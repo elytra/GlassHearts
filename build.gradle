@@ -1,0 +1,200 @@
+buildscript {
+	repositories {
+		mavenCentral()
+		jcenter()
+		maven {
+			name = "forge"
+			url = "http://files.minecraftforge.net/maven"
+		}
+		maven {
+			name = "sonatype"
+			url = "https://oss.sonatype.org/content/repositories/snapshots/"
+		}
+		maven {
+			url "https://plugins.gradle.org/m2/"
+		}
+	}
+	dependencies {
+		classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+		classpath 'me.tatarka:gradle-retrolambda:3.2.0'
+		classpath 'net.sf.proguard:proguard-gradle:5.3.3'
+		classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.4'
+		classpath 'gradle.plugin.net.minecrell:licenser:0.3'
+	}
+}
+
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'me.tatarka.retrolambda'
+
+apply from: 'project.gradle'
+
+println("Elytra Project Skeleton v1.0")
+println("https://github.com/elytra/skel")
+println()
+println("Project Name: "+project.ext.projectName)
+println("Version: "+project.ext.version)
+println()
+println("Package: "+project.ext.package)
+println()
+if (project.ext.includeConcrete) {
+	println("Concrete Version: "+project.ext.concreteVersion)
+}
+println("Forge Version: "+project.ext.forge)
+println("Mappings: "+project.ext.mappings)
+
+project.ext.priv = parseConfig(file('private.properties'))
+
+group = "com.elytradev"
+archivesBaseName = project.ext.projectName
+version = project.ext.version
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+retrolambda {
+	javaVersion JavaVersion.VERSION_1_6
+	defaultMethods true
+}
+
+repositories {
+	jcenter()
+	mavenCentral()
+	maven {
+		name = 'elytra'
+		url = 'http://repo.elytradev.com/'
+	}
+}
+
+if (project.ext.enforceLicenseHeaders) {
+	apply plugin: 'net.minecrell.licenser'
+}
+
+if (project.ext.includeConcrete) {
+	apply plugin: 'com.github.johnrengelman.shadow'
+
+	task proguard(type: proguard.gradle.ProGuardTask) {
+		dependsOn shadowJar
+
+		injars 'build/libs/'+archivesBaseName+'-'+version+'-fat.jar'
+		libraryjars "${System.properties.'java.home'}/lib/rt.jar"
+		outjars 'build/tmp/proguard.jar'
+		// keep everything that isn't concrete
+		keep 'class !'+project.ext.package+'.repackage.com.elytradev.concrete.** {*;}'
+		// if part of a concrete class is kept, keep the whole class
+		// since we have an incomplete classpath, this is neccessary
+		keepclasseswithmembers 'class '+project.ext.package+'.repackage.com.elytradev.concrete.**'
+		// just shrink
+		dontobfuscate
+		dontoptimize
+
+		// we're only removing unreferenced classes within this jar, we don't
+		// need to resolve the entire classpath. either way, optimization and
+		// obfuscation are disabled, which is where this becomes an issue
+		if (project.ext.verbose) {
+			ignorewarnings
+		} else {
+			dontwarn '**'
+			dontnote '**'
+		}
+	}
+
+	task proguardJar(type: Jar) {
+		dependsOn proguard
+		from(zipTree(file('build/tmp/proguard.jar')))
+	}
+
+	jar {
+		classifier = 'slim'
+	}
+
+	shadowJar {
+		classifier = 'fat'
+		relocate 'com.elytradev.concrete', project.ext.package+'.repackage.com.elytradev.concrete'
+		configurations = [project.configurations.shadow]
+	}
+
+	reobf {
+		proguardJar { mappingType = 'SEARGE' }
+	}
+
+	tasks.reobfJar.doLast {
+		file('build/libs/'+archivesBaseName+'-'+version+'-slim.jar').delete()
+		file('build/libs/'+archivesBaseName+'-'+version+'-fat.jar').delete()
+	}
+
+	tasks.build.dependsOn reobfProguardJar
+	tasks.build.dependsOn proguardJar
+
+	artifacts {
+		archives shadowJar, proguardJar
+	}
+
+	dependencies {
+		shadow 'com.elytradev:concrete:'+project.ext.concreteVersion
+		compile 'com.elytradev:concrete:'+project.ext.concreteVersion
+	}
+}
+
+if (priv != null) {
+	apply plugin: 'maven'
+
+	configurations {
+		deploy
+	}
+
+	dependencies {
+		deploy 'org.apache.maven.wagon:wagon-ssh:2.10'
+	}
+
+	uploadArchives {
+		repositories.mavenDeployer {
+			configuration = configurations.deploy
+			pom.artifactId = project.ext.projectName.toLowerCase()
+			repository(url: "sftp://"+priv.sftpHost+priv.sftpPath) {
+				authentication(userName: priv.sftpUser, privateKey: file(priv.sftpKey))
+			}
+		}
+	}
+}
+
+
+
+minecraft {
+	version = project.ext.forge
+	mappings = project.ext.mappings
+
+	runDir = "minecraft"
+
+	replaceIn 'src/main/java/'+project.ext.package.replace('.', '/')+'/'+project.ext.projectName+'.java'
+	replace '@VERSION@', project.version
+}
+
+processResources {
+	// this will ensure that this task is redone when the versions change.
+	inputs.property "version", project.version
+	inputs.property "mcversion", project.minecraft.version
+
+	// replace stuff in mcmod.info, nothing else
+	from(sourceSets.main.resources.srcDirs) {
+		include 'mcmod.info'
+
+		// replace version and mcversion
+		expand 'version':project.version, 'mcversion':project.minecraft.version
+	}
+
+	// copy everything else, thats not the mcmod.info
+	from(sourceSets.main.resources.srcDirs) {
+		exclude 'mcmod.info'
+		exclude '*.xcf'
+		exclude '*.wav'
+	}
+}
+
+def parseConfig(File config) {
+	if (!config.exists()) return null
+	config.withReader {
+		def prop = new Properties()
+		prop.load(it)
+		return (new ConfigSlurper().parse(prop))
+	}
+}
