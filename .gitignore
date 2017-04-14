@@ -1,0 +1,10 @@
+build
+bin
+.classpath
+.project
+.metadata
+.settings
+*.launch
+private.properties
+.gradle
+minecraft

@@ -1,0 +1,22 @@
+ext.package = 'com.elytradev.glasshearts'
+ext.projectName = 'GlassHearts'
+ext.version = '0.0.1'
+
+// 0.2.0 is the earliest Concrete version supported by the skeleton.
+ext.includeConcrete = true
+ext.concreteVersion = '0.2.0'
+
+ext.forge = '1.11.2-13.20.0.2226'
+ext.mappings = 'snapshot_20170205'
+
+ext.enforceLicenseHeaders = false
+
+ext.verbose = false
+
+repositories {
+	// the skeleton already defines mavenCentral, jcenter, and the Elytra repo
+}
+
+dependencies {
+
+}
