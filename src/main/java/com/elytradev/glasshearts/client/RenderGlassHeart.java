@@ -136,7 +136,7 @@ public class RenderGlassHeart extends TileEntitySpecialRenderer<TileEntityGlassH
 		
 		float s = 1/16f;
 		
-		vb.begin(GL11.GL_QUAD_STRIP, DefaultVertexFormats.POSITION_TEX);
+		vb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
 		vb.pos((x+0)*s, (y+0)*s, (z+0)*s).tex(minUX, minVY).endVertex();
 		vb.pos((x+0)*s, (y+h)*s, (z+0)*s).tex(minUX, maxVY).endVertex();
 		vb.pos((x+w)*s, (y+0)*s, (z+0)*s).tex(maxUX, minVY).endVertex();
