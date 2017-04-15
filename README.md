@@ -1,4 +1,4 @@
-<img src="https://rawgit.com/elytra/GlassHearts/1.11.2/doc/logo.png" align="right" width="180px"/>
+<img src="https://github.com/elytra/GlassHearts/raw/1.11.2/doc/logo.png" align="right" width="180px"/>
 
 # Glass Hearts
 *A novel and balanced way to increase your max health.*
