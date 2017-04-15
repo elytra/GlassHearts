@@ -1,0 +1,22 @@
+{
+	"forge_marker": 1,
+	"defaults": {
+		"transform": "forge:default-block"
+	},
+	"variants": {
+		"stained": {
+			"true": {
+				"model": "glasshearts:stained_glass_heart"
+			},
+			"false": {
+				"model": "glasshearts:glass_heart"
+			}
+		},
+		"inner": {
+			"true": {
+				"model": "glasshearts:glass_heart_inner"
+			},
+			"false": {}
+		}
+	}
+}
