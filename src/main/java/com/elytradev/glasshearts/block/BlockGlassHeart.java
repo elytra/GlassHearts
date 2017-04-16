@@ -19,6 +19,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -68,16 +69,24 @@ public class BlockGlassHeart extends Block {
 	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
 		ItemStack stack = playerIn.getHeldItem(hand);
 		TileEntity te = worldIn.getTileEntity(pos);
-		if (!worldIn.isRemote && te instanceof TileEntityGlassHeart) {
+		if (te instanceof TileEntityGlassHeart) {
 			TileEntityGlassHeart tegh = (TileEntityGlassHeart)te;
-			if (tegh.getLifeforce() < GlassHearts.inst.configGlassHeartCapacity) {
+			if (tegh.getLifeforceBuffer() < GlassHearts.inst.configGlassHeartCapacity) {
 				try {
 					if (stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
 						IFluidHandlerItem ifhi = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
-						FluidStack rtrn = ifhi.drain(new FluidStack(GlassHearts.inst.LIFEFORCE, GlassHearts.inst.configGlassHeartCapacity-tegh.getLifeforce()), true);
+						FluidStack rtrn = ifhi.drain(new FluidStack(GlassHearts.inst.LIFEFORCE, (GlassHearts.inst.configGlassHeartCapacity-tegh.getLifeforce())-tegh.getLifeforceBuffer()), !worldIn.isRemote);
 						if (rtrn != null) {
 							if (rtrn.getFluid() == GlassHearts.inst.LIFEFORCE) {
-								tegh.setLifeforce(tegh.getLifeforce()+rtrn.amount);
+								if (stack.getItem() == GlassHearts.inst.LIFEFORCE_BOTTLE) {
+									stack.shrink(1);
+									if (!playerIn.inventory.addItemStackToInventory(new ItemStack(Items.GLASS_BOTTLE))) {
+										playerIn.dropItem(new ItemStack(Items.GLASS_BOTTLE), false);
+									}
+								} else {
+									playerIn.setHeldItem(hand, ifhi.getContainer());
+								}
+								tegh.setLifeforceBuffer(tegh.getLifeforceBuffer()+rtrn.amount);
 								worldIn.playSound(null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1f, 1f);
 								return true;
 							} else {

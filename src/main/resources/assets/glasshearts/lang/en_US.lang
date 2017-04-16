@@ -22,9 +22,10 @@ item.glasshearts.lifeforce_bottle.name=Bottle of Lifeforce
 
 item.glasshearts.gem.amethyst.name=Amethyst
 item.glasshearts.gem.ruby.name=Ruby
-item.glasshearts.gem.amber.name=Amber
+item.glasshearts.gem.topaz.name=Topaz
 item.glasshearts.gem.sapphire.name=Sapphire
 item.glasshearts.gem.opal.name=Opal
 item.glasshearts.gem.onyx.name=Onyx
+item.glasshearts.gem.amber.name=Amber
 
 enchantment.glasshearts.sapping=Sapping

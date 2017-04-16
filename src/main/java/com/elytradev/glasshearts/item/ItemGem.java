@@ -12,10 +12,11 @@ public class ItemGem extends Item {
 	public static final EnumGem[] VALID_GEMS = {
 		EnumGem.AMETHYST,
 		EnumGem.RUBY,
-		EnumGem.AMBER,
+		EnumGem.TOPAZ,
 		EnumGem.SAPPHIRE,
 		EnumGem.OPAL,
-		EnumGem.ONYX
+		EnumGem.ONYX,
+		EnumGem.AMBER
 	};
 	
 	public ItemGem() {

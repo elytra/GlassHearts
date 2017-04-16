@@ -37,8 +37,8 @@ public class GlassHeartWorldData extends WorldSavedData {
 		return nbt;
 	}
 	
-	public GlassHeartData create(BlockPos pos, EnumGlassColor color, EnumGem gem, int lifeforce) {
-		GlassHeartData ghd = new GlassHeartData(this, pos, color, gem, lifeforce);
+	public GlassHeartData create(BlockPos pos, EnumGlassColor color, EnumGem gem, int lifeforce, int lifeforceBuffer) {
+		GlassHeartData ghd = new GlassHeartData(this, pos, color, gem, lifeforce, lifeforceBuffer);
 		hearts.put(pos, ghd);
 		markDirty();
 		return ghd;
@@ -51,6 +51,10 @@ public class GlassHeartWorldData extends WorldSavedData {
 	public void remove(BlockPos pos) {
 		hearts.remove(pos);
 		markDirty();
+	}
+	
+	public Iterable<GlassHeartData> all() {
+		return hearts.values();
 	}
 	
 	public static GlassHeartWorldData getDataFor(World w) {
