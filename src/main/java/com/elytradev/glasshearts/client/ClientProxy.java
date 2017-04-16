@@ -1,9 +1,13 @@
 package com.elytradev.glasshearts.client;
 
+import java.util.Iterator;
+import java.util.List;
+
 import com.elytradev.glasshearts.CommonProxy;
 import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.item.ItemGem;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
+import com.google.common.collect.Lists;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -28,6 +32,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 public class ClientProxy extends CommonProxy {
 	
 	private HeartRenderer heartRenderer = new HeartRenderer();
+	private List<TileEntityGlassHeart> glassHearts = Lists.newArrayList();
 	
 	@Override
 	public void onPreInit() {
@@ -74,10 +79,15 @@ public class ClientProxy extends CommonProxy {
 				e.setCanceled(true);
 				heartRenderer.renderHealth(e.getResolution(), e.getPartialTicks());
 			}
-		} else if (e.getType() == ElementType.HEALTHMOUNT) {
-			if (GlassHearts.inst.configOverrideHealthRenderer && heartRenderer.useMoreSpace()) {
-				e.setCanceled(true);
-			}
+		}
+	}
+	
+	@Override
+	public void onLoad(TileEntityGlassHeart te) {
+		super.onLoad(te);
+		if (te.hasWorld() && te.getWorld().isRemote) {
+			te.setClient(true);
+			glassHearts.add(te);
 		}
 	}
 	
@@ -85,8 +95,20 @@ public class ClientProxy extends CommonProxy {
 	public void onTick(ClientTickEvent e) {
 		if (e.phase == Phase.START && Minecraft.getMinecraft().world != null) {
 			heartRenderer.tick();
+			Iterator<TileEntityGlassHeart> iter = glassHearts.iterator();
+			while (iter.hasNext()) {
+				TileEntityGlassHeart tegh = iter.next();
+				if (tegh.isInvalid()) {
+					iter.remove();
+				} else {
+					GlassHearts.inst.update(tegh, tegh.getWorld().getTotalWorldTime());
+				}
+			}
 			// this effect is actually really annoying
 			if (Integer.valueOf(4).intValue() == 4) return;
+			// !!##!! THE ABOVE LINE DISABLES THE FOLLOWING CODE !!##!! //
+			// (unless you reflected into the int cache and messed with it)
+			// (don't do that)
 			World world = Minecraft.getMinecraft().world;
 			EntityPlayer player = Minecraft.getMinecraft().player;
 			int baseX = (int)(player.posX/16);
@@ -113,13 +135,6 @@ public class ClientProxy extends CommonProxy {
 					}
 				}
 			}
-		}
-	}
-	
-	@SubscribeEvent(receiveCanceled=true)
-	public void onRenderFood(RenderGameOverlayEvent.Pre e) {
-		if (e.getType() == ElementType.FOOD) {
-			heartRenderer.setUseMoreSpace(e.isCanceled());
 		}
 	}
 	

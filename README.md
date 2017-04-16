@@ -39,3 +39,5 @@ implement this idea. I hope you enjoy!
 *In accordance with the MIT License, this mod may be used in any modpacks on
 any platform for any purpose. You can even charge for it, though that's against
 Mojang's EULA.*
+
+This will probably evolve into a lifeforce alchemy mod! Stay tuned.

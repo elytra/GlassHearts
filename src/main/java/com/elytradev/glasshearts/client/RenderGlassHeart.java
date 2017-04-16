@@ -2,6 +2,7 @@ package com.elytradev.glasshearts.client;
 
 import org.lwjgl.opengl.GL11;
 
+import com.elytradev.glasshearts.EnumGem;
 import com.elytradev.glasshearts.EnumGlassColor;
 import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.block.BlockGlassHeart;
@@ -17,6 +18,7 @@ import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.GlStateManager.DestFactor;
 import net.minecraft.client.renderer.GlStateManager.SourceFactor;
 import net.minecraft.client.renderer.block.model.IBakedModel;
+import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
@@ -62,7 +64,11 @@ public class RenderGlassHeart extends TileEntitySpecialRenderer<TileEntityGlassH
 		GlStateManager.disableBlend();
 		
 		if (MinecraftForgeClient.getRenderPass() == 0) {
-			float amt = (te.getLifeforce()/(float)GlassHearts.inst.configGlassHeartCapacity)*14f;
+			float partial = te.getLifeforceBuffer() > 0 ? partialTicks : 0;
+			if (te.getGem() == EnumGem.OPAL) {
+				partial = ((te.getWorld().getTotalWorldTime()+partialTicks)%10)/10f;
+			}
+			float amt = ((te.getLifeforce()+partial)/GlassHearts.inst.configGlassHeartCapacity)*14f;
 			float bufferAmt = (te.getLifeforceBuffer()/(float)GlassHearts.inst.configGlassHeartCapacity)*14f;
 			
 			renderFill(amt);
@@ -75,6 +81,20 @@ public class RenderGlassHeart extends TileEntitySpecialRenderer<TileEntityGlassH
 			GlStateManager.tryBlendFuncSeparate(SourceFactor.SRC_ALPHA, DestFactor.ONE,
 					SourceFactor.SRC_ALPHA, DestFactor.ONE);
 			renderFill(bufferAmt+amt);
+			GlStateManager.popMatrix();
+
+			GlStateManager.pushMatrix();
+				GlStateManager.translate(0.5f, 0.55f, 0.5f);
+				GlStateManager.pushMatrix();
+					GlStateManager.translate(0, 0, -0.265f);
+					GlStateManager.scale(0.45f, 0.45f, 0.45f);
+					Minecraft.getMinecraft().getRenderItem().renderItem(te.getGem().getRenderingSingleton(), TransformType.FIXED);
+				GlStateManager.popMatrix();
+				GlStateManager.pushMatrix();
+					GlStateManager.translate(0, 0, 0.265f);
+					GlStateManager.scale(0.45f, 0.45f, 0.45f);
+					Minecraft.getMinecraft().getRenderItem().renderItem(te.getGem().getRenderingSingleton(), TransformType.FIXED);
+				GlStateManager.popMatrix();
 			GlStateManager.popMatrix();
 		}
 		

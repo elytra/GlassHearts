@@ -8,7 +8,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.INBTSerializable;
 
-public class GlassHeartData implements INBTSerializable<NBTTagCompound> {
+public class GlassHeartData implements INBTSerializable<NBTTagCompound>, IGlassHeart {
 	
 	private GlassHeartWorldData parent;
 	
@@ -33,37 +33,45 @@ public class GlassHeartData implements INBTSerializable<NBTTagCompound> {
 	}
 	
 	
+	@Override
 	public EnumGlassColor getColor() {
 		return color;
 	}
 	
+	@Override
 	public EnumGem getGem() {
 		return gem;
 	}
 	
+	@Override
 	public int getLifeforce() {
 		return lifeforce;
 	}
 	
+	@Override
 	public BlockPos getPos() {
 		return pos;
 	}
 	
+	@Override
 	public int getLifeforceBuffer() {
 		return lifeforceBuffer;
 	}
 	
 	
+	@Override
 	public void setColor(EnumGlassColor color) {
 		this.color = color;
 		parent.markDirty();
 	}
 	
+	@Override
 	public void setGem(EnumGem gem) {
 		this.gem = gem;
 		parent.markDirty();
 	}
 	
+	@Override
 	public void setLifeforce(int lifeforce) {
 		this.lifeforce = lifeforce;
 		parent.markDirty();
@@ -74,6 +82,7 @@ public class GlassHeartData implements INBTSerializable<NBTTagCompound> {
 		parent.markDirty();
 	}
 	
+	@Override
 	public void setLifeforceBuffer(int lifeforceBuffer) {
 		this.lifeforceBuffer = lifeforceBuffer;
 		parent.markDirty();

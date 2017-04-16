@@ -242,23 +242,10 @@ public class GlassHearts {
 			GlassHeartWorldData data = GlassHeartWorldData.getDataFor(e.world);
 			Set<BlockPos> remove = Collections.emptySet();
 			for (GlassHeartData ghd : data.all()) {
-				if (ghd.getLifeforceBuffer() > 0 && ghd.getLifeforce() < configGlassHeartCapacity) {
-					int amt = Math.min(10, Math.min(ghd.getLifeforceBuffer(), configGlassHeartCapacity-ghd.getLifeforce()));
-					ghd.setLifeforceBuffer(ghd.getLifeforceBuffer()-amt);
-					ghd.setLifeforce(ghd.getLifeforce()+amt);
-				}
-				if (ghd.getGem() == EnumGem.OPAL) {
-					if (e.world.getTotalWorldTime()%10 == 0) {
-						if (ghd.getLifeforce() < configGlassHeartCapacity) {
-							ghd.setLifeforce(ghd.getLifeforce()+1);
-						}
-					}
-				}
+				update(ghd, e.world.getTotalWorldTime());
 				if (e.world.isBlockLoaded(ghd.getPos())) {
 					TileEntity te = e.world.getTileEntity(ghd.getPos());
-					if (te instanceof TileEntityGlassHeart) {
-						sendUpdatePacket(te);
-					} else {
+					if (!(te instanceof TileEntityGlassHeart)) {
 						LogManager.getLogger("GlassHearts").warn("Deleting orphaned Glass Heart at {}, {}, {}", ghd.getPos().getX(), ghd.getPos().getY(), ghd.getPos().getZ());
 						if (remove.isEmpty()) {
 							remove = Sets.newHashSet();
@@ -269,6 +256,21 @@ public class GlassHearts {
 			}
 			for (BlockPos pos : remove) {
 				data.remove(pos);
+			}
+		}
+	}
+	
+	public void update(IGlassHeart igh, long ticks) {
+		if (igh.getLifeforceBuffer() > 0 && igh.getLifeforce() < configGlassHeartCapacity) {
+			int amt = Math.min(10, Math.min(igh.getLifeforceBuffer(), configGlassHeartCapacity-igh.getLifeforce()));
+			igh.setLifeforceBuffer(igh.getLifeforceBuffer()-amt);
+			igh.setLifeforce(igh.getLifeforce()+amt);
+		}
+		if (igh.getGem() == EnumGem.OPAL) {
+			if (ticks%10 == 0) {
+				if (igh.getLifeforce() < configGlassHeartCapacity) {
+					igh.setLifeforce(igh.getLifeforce()+1);
+				}
 			}
 		}
 	}
