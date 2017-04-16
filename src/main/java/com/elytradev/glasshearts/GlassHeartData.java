@@ -16,18 +16,20 @@ public class GlassHeartData implements INBTSerializable<NBTTagCompound> {
 	private EnumGlassColor color;
 	private EnumGem gem;
 	private int lifeforce;
+	private int lifeforceBuffer;
 	
 	
 	public GlassHeartData(GlassHeartWorldData parent) {
 		this.parent = parent;
 	}
 	
-	public GlassHeartData(GlassHeartWorldData parent, BlockPos pos, EnumGlassColor color, EnumGem gem, int lifeforce) {
+	public GlassHeartData(GlassHeartWorldData parent, BlockPos pos, EnumGlassColor color, EnumGem gem, int lifeforce, int lifeforceBuffer) {
 		this.parent = parent;
 		this.pos = pos;
 		this.color = color;
 		this.gem = gem;
 		this.lifeforce = lifeforce;
+		this.lifeforceBuffer = lifeforceBuffer;
 	}
 	
 	
@@ -45,6 +47,10 @@ public class GlassHeartData implements INBTSerializable<NBTTagCompound> {
 	
 	public BlockPos getPos() {
 		return pos;
+	}
+	
+	public int getLifeforceBuffer() {
+		return lifeforceBuffer;
 	}
 	
 	
@@ -68,12 +74,18 @@ public class GlassHeartData implements INBTSerializable<NBTTagCompound> {
 		parent.markDirty();
 	}
 	
+	public void setLifeforceBuffer(int lifeforceBuffer) {
+		this.lifeforceBuffer = lifeforceBuffer;
+		parent.markDirty();
+	}
+	
 	@Override
 	public void deserializeNBT(NBTTagCompound nbt) {
 		pos = BlockPos.fromLong(nbt.getLong("Pos"));
 		color = Enums.getIfPresent(EnumGlassColor.class, nbt.getString("Color").toUpperCase(Locale.ROOT)).or(EnumGlassColor.NONE);
 		gem = Enums.getIfPresent(EnumGem.class, nbt.getString("Gem").toUpperCase(Locale.ROOT)).or(EnumGem.NONE);
-		lifeforce = Math.max(0, Math.min(nbt.getShort("Lifeforce"), 1000));
+		lifeforce = Math.max(0, Math.min(nbt.getShort("Lifeforce"), GlassHearts.inst.configGlassHeartCapacity));
+		lifeforceBuffer = Math.max(0, Math.min(nbt.getShort("LifeforceBuffer"), GlassHearts.inst.configGlassHeartCapacity-lifeforce));
 	}
 	
 	@Override
@@ -83,6 +95,7 @@ public class GlassHeartData implements INBTSerializable<NBTTagCompound> {
 		tag.setString("Color", color.getName());
 		tag.setString("Gem", gem.getName());
 		tag.setShort("Lifeforce", (short)lifeforce);
+		tag.setShort("LifeforceBuffer", (short)lifeforceBuffer);
 		return tag;
 	}
 	

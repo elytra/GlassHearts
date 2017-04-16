@@ -8,7 +8,8 @@ public enum EnumGem implements IStringSerializable {
 	NONE,
 	
 	/**
-	 * Attacker receives Poison when the container is emptied.
+	 * Poison does 2/3 damage while this container is not empty, and poison
+	 * damage to this heart does 1/3 damage. 
 	 */
 	EMERALD,
 	/**
@@ -28,7 +29,7 @@ public enum EnumGem implements IStringSerializable {
 	/**
 	 * Gives you Absorption when the container is emptied.
 	 */
-	AMBER,
+	TOPAZ,
 	/**
 	 * If this container is at least half full, damage dealt will be capped to
 	 * this container only.
@@ -39,9 +40,14 @@ public enum EnumGem implements IStringSerializable {
 	 */
 	OPAL,
 	/**
-	 * Atacker receives Wither when the container is emptied.
+	 * Wither does 2/3 damage while this container is not empty, and wither
+	 * damage to this heart does 1/3 damage.
 	 */
 	ONYX,
+	/**
+	 * 
+	 */
+	AMBER,
 	;
 	
 	private final String name;

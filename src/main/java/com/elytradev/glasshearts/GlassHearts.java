@@ -1,5 +1,10 @@
 package com.elytradev.glasshearts;
 
+import java.util.Collections;
+import java.util.Set;
+
+import org.apache.logging.log4j.LogManager;
+
 import com.elytradev.concrete.network.NetworkContext;
 import com.elytradev.concrete.reflect.invoker.Invoker;
 import com.elytradev.concrete.reflect.invoker.Invokers;
@@ -10,11 +15,13 @@ import com.elytradev.glasshearts.item.ItemLifeforceBottle;
 import com.elytradev.glasshearts.network.SapEffectMessage;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
 import com.google.common.base.Predicates;
+import com.google.common.collect.Sets;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EnumCreatureAttribute;
+import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Items;
@@ -36,6 +43,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickItem;
 import net.minecraftforge.fluids.BlockFluidClassic;
@@ -49,6 +57,8 @@ import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.eventhandler.Event.Result;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.oredict.ShapedOreRecipe;
@@ -66,6 +76,8 @@ public class GlassHearts {
 	
 	public int configGlassHeartCapacity = 1000;
 	public int configLifeforceBottleSize = 333;
+	public boolean configCreepersSeekHearts = true;
+	public boolean configCreeperFakeExplosions = false;
 	
 	@SidedProxy(clientSide="com.elytradev.glasshearts.client.ClientProxy", serverSide="com.elytradev.glasshearts.CommonProxy")
 	public static Proxy proxy;
@@ -112,7 +124,7 @@ public class GlassHearts {
 		configOverrideHealthRenderer = config.getBoolean("overrideHealthRenderer", "Compatibility", true,
 				  "If true, the health bar renderer will be overridden.\n"
 				+ "Required for glass outlines and sub-half-heart accuracy.\n");
-		configGlassHeartCapacity = config.getInt("glassHeartCapacity", "Balance", 8000, 0, Integer.MAX_VALUE,
+		configGlassHeartCapacity = config.getInt("glassHeartCapacity", "Balance", 8000, 0, Short.MAX_VALUE,
 				  "The maximum amount of Lifeforce a glass heart can hold, in mB.\n"
 				+ "This directly corresponds to how much Lifeforce it takes to\n"
 				+ "bring a heart container back to full, or fill a new container.\n");
@@ -120,6 +132,13 @@ public class GlassHearts {
 				  "How much Lifeforce is in a Bottle of Lifeforce, in mB.\n"
 				+ "You receive a Bottle of Lifeforce when the Sapping enchant\n"
 				+ "procs.\n");
+		configCreepersSeekHearts = config.getBoolean("creepersSeekHearts", "Balance", true,
+				  "If true, Creepers will seek out Glass Hearts and explode on\n"
+				+ "them. If mobGriefing is false, the heart will still be\n"
+				+ "destroyed, but no nearby blocks will be.\n");
+		configCreeperFakeExplosions = config.getBoolean("creeperFakeExplosions", "Balance", false,
+				  "If true, Creepers exploding on Glass Hearts will only\n"
+				+ "destroy the heart, even if mobGriefing is true.");
 		
 		config.save();
 		
@@ -215,6 +234,53 @@ public class GlassHearts {
 	@EventHandler
 	public void onPostInit(FMLPostInitializationEvent e) {
 		proxy.onPostInit();
+	}
+	
+	@SubscribeEvent
+	public void onWorldTick(WorldTickEvent e) {
+		if (e.phase == Phase.START) {
+			GlassHeartWorldData data = GlassHeartWorldData.getDataFor(e.world);
+			Set<BlockPos> remove = Collections.emptySet();
+			for (GlassHeartData ghd : data.all()) {
+				if (ghd.getLifeforceBuffer() > 0 && ghd.getLifeforce() < configGlassHeartCapacity) {
+					int amt = Math.min(10, Math.min(ghd.getLifeforceBuffer(), configGlassHeartCapacity-ghd.getLifeforce()));
+					ghd.setLifeforceBuffer(ghd.getLifeforceBuffer()-amt);
+					ghd.setLifeforce(ghd.getLifeforce()+amt);
+				}
+				if (ghd.getGem() == EnumGem.OPAL) {
+					if (e.world.getTotalWorldTime()%10 == 0) {
+						if (ghd.getLifeforce() < configGlassHeartCapacity) {
+							ghd.setLifeforce(ghd.getLifeforce()+1);
+						}
+					}
+				}
+				if (e.world.isBlockLoaded(ghd.getPos())) {
+					TileEntity te = e.world.getTileEntity(ghd.getPos());
+					if (te instanceof TileEntityGlassHeart) {
+						sendUpdatePacket(te);
+					} else {
+						LogManager.getLogger("GlassHearts").warn("Deleting orphaned Glass Heart at {}, {}, {}", ghd.getPos().getX(), ghd.getPos().getY(), ghd.getPos().getZ());
+						if (remove.isEmpty()) {
+							remove = Sets.newHashSet();
+						}
+						remove.add(ghd.getPos());
+					}
+				}
+			}
+			for (BlockPos pos : remove) {
+				data.remove(pos);
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public void onJoinWorld(EntityJoinWorldEvent e) {
+		if (e.getEntity() instanceof EntityCreeper) {
+			if (configCreepersSeekHearts) {
+				EntityCreeper creeper = ((EntityCreeper)e.getEntity());
+				creeper.tasks.addTask(10, new EntityAICreeperSeekHeart());
+			}
+		}
 	}
 	
 	@SubscribeEvent
