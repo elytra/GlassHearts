@@ -1,5 +1,7 @@
 package com.elytradev.glasshearts;
 
+import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
+
 public class CommonProxy implements Proxy {
 
 	@Override
@@ -8,6 +10,10 @@ public class CommonProxy implements Proxy {
 	
 	@Override
 	public void onPostInit() {
+	}
+	
+	@Override
+	public void onLoad(TileEntityGlassHeart te) {
 	}
 	
 }

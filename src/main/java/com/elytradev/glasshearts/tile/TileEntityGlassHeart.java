@@ -5,6 +5,7 @@ import com.elytradev.glasshearts.EnumGlassColor;
 import com.elytradev.glasshearts.GlassHeartData;
 import com.elytradev.glasshearts.GlassHeartWorldData;
 import com.elytradev.glasshearts.GlassHearts;
+import com.elytradev.glasshearts.IGlassHeart;
 import com.google.common.base.Optional;
 
 import net.minecraft.nbt.NBTTagCompound;
@@ -22,16 +23,22 @@ import net.minecraftforge.fluids.capability.FluidTankProperties;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
 
-public class TileEntityGlassHeart extends TileEntity implements IFluidHandler {
+public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, IGlassHeart {
 	
-	private boolean useReceivedData = false;
+	private boolean client = false;
 	
-	private int receivedLifeforce;
-	private int receivedLifeforceBuffer;
-	private EnumGlassColor receivedColor;
-	private EnumGem receivedGem;
+	private int clientLifeforce = 0;
+	private int clientLifeforceBuffer = 0;
+	private EnumGlassColor clientColor = EnumGlassColor.NONE;
+	private EnumGem clientGem = EnumGem.NONE;
 	
 	private String name;
+	
+	@Override
+	public void onLoad() {
+		super.onLoad();
+		GlassHearts.proxy.onLoad(this);
+	}
 	
 	@Override
 	public ITextComponent getDisplayName() {
@@ -81,11 +88,11 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler {
 	@Override
 	public void handleUpdateTag(NBTTagCompound tag) {
 		super.handleUpdateTag(tag);
-		useReceivedData = true;
-		receivedLifeforce = tag.getInteger("Lifeforce");
-		receivedLifeforceBuffer = tag.getInteger("LifeforceBuffer");
-		receivedColor = EnumGlassColor.values()[tag.getByte("Color")];
-		receivedGem = EnumGem.values()[tag.getByte("Gem")];
+		client = true;
+		clientLifeforce = tag.getInteger("Lifeforce");
+		clientLifeforceBuffer = tag.getInteger("LifeforceBuffer");
+		clientColor = EnumGlassColor.values()[tag.getByte("Color")];
+		clientGem = EnumGem.values()[tag.getByte("Gem")];
 		name = tag.hasKey("Name", NBT.TAG_STRING) ? tag.getString("Name") : null;
 	}
 	
@@ -132,30 +139,34 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler {
 		return name;
 	}
 	
+	@Override
 	public int getLifeforce() {
-		if (useReceivedData) {
-			return receivedLifeforce;
+		if (client) {
+			return clientLifeforce;
 		}
 		return getData().transform(GlassHeartData::getLifeforce).or(0);
 	}
 	
+	@Override
 	public EnumGlassColor getColor() {
-		if (useReceivedData) {
-			return receivedColor;
+		if (client) {
+			return clientColor;
 		}
 		return getData().transform(GlassHeartData::getColor).or(EnumGlassColor.NONE);
 	}
 	
+	@Override
 	public EnumGem getGem() {
-		if (useReceivedData) {
-			return receivedGem;
+		if (client) {
+			return clientGem;
 		}
 		return getData().transform(GlassHeartData::getGem).or(EnumGem.NONE);
 	}
 	
+	@Override
 	public int getLifeforceBuffer() {
-		if (useReceivedData) {
-			return receivedLifeforceBuffer;
+		if (client) {
+			return clientLifeforceBuffer;
 		}
 		return getData().transform(GlassHeartData::getLifeforceBuffer).or(0);
 	}
@@ -163,30 +174,43 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler {
 	public void setName(String name) {
 		this.name = name;
 		GlassHearts.sendUpdatePacket(this);
+		markDirty();
 	}
 	
+	@Override
 	public void setLifeforce(int lifeforce) {
+		if (client) this.clientLifeforce = lifeforce;
 		if (!hasWorld() || getWorld().isRemote) return;
 		getOrCreateData().setLifeforce(lifeforce);
 		GlassHearts.sendUpdatePacket(this);
 	}
 	
+	@Override
 	public void setColor(EnumGlassColor color) {
+		if (client) this.clientColor = color;
 		if (!hasWorld() || getWorld().isRemote) return;
 		getOrCreateData().setColor(color);
 		GlassHearts.sendUpdatePacket(this);
 	}
 	
+	@Override
 	public void setGem(EnumGem gem) {
+		if (client) this.clientGem = gem;
 		if (!hasWorld() || getWorld().isRemote) return;
 		getOrCreateData().setGem(gem);
 		GlassHearts.sendUpdatePacket(this);
 	}
 	
+	@Override
 	public void setLifeforceBuffer(int lifeforceBuffer) {
+		if (client) this.clientLifeforceBuffer = lifeforceBuffer;
 		if (!hasWorld() || getWorld().isRemote) return;
 		getOrCreateData().setLifeforceBuffer(lifeforceBuffer);
 		GlassHearts.sendUpdatePacket(this);
+	}
+	
+	public void setClient(boolean client) {
+		this.client = client;
 	}
 	
 	@Override

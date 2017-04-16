@@ -1,13 +1,10 @@
 package com.elytradev.glasshearts.block;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
-
 import com.elytradev.glasshearts.EnumGem;
 import com.elytradev.glasshearts.EnumGlassColor;
 import com.elytradev.glasshearts.GlassHeartWorldData;
 import com.elytradev.glasshearts.GlassHearts;
-import com.elytradev.glasshearts.item.ItemGem;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
 
 import net.minecraft.block.Block;
@@ -71,7 +68,27 @@ public class BlockGlassHeart extends Block {
 		TileEntity te = worldIn.getTileEntity(pos);
 		if (te instanceof TileEntityGlassHeart) {
 			TileEntityGlassHeart tegh = (TileEntityGlassHeart)te;
-			if (tegh.getLifeforceBuffer() < GlassHearts.inst.configGlassHeartCapacity) {
+			if (stack.isEmpty() && tegh.getGem() != EnumGem.NONE) {
+				if (!worldIn.isRemote) {
+					spawnAsEntity(worldIn, pos, tegh.getGem().toItemStack());
+					tegh.setGem(EnumGem.NONE);
+					worldIn.playSound(null, pos, SoundEvents.ITEM_ARMOR_EQUIP_DIAMOND, SoundCategory.BLOCKS, 1f, 1f);
+				}
+				return true;
+			} else if (stack.getItem() == Items.DIAMOND || stack.getItem() == Items.EMERALD || stack.getItem() == GlassHearts.inst.GEM) {
+				EnumGem eg = EnumGem.fromItemStack(stack);
+				if (eg != null) {
+					if (!worldIn.isRemote) {
+						if (tegh.getGem() != EnumGem.NONE) {
+							spawnAsEntity(worldIn, pos, tegh.getGem().toItemStack());
+						}
+						worldIn.playSound(null, pos, SoundEvents.ITEM_ARMOR_EQUIP_DIAMOND, SoundCategory.BLOCKS, 1f, 1f);
+						tegh.setGem(eg);
+						stack.shrink(1);
+					}
+					return true;
+				}
+			} else if (tegh.getLifeforceBuffer() < GlassHearts.inst.configGlassHeartCapacity) {
 				try {
 					if (stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
 						IFluidHandlerItem ifhi = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
@@ -128,7 +145,7 @@ public class BlockGlassHeart extends Block {
 			TileEntityGlassHeart tegh = (TileEntityGlassHeart)te;
 			spawnAsEntity(worldIn, pos, getPickBlock(worldIn.getBlockState(pos), null, worldIn, pos, null));
 			if (tegh.getGem() != EnumGem.NONE) {
-				spawnAsEntity(worldIn, pos, new ItemStack(GlassHearts.inst.GEM, 1, ArrayUtils.indexOf(ItemGem.VALID_GEMS, tegh.getGem())));
+				spawnAsEntity(worldIn, pos, tegh.getGem().toItemStack());
 			}
 			GlassHeartWorldData.getDataFor(worldIn).remove(pos);
 		}
