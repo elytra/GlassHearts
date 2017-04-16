@@ -33,6 +33,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
@@ -242,6 +243,12 @@ public class GlassHearts {
 			GlassHeartWorldData data = GlassHeartWorldData.getDataFor(e.world);
 			Set<BlockPos> remove = Collections.emptySet();
 			for (GlassHeartData ghd : data.all()) {
+				if (ghd.getGem() == EnumGem.RUBY && ghd.getLifeforce() == 0 && e.world instanceof WorldServer) {
+					((WorldServer)e.world).spawnParticle(EnumParticleTypes.ITEM_CRACK,
+							ghd.getPos().getX()+0.5, ghd.getPos().getY()+0.5, ghd.getPos().getZ()+0.5, 32,
+							0, 0, 0, 0.2, Item.getIdFromItem(GEM), 1);
+					e.world.playSound(null, ghd.getPos(), SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.BLOCKS, 1f, 2f);
+				}
 				update(ghd, e.world.getTotalWorldTime());
 				if (e.world.isBlockLoaded(ghd.getPos())) {
 					TileEntity te = e.world.getTileEntity(ghd.getPos());
@@ -272,6 +279,9 @@ public class GlassHearts {
 					igh.setLifeforce(igh.getLifeforce()+1);
 				}
 			}
+		} else if (igh.getGem() == EnumGem.RUBY && igh.getLifeforce() == 0) {
+			igh.setGem(EnumGem.NONE);
+			igh.setLifeforce(configGlassHeartCapacity);
 		}
 	}
 	
