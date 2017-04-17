@@ -31,6 +31,7 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 	private int clientLifeforceBuffer = 0;
 	private EnumGlassColor clientColor = EnumGlassColor.NONE;
 	private EnumGem clientGem = EnumGem.NONE;
+	private boolean clientHasBeenFull = false;
 	
 	private String name;
 	
@@ -141,34 +142,32 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 	
 	@Override
 	public int getLifeforce() {
-		if (client) {
-			return clientLifeforce;
-		}
+		if (client) return clientLifeforce;
 		return getData().transform(GlassHeartData::getLifeforce).or(0);
 	}
 	
 	@Override
 	public EnumGlassColor getColor() {
-		if (client) {
-			return clientColor;
-		}
+		if (client) return clientColor;
 		return getData().transform(GlassHeartData::getColor).or(EnumGlassColor.NONE);
 	}
 	
 	@Override
 	public EnumGem getGem() {
-		if (client) {
-			return clientGem;
-		}
+		if (client) return clientGem;
 		return getData().transform(GlassHeartData::getGem).or(EnumGem.NONE);
 	}
 	
 	@Override
 	public int getLifeforceBuffer() {
-		if (client) {
-			return clientLifeforceBuffer;
-		}
+		if (client) return clientLifeforceBuffer;
 		return getData().transform(GlassHeartData::getLifeforceBuffer).or(0);
+	}
+	
+	@Override
+	public boolean hasBeenFull() {
+		if (client) return clientHasBeenFull;
+		return getData().transform(GlassHeartData::hasBeenFull).or(false);
 	}
 	
 	public void setName(String name) {
@@ -181,32 +180,55 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 	public void setLifeforce(int lifeforce) {
 		if (client) this.clientLifeforce = lifeforce;
 		if (!hasWorld() || getWorld().isRemote) return;
+		int oldLifeforce = getLifeforce();
 		getOrCreateData().setLifeforce(lifeforce);
-		GlassHearts.sendUpdatePacket(this);
+		if (oldLifeforce != lifeforce) {
+			GlassHearts.sendUpdatePacket(this);
+		}
 	}
 	
 	@Override
 	public void setColor(EnumGlassColor color) {
 		if (client) this.clientColor = color;
 		if (!hasWorld() || getWorld().isRemote) return;
+		EnumGlassColor oldColor = getColor();
 		getOrCreateData().setColor(color);
-		GlassHearts.sendUpdatePacket(this);
+		if (oldColor != color) {
+			GlassHearts.sendUpdatePacket(this);
+		}
 	}
 	
 	@Override
 	public void setGem(EnumGem gem) {
 		if (client) this.clientGem = gem;
 		if (!hasWorld() || getWorld().isRemote) return;
+		EnumGem oldGem = getGem();
 		getOrCreateData().setGem(gem);
-		GlassHearts.sendUpdatePacket(this);
+		if (oldGem != gem) {
+			GlassHearts.sendUpdatePacket(this);
+		}
 	}
 	
 	@Override
 	public void setLifeforceBuffer(int lifeforceBuffer) {
 		if (client) this.clientLifeforceBuffer = lifeforceBuffer;
 		if (!hasWorld() || getWorld().isRemote) return;
+		int oldLifeforceBuffer = getLifeforceBuffer();
 		getOrCreateData().setLifeforceBuffer(lifeforceBuffer);
-		GlassHearts.sendUpdatePacket(this);
+		if (oldLifeforceBuffer != lifeforceBuffer) {
+			GlassHearts.sendUpdatePacket(this);
+		}
+	}
+	
+	@Override
+	public void setHasBeenFull(boolean hasBeenFull) {
+		if (client) this.clientHasBeenFull = hasBeenFull;
+		if (!hasWorld() || getWorld().isRemote) return;
+		boolean oldHasBeenFull = hasBeenFull();
+		getOrCreateData().setHasBeenFull(hasBeenFull);
+		if (oldHasBeenFull != hasBeenFull) {
+			GlassHearts.sendUpdatePacket(this);
+		}
 	}
 	
 	public void setClient(boolean client) {

@@ -1,7 +1,14 @@
 package com.elytradev.glasshearts.client;
 
 
+import java.util.List;
 import java.util.Random;
+
+import org.lwjgl.opengl.GL11;
+
+import com.elytradev.glasshearts.EnumGlassColor;
+import com.elytradev.glasshearts.HeartContainer;
+import com.google.common.collect.Lists;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -10,23 +17,22 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.attributes.IAttributeInstance;
+import net.minecraft.entity.passive.EntitySheep;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.MobEffects;
-import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.GuiIngameForge;
 
 public class HeartRenderer extends Gui {
 
-	private static final ResourceLocation ICONS = new ResourceLocation("minecraft", "textures/gui/icons.png");
-	private static final ResourceLocation HEART_OVERLAYS = new ResourceLocation("glasshearts", "textures/gui/heart_overlays.png");
-	private static final ResourceLocation GEM_OVERLAYS = new ResourceLocation("glasshearts", "textures/gui/gem_overlays.png");
+	public List<HeartContainer> containers = Lists.newArrayList();
+	
+	public static final ResourceLocation TEX = new ResourceLocation("glasshearts", "textures/gui/heart.png");
+	public static final int TEXTURE_WIDTH = 108;
+	public static final int TEXTURE_HEIGHT = 126;
 	
 	private int healthUpdateCounter, updateCounter;
-	private float playerHealth, lastPlayerHealth;
 	private long lastSystemTime;
 	private Random rand = new Random(0);
 	
@@ -47,7 +53,7 @@ public class HeartRenderer extends Gui {
 	
 	public void renderHealth(ScaledResolution res, float partialTicks) {
 		Minecraft mc = Minecraft.getMinecraft();
-		mc.mcProfiler.startSection("glassHearts");
+		mc.mcProfiler.startSection("glasshearts:healthbar");
 		
 		int width = res.getScaledWidth();
 		int height = res.getScaledHeight();
@@ -56,38 +62,31 @@ public class HeartRenderer extends Gui {
 		GlStateManager.pushMatrix();
 
 		EntityPlayer player = (EntityPlayer) mc.getRenderViewEntity();
-		float health = player.getHealth();
-		boolean highlight = healthUpdateCounter > updateCounter
-				&& (healthUpdateCounter - updateCounter) / 3 % 2 == 1;
+		boolean highlight = healthUpdateCounter > (long)updateCounter && (healthUpdateCounter - (long)updateCounter) / 3 % 2 == 1;
 
-		if (health < playerHealth && player.hurtResistantTime > 0) {
+		boolean anyNotEqual = false;
+		for (HeartContainer hc : containers) {
+			if (hc.getLastFillAmount() != hc.getFillAmount()) {
+				anyNotEqual = true;
+				break;
+			}
+		}
+		
+		if (anyNotEqual && player.hurtResistantTime > 0) {
 			lastSystemTime = Minecraft.getSystemTime();
 			healthUpdateCounter = updateCounter + 20;
-		} else if (health > playerHealth && player.hurtResistantTime > 0) {
-			lastSystemTime = Minecraft.getSystemTime();
-			healthUpdateCounter = updateCounter + 10;
 		}
 
-		if (Minecraft.getSystemTime() - this.lastSystemTime > 1000L) {
-			playerHealth = health;
-			lastPlayerHealth = health;
+		if (Minecraft.getSystemTime() - lastSystemTime > 1000L) {
 			lastSystemTime = Minecraft.getSystemTime();
+			for (HeartContainer hc : containers) {
+				hc.setLastFillAmount(hc.getFillAmount());
+			}
 		}
 		
-		playerHealth = health;
-		float healthLast = lastPlayerHealth;
-
-		IAttributeInstance attrMaxHealth = player.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH);
-		float healthMax = (float) attrMaxHealth.getAttributeValue();
-		float absorb = player.getAbsorptionAmount();
-		PotionEffect absorption = mc.player.getActivePotionEffect(MobEffects.ABSORPTION);
-		int maxAbsorbHearts = absorption == null ? 0 : (absorption.getAmplifier()+1)*2;
-
-		int healthRows = MathHelper.ceil((healthMax + (maxAbsorbHearts*2)) / 2f / (useMoreSpace ? 22f : 10f));
+		int healthRows = MathHelper.ceil(containers.size()/10f);
 		int rowHeight = Math.max(10 - (healthRows - 2), 3);
 
-		int maxHearts = MathHelper.ceil(healthMax/2f);
-		
 		rand.setSeed((updateCounter) * 312871L);
 
 		int left = width / 2 - 91;
@@ -99,42 +98,23 @@ public class HeartRenderer extends Gui {
 
 		float regen = -1;
 		if (player.isPotionActive(MobEffects.REGENERATION)) {
-			regen = (updateCounter+partialTicks) % (maxHearts+15);
+			regen = (updateCounter+partialTicks) % (containers.size()+15);
 		}
 
-		final int TOP = 9 * (mc.world.getWorldInfo().isHardcoreModeEnabled() ? 5 : 0);
-		final int BACKGROUND = (highlight ? 25 : 16);
-		int MARGIN = 16;
-		if (player.isPotionActive(MobEffects.POISON)) {
-			MARGIN += 36;
-		} else if (player.isPotionActive(MobEffects.WITHER)) {
-			MARGIN += 72;
-		}
+		// we can still rely on the player's health value as a total
+		boolean shake = player.getHealth() <= player.getMaxHealth()/5f;
+		
+		int defaultX = left+(((containers.size()+9)%10)*8);
+		int defaultY = top-(healthRows-1)*rowHeight;
+		
+		int x = defaultX;
+		int y = defaultY;
 		
 		
-		float hearts = health/2f;
-		float lastHearts = healthLast/2f;
-		
-		float absorbHearts = absorb/2f;
-		
-		// absorption
-		drawHealthBar(false, rowHeight, left, top, TOP, BACKGROUND, 160, absorbHearts, absorbHearts, maxAbsorbHearts, -1, false, maxHearts);
-		// normal health
-		drawHealthBar(highlight, rowHeight, left, top, TOP, BACKGROUND, MARGIN+36, hearts, lastHearts, maxHearts, regen, true, 0);
-		
-		GlStateManager.disableBlend();
-		GlStateManager.popMatrix();
-		mc.mcProfiler.endSection();
-	}
-
-	public void drawHealthBar(boolean highlight, int rowHeight, int left, int top, final int v, final int backgroundU,
-			int foregroundU, float hearts, float lastHearts, int maxHearts, float regen, boolean doShake, int start) {
-		float fifth = (maxHearts/5f);
-		for (int j = (maxHearts-1)+start; j >= start; j--) {
-			int i = (j - start);
-			int x = left+((j%(useMoreSpace?22:10))*8);
-			float y = top-(rowHeight*(j/(useMoreSpace?22:10)));
-			if (doShake && hearts <= fifth) {
+		for (int i = containers.size()-1; i >= 0; i--) {
+			HeartContainer hc = containers.get(i);
+			int oldY = y;
+			if (shake) {
 				y += rand.nextInt(2);
 			}
 			if (regen != -1) {
@@ -146,52 +126,80 @@ public class HeartRenderer extends Gui {
 				}
 				
 			}
-			/*if (i+1 <= fifth) {
-				GlStateManager.color(1f, 0.5f, 0f);
-				drawTexturedModalRect(x, y, backgroundU+18, v, 9, 9);
-				GlStateManager.color(1, 1, 1);
-			} else if (MathHelper.ceiling_float_int(fifth) == (i+1)) {
-				float ofs = (fifth%1)*9;
-				GlStateManager.color(1f, 0.5f, 0f);
-				drawTexturedModalRect(x, y, backgroundU+18, v, ofs, 9);
-				GlStateManager.color(1, 1, 1);
-				drawTexturedModalRect(x+ofs, y, backgroundU+ofs, v, 9-ofs, 9);
-			} else {*/
-				drawTexturedModalRect(x, y, backgroundU, v, 9, 9);
-			//}
-			if (hearts >= (i+1)) {
-				drawTexturedModalRect(x, y, foregroundU, v, 9, 9);
-			} else if (MathHelper.ceil(hearts) == (i+1)) {
-				drawTexturedModalRect(x, y, foregroundU, v, (hearts%1)*9, 9);
+			
+			mc.getTextureManager().bindTexture(TEX);
+			
+			int bgFgIdx;
+			if (hc.getGlassColor() == null) {
+				bgFgIdx = 0;
+			} else if (hc.getGlassColor() == EnumGlassColor.NONE) {
+				bgFgIdx = 1;
+			} else {
+				bgFgIdx = 2;
 			}
-			if (highlight && (i+1) >= MathHelper.ceil(hearts) && hearts < lastHearts) {
-				float w = 0;
-				float ofs = 0;
-				if (lastHearts >= (i+1) && (i+1) > hearts) {
-					w = 9;
-				} else if (MathHelper.ceil(lastHearts) == (i+1)) {
-					w = (lastHearts%1)*9;
-				}
-				if (MathHelper.ceil(hearts) == (i+1)) {
-					ofs = (hearts%1)*9;
-					w -= ofs;
-				}
-				drawTexturedModalRect(x+ofs, y, foregroundU+18+ofs, v, w, 9);
+			drawModalRectWithCustomSizedTexture(x, y, 9+((bgFgIdx*18)+(highlight?9:0)), 27, 9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			
+			int fillIdx;
+			if (player.isPotionActive(MobEffects.WITHER)) {
+				fillIdx = 2;
+			} else if (player.isPotionActive(MobEffects.POISON)) {
+				fillIdx = 1;
+			} else {
+				fillIdx = 0;
+			}
+			if (highlight) {
+				drawModalRectWithCustomSizedTexture(x, y, 9+(hc.getDecay()*9), 72+((fillIdx*18)+9), hc.getLastFillAmount()*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			}
+			drawModalRectWithCustomSizedTexture(x, y, 9+(hc.getDecay()*9), 72+((fillIdx*18)), hc.getFillAmount()*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			
+			if (hc.getGlassColor() != null && hc.getGlassColor().dye != null) {
+				float[] fleece = EntitySheep.getDyeRgb(hc.getGlassColor().dye);
+				GlStateManager.color(fleece[0], fleece[1], fleece[2]);
+			}
+			float ofsL = 0.5f;
+			float ofsR = 0.5f;
+			if (x - 8 < left) {
+				ofsL = 0;
+			} else if (x == left+72 || (y == defaultY && x == defaultX)) {
+				ofsR = 0;
+			}
+			float overlay = 1;
+			if (hc.getGlassColor() == null) {
+				overlay = hc.getFillAmount();
+			}
+			drawModalRectWithCustomSizedTexture(x+ofsL, y, 9+ofsL+((bgFgIdx*18)+(highlight?9:0)), 36, (overlay*9)-(ofsL+ofsR), 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			GlStateManager.color(1, 1, 1);
+			if (mc.world.getWorldInfo().isHardcoreModeEnabled() && hc.getGlassColor() == null) {
+				drawModalRectWithCustomSizedTexture(x, y, 99, 72+((fillIdx*18)+(highlight?9:0)), hc.getFillAmount()*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			}
+			drawModalRectWithCustomSizedTexture(x, y, 9+(hc.getGem().ordinal()*9), 54, 9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			
+			y = oldY;
+			
+			x -= 8;
+			if (x < left) {
+				x = left+72;
+				y += rowHeight;
 			}
 		}
+		
+		GlStateManager.popMatrix();
+		GlStateManager.disableBlend();
+		
+		mc.mcProfiler.endSection();
 	}
-	
-	public void drawTexturedModalRect(float x, float y, float textureX, float textureY, float width, float height) {
-		float xScale = 1/256f;
-		float yScale = 1/256f;
-		Tessellator tessellator = Tessellator.getInstance();
-		VertexBuffer worldrenderer = tessellator.getBuffer();
-		worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX);
-		worldrenderer.pos(x + 0, y + height, zLevel).tex((textureX + 0) * xScale, (textureY + height) * yScale).endVertex();
-		worldrenderer.pos(x + width, y + height, zLevel).tex((textureX + width) * xScale, (textureY + height) * yScale).endVertex();
-		worldrenderer.pos(x + width, y + 0, zLevel).tex((textureX + width) * xScale, (textureY + 0) * yScale).endVertex();
-		worldrenderer.pos(x + 0, y + 0, zLevel).tex((textureX + 0) * xScale, (textureY + 0) * yScale).endVertex();
-		tessellator.draw();
+
+	public static void drawModalRectWithCustomSizedTexture(float x, float y, float u, float v, float width, float height, float textureWidth, float textureHeight) {
+		float xScale = 1 / textureWidth;
+		float yScale = 1 / textureHeight;
+		Tessellator tess = Tessellator.getInstance();
+		VertexBuffer vb = tess.getBuffer();
+		vb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+		vb.pos(x,         y + height, 0).tex( u          * xScale, (v + height) * yScale).endVertex();
+		vb.pos(x + width, y + height, 0).tex((u + width) * xScale, (v + height) * yScale).endVertex();
+		vb.pos(x + width, y         , 0).tex((u + width) * xScale,  v           * yScale).endVertex();
+		vb.pos( x      ,  y         , 0).tex( u          * xScale,  v           * yScale).endVertex();
+		tess.draw();
 	}
 
 }

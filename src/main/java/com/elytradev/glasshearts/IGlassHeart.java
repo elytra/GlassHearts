@@ -8,9 +8,11 @@ public interface IGlassHeart {
 	EnumGem getGem();
 	EnumGlassColor getColor();
 	BlockPos getPos();
+	boolean hasBeenFull();
 	
 	void setLifeforce(int lifeforce);
 	void setLifeforceBuffer(int lifeforceBuffer);
 	void setGem(EnumGem gem);
 	void setColor(EnumGlassColor color);
+	void setHasBeenFull(boolean hasBeenFull);
 }

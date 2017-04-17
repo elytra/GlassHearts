@@ -2,20 +2,23 @@ package com.elytradev.glasshearts.block;
 
 import org.apache.logging.log4j.LogManager;
 import com.elytradev.glasshearts.EnumGem;
+import com.elytradev.glasshearts.EnumGemState;
 import com.elytradev.glasshearts.EnumGlassColor;
 import com.elytradev.glasshearts.GlassHeartWorldData;
 import com.elytradev.glasshearts.GlassHearts;
+import com.elytradev.glasshearts.network.ParticleEffectMessage;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
@@ -28,8 +31,11 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.Chunk.EnumCreateEntityType;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
@@ -43,7 +49,7 @@ public class BlockGlassHeart extends Block {
 		super(Material.GLASS);
 		setHardness(0.5f);
 		setResistance(0.3f);
-		setSoundType(SoundType.GLASS);
+		setSoundType(new SoundType(1f, 1f, SoundEvents.BLOCK_GLASS_HIT, SoundEvents.BLOCK_GLASS_STEP, SoundEvents.BLOCK_GLASS_PLACE, SoundEvents.BLOCK_GLASS_HIT, SoundEvents.BLOCK_GLASS_FALL));
 		setLightOpacity(0);
 	}
 	
@@ -63,12 +69,30 @@ public class BlockGlassHeart extends Block {
 	}
 	
 	@Override
+	public boolean addLandingEffects(IBlockState state, WorldServer worldObj, BlockPos blockPosition, IBlockState iblockstate, EntityLivingBase entity, int numberOfParticles) {
+		return true;
+	}
+	
+	@Override
+	public boolean addDestroyEffects(World world, BlockPos pos, ParticleManager manager) {
+		return true;
+	}
+	
+	@Override
+	public boolean addHitEffects(IBlockState state, World worldObj, RayTraceResult target, ParticleManager manager) {
+		return true;
+	}
+	
+	@Override
 	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
 		ItemStack stack = playerIn.getHeldItem(hand);
 		TileEntity te = worldIn.getTileEntity(pos);
 		if (te instanceof TileEntityGlassHeart) {
 			TileEntityGlassHeart tegh = (TileEntityGlassHeart)te;
 			if (stack.isEmpty() && tegh.getGem() != EnumGem.NONE) {
+				if (tegh.getGem().getState(tegh) == EnumGemState.ACTIVE_CURSED) {
+					return false;
+				}
 				if (!worldIn.isRemote) {
 					spawnAsEntity(worldIn, pos, tegh.getGem().toItemStack());
 					tegh.setGem(EnumGem.NONE);
@@ -76,6 +100,9 @@ public class BlockGlassHeart extends Block {
 				}
 				return true;
 			} else if (stack.getItem() == Items.DIAMOND || stack.getItem() == Items.EMERALD || stack.getItem() == GlassHearts.inst.GEM) {
+				if (tegh.getGem().getState(tegh) == EnumGemState.ACTIVE_CURSED) {
+					return false;
+				}
 				EnumGem eg = EnumGem.fromItemStack(stack);
 				if (eg != null) {
 					if (!worldIn.isRemote) {
@@ -88,7 +115,12 @@ public class BlockGlassHeart extends Block {
 					}
 					return true;
 				}
-			} else if (tegh.getLifeforceBuffer() < GlassHearts.inst.configGlassHeartCapacity) {
+			} else if (stack.getItem() == GlassHearts.inst.STAFF) {
+				stack.damageItem(1, playerIn);
+				worldIn.playSound(null, pos, GlassHearts.inst.ATTUNE, SoundCategory.PLAYERS, 1f, 2f);
+				new ParticleEffectMessage(pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5, playerIn, 1).sendToAllWatchingAndSelf(playerIn);
+				return true;
+			} else if (stack.getItem() != GlassHearts.inst.LIFEFORCE_BOTTLE && tegh.getLifeforceBuffer() < GlassHearts.inst.configGlassHeartCapacity) {
 				try {
 					if (stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
 						IFluidHandlerItem ifhi = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
@@ -122,6 +154,27 @@ public class BlockGlassHeart extends Block {
 	}
 	
 	@Override
+	public void onBlockExploded(World world, BlockPos pos, Explosion explosion) {
+		if (!world.isRemote) {
+			GlassHeartWorldData.getDataFor(world).remove(pos);
+			world.removeTileEntity(pos);
+		}
+		super.onBlockExploded(world, pos, explosion);
+	}
+	
+	@Override
+	public float getBlockHardness(IBlockState blockState, World worldIn, BlockPos pos) {
+		TileEntity te = worldIn.getTileEntity(pos);
+		if (te instanceof TileEntityGlassHeart) {
+			TileEntityGlassHeart tegh = (TileEntityGlassHeart)te;
+			if (tegh.getGem().getState(tegh) == EnumGemState.ACTIVE_CURSED) {
+				return -1;
+			}
+		}
+		return super.getBlockHardness(blockState, worldIn, pos);
+	}
+	
+	@Override
 	public void onBlockPlacedBy(World worldIn, BlockPos pos, IBlockState state, EntityLivingBase placer, ItemStack stack) {
 		super.onBlockPlacedBy(worldIn, pos, state, placer, stack);
 		TileEntity te = worldIn.getTileEntity(pos);
@@ -129,7 +182,7 @@ public class BlockGlassHeart extends Block {
 			TileEntityGlassHeart tegh = (TileEntityGlassHeart)te;
 			if (stack.getItem() == Item.getItemFromBlock(GlassHearts.inst.GLASS_HEART)) {
 				int meta = stack.getMetadata();
-				EnumGlassColor egc = EnumGlassColor.values()[meta%EnumGlassColor.values().length];;
+				EnumGlassColor egc = EnumGlassColor.values()[meta%EnumGlassColor.values().length];
 				tegh.setColor(egc);
 				if (stack.hasDisplayName()) {
 					tegh.setName(stack.getDisplayName());
@@ -140,16 +193,28 @@ public class BlockGlassHeart extends Block {
 	
 	@Override
 	public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
-		TileEntity te = worldIn.getTileEntity(pos);
+		boolean placeLiquid = false;
+		TileEntity te = worldIn.getChunkFromBlockCoords(pos).getTileEntity(pos, EnumCreateEntityType.CHECK);
 		if (!worldIn.isRemote && te instanceof TileEntityGlassHeart) {
 			TileEntityGlassHeart tegh = (TileEntityGlassHeart)te;
 			spawnAsEntity(worldIn, pos, getPickBlock(worldIn.getBlockState(pos), null, worldIn, pos, null));
 			if (tegh.getGem() != EnumGem.NONE) {
 				spawnAsEntity(worldIn, pos, tegh.getGem().toItemStack());
 			}
+			if (tegh.getLifeforce()+tegh.getLifeforceBuffer() > 1000) {
+				placeLiquid = true;
+			}
+			if (tegh.getColor() == EnumGlassColor.NONE) {
+				worldIn.playEvent(2001, pos, Block.getIdFromBlock(Blocks.GLASS));
+			} else {
+				worldIn.playEvent(2001, pos, (tegh.getColor().ordinal()-1 << 12) | Block.getIdFromBlock(Blocks.STAINED_GLASS));
+			}
 			GlassHeartWorldData.getDataFor(worldIn).remove(pos);
 		}
 		super.breakBlock(worldIn, pos, state);
+		if (placeLiquid) {
+			worldIn.setBlockState(pos, GlassHearts.inst.LIFEFORCE_BLOCK.getDefaultState());
+		}
 	}
 	
 	@Override
@@ -173,6 +238,11 @@ public class BlockGlassHeart extends Block {
 	@Override
 	public EnumBlockRenderType getRenderType(IBlockState state) {
 		return EnumBlockRenderType.ENTITYBLOCK_ANIMATED;
+	}
+	
+	@Override
+	public boolean canDropFromExplosion(Explosion explosionIn) {
+		return false;
 	}
 	
 	@Override

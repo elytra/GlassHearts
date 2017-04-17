@@ -1,10 +1,10 @@
 package com.elytradev.glasshearts;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
-
 import com.elytradev.concrete.network.NetworkContext;
 import com.elytradev.concrete.reflect.invoker.Invoker;
 import com.elytradev.concrete.reflect.invoker.Invokers;
@@ -12,14 +12,18 @@ import com.elytradev.glasshearts.block.BlockGlassHeart;
 import com.elytradev.glasshearts.item.ItemBlockGlassHeart;
 import com.elytradev.glasshearts.item.ItemGem;
 import com.elytradev.glasshearts.item.ItemLifeforceBottle;
-import com.elytradev.glasshearts.network.SapEffectMessage;
+import com.elytradev.glasshearts.item.ItemStaff;
+import com.elytradev.glasshearts.network.ParticleEffectMessage;
+import com.elytradev.glasshearts.network.UpdateHeartsMessage;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
 import com.google.common.base.Predicates;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EnumCreatureAttribute;
 import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.entity.player.EntityPlayer;
@@ -38,6 +42,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -46,6 +51,8 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingHealEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickItem;
 import net.minecraftforge.fluids.BlockFluidClassic;
 import net.minecraftforge.fluids.Fluid;
@@ -56,8 +63,10 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.eventhandler.Event.Result;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
@@ -76,7 +85,8 @@ public class GlassHearts {
 	public boolean configOverrideHealthRenderer = true;
 	
 	public int configGlassHeartCapacity = 1000;
-	public int configLifeforceBottleSize = 333;
+	public int configLifeforceBottleSize = 400;
+	public int configGlassHeartFillRate = 10;
 	public boolean configCreepersSeekHearts = true;
 	public boolean configCreeperFakeExplosions = false;
 	
@@ -89,20 +99,21 @@ public class GlassHearts {
 	public BlockFluidClassic LIFEFORCE_BLOCK;
 	
 	public EnchantmentSapping SAPPING;
+	
 	public SoundEvent SAP;
+	public SoundEvent ATTUNE;
 	
 	public ItemLifeforceBottle LIFEFORCE_BOTTLE;
 	public ItemGem GEM;
+	public ItemStaff STAFF;
 	
 	public BlockGlassHeart GLASS_HEART;
 	
 	public CreativeTabs CREATIVE_TAB = new CreativeTabs("glass_heart") {
-		
 		@Override
 		public ItemStack getTabIconItem() {
 			return new ItemStack(GLASS_HEART);
 		}
-		
 	};
 	
 	private Invoker rayTrace = Invokers.findMethod(Item.class, null, new String[] {"func_77621_a", "rayTrace", "a"}, World.class, EntityPlayer.class, boolean.class);
@@ -129,10 +140,15 @@ public class GlassHearts {
 				  "The maximum amount of Lifeforce a glass heart can hold, in mB.\n"
 				+ "This directly corresponds to how much Lifeforce it takes to\n"
 				+ "bring a heart container back to full, or fill a new container.\n");
-		configLifeforceBottleSize = config.getInt("lifeforceBottleSize", "Balance", 333, 0, Integer.MAX_VALUE,
+		configLifeforceBottleSize = config.getInt("lifeforceBottleSize", "Balance", 400, 0, Integer.MAX_VALUE,
 				  "How much Lifeforce is in a Bottle of Lifeforce, in mB.\n"
 				+ "You receive a Bottle of Lifeforce when the Sapping enchant\n"
 				+ "procs.\n");
+		configGlassHeartFillRate = config.getInt("glassHeartFillRate", "Balance", 10, 1, Short.MAX_VALUE,
+				  "The maximum amount of Lifeforce transferred from the buffer\n"
+				+ "tank to the main tank every tick. Keeping this low prevents\n"
+				+ "players from becoming invincible by refilling their glass\n"
+				+ "hearts quickly.");
 		configCreepersSeekHearts = config.getBoolean("creepersSeekHearts", "Balance", true,
 				  "If true, Creepers will seek out Glass Hearts and explode on\n"
 				+ "them. If mobGriefing is false, the heart will still be\n"
@@ -144,7 +160,8 @@ public class GlassHearts {
 		config.save();
 		
 		NETWORK = NetworkContext.forChannel("GlassHearts");
-		NETWORK.register(SapEffectMessage.class);
+		NETWORK.register(ParticleEffectMessage.class);
+		NETWORK.register(UpdateHeartsMessage.class);
 		
 		LIFEFORCE = new Fluid("glasshearts.lifeforce", new ResourceLocation("glasshearts", "blocks/lifeforce_still"), new ResourceLocation("glasshearts", "blocks/lifeforce_flow"));
 		LIFEFORCE.setViscosity(750);
@@ -178,6 +195,11 @@ public class GlassHearts {
 			OreDictionary.registerOre(gem.oreDictionary, new ItemStack(GEM, 1, i));
 		}
 		
+		STAFF = new ItemStaff();
+		STAFF.setRegistryName("staff");
+		STAFF.setCreativeTab(CREATIVE_TAB);
+		GameRegistry.register(STAFF);
+		
 		GLASS_HEART = new BlockGlassHeart();
 		GLASS_HEART.setRegistryName("glass_heart");
 		GLASS_HEART.setCreativeTab(CREATIVE_TAB);
@@ -188,6 +210,18 @@ public class GlassHearts {
 		SAP.setRegistryName("sap");
 		GameRegistry.register(SAP);
 		
+		ATTUNE = new SoundEvent(new ResourceLocation("glasshearts", "attune"));
+		ATTUNE.setRegistryName("attune");
+		GameRegistry.register(ATTUNE);
+		
+		
+		GameRegistry.addRecipe(new ShapedOreRecipe(STAFF,
+				"  o",
+				" //",
+				"/  ",
+				
+				'/', Items.BLAZE_ROD,
+				'o', "gemOpal"));
 		
 		GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(GLASS_HEART, 1, 0),
 				"g g",
@@ -238,12 +272,42 @@ public class GlassHearts {
 	}
 	
 	@SubscribeEvent
+	public void onLogIn(PlayerLoggedInEvent e) {
+		resyncHealth(e.player, 0);
+	}
+	
+	@SubscribeEvent(priority=EventPriority.LOWEST)
+	public void onDamage(LivingHurtEvent e) {
+		if (e.getEntityLiving() instanceof EntityPlayer) {
+			resyncHealth((EntityPlayer)e.getEntityLiving(), -e.getAmount());
+		}
+	}
+	
+	@SubscribeEvent(priority=EventPriority.LOWEST)
+	public void onHeal(LivingHealEvent e) {
+		if (e.getEntityLiving() instanceof EntityPlayer) {
+			resyncHealth((EntityPlayer)e.getEntityLiving(), e.getAmount());
+		}
+	}
+	
+	public void resyncHealth(EntityPlayer player, float change) {
+		List<HeartContainer> li = Lists.newArrayList();
+		float hp = (player.getHealth()+change)/2;
+		System.out.println(hp);
+		for (int i = 0; i < MathHelper.ceil(player.getMaxHealth()/2); i++) {
+			li.add(new HeartContainer(null, EnumGem.NONE, 0, Math.max(Math.min(hp, 1), 0)));
+			hp--;
+		}
+		new UpdateHeartsMessage(0, true, li).sendTo(player);
+	}
+	
+	@SubscribeEvent
 	public void onWorldTick(WorldTickEvent e) {
 		if (e.phase == Phase.START) {
 			GlassHeartWorldData data = GlassHeartWorldData.getDataFor(e.world);
 			Set<BlockPos> remove = Collections.emptySet();
 			for (GlassHeartData ghd : data.all()) {
-				if (ghd.getGem() == EnumGem.RUBY && ghd.getLifeforce() == 0 && e.world instanceof WorldServer) {
+				if (ghd.getGem() == EnumGem.RUBY && ghd.getLifeforce() == 0 && ghd.hasBeenFull() && e.world instanceof WorldServer) {
 					((WorldServer)e.world).spawnParticle(EnumParticleTypes.ITEM_CRACK,
 							ghd.getPos().getX()+0.5, ghd.getPos().getY()+0.5, ghd.getPos().getZ()+0.5, 32,
 							0, 0, 0, 0.2, Item.getIdFromItem(GEM), 1);
@@ -269,19 +333,27 @@ public class GlassHearts {
 	
 	public void update(IGlassHeart igh, long ticks) {
 		if (igh.getLifeforceBuffer() > 0 && igh.getLifeforce() < configGlassHeartCapacity) {
-			int amt = Math.min(10, Math.min(igh.getLifeforceBuffer(), configGlassHeartCapacity-igh.getLifeforce()));
+			int amt = Math.min(configGlassHeartFillRate, Math.min(igh.getLifeforceBuffer(), configGlassHeartCapacity-igh.getLifeforce()));
 			igh.setLifeforceBuffer(igh.getLifeforceBuffer()-amt);
 			igh.setLifeforce(igh.getLifeforce()+amt);
 		}
-		if (igh.getGem() == EnumGem.OPAL) {
-			if (ticks%10 == 0) {
-				if (igh.getLifeforce() < configGlassHeartCapacity) {
-					igh.setLifeforce(igh.getLifeforce()+1);
+		if (igh.getGem().getState(igh) != EnumGemState.INACTIVE) {
+			if (igh.getGem() == EnumGem.OPAL) {
+				if (ticks%10 == 0) {
+					if (igh.getLifeforce() < configGlassHeartCapacity) {
+						igh.setLifeforce(igh.getLifeforce()+1);
+					}
 				}
+			} else if (igh.getGem() == EnumGem.RUBY && igh.getLifeforce() == 0) {
+				igh.setGem(EnumGem.NONE);
+				igh.setLifeforce(configGlassHeartCapacity);
 			}
-		} else if (igh.getGem() == EnumGem.RUBY && igh.getLifeforce() == 0) {
-			igh.setGem(EnumGem.NONE);
-			igh.setLifeforce(configGlassHeartCapacity);
+		}
+		if (igh.getLifeforce() == 0) {
+			igh.setHasBeenFull(false);
+		}
+		if (igh.getLifeforce() == configGlassHeartCapacity) {
+			igh.setHasBeenFull(true);
 		}
 	}
 	
@@ -319,7 +391,8 @@ public class GlassHearts {
 								p.dropItem(LIFEFORCE_BOTTLE, 1);
 							}
 							p.world.playSound(null, p.posX, p.posY, p.posZ, SAP, SoundCategory.NEUTRAL, 1f, 1f);
-							new SapEffectMessage(e.getEntityLiving(), p).sendToAllWatching(e.getEntityLiving());
+							EntityLivingBase el = e.getEntityLiving();
+							new ParticleEffectMessage(el.posX, el.posY, el.posZ, p, 0).sendToAllWatching(el);
 						}
 					}
 				}
@@ -362,6 +435,8 @@ public class GlassHearts {
 	
 	public static void sendUpdatePacket(TileEntity te, NBTTagCompound nbt) {
 		if (!te.hasWorld() || te.getWorld().isRemote) return;
+		Thread.dumpStack();
+		System.out.println("SYNC "+te.getPos().getX()+", "+te.getPos().getY()+", "+te.getPos().getZ());
 		WorldServer ws = (WorldServer)te.getWorld();
 		Chunk c = te.getWorld().getChunkFromBlockCoords(te.getPos());
 		SPacketUpdateTileEntity packet = new SPacketUpdateTileEntity(te.getPos(), te.getBlockMetadata(), nbt);

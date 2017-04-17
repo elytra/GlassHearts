@@ -17,6 +17,7 @@ public class GlassHeartData implements INBTSerializable<NBTTagCompound>, IGlassH
 	private EnumGem gem;
 	private int lifeforce;
 	private int lifeforceBuffer;
+	private boolean hasBeenFull;
 	
 	
 	public GlassHeartData(GlassHeartWorldData parent) {
@@ -58,6 +59,10 @@ public class GlassHeartData implements INBTSerializable<NBTTagCompound>, IGlassH
 		return lifeforceBuffer;
 	}
 	
+	public boolean hasBeenFull() {
+		return hasBeenFull;
+	}
+	
 	
 	@Override
 	public void setColor(EnumGlassColor color) {
@@ -74,6 +79,11 @@ public class GlassHeartData implements INBTSerializable<NBTTagCompound>, IGlassH
 	@Override
 	public void setLifeforce(int lifeforce) {
 		this.lifeforce = lifeforce;
+		parent.markDirty();
+	}
+	
+	public void setHasBeenFull(boolean hasBeenFull) {
+		this.hasBeenFull = hasBeenFull;
 		parent.markDirty();
 	}
 	
@@ -95,6 +105,7 @@ public class GlassHeartData implements INBTSerializable<NBTTagCompound>, IGlassH
 		gem = Enums.getIfPresent(EnumGem.class, nbt.getString("Gem").toUpperCase(Locale.ROOT)).or(EnumGem.NONE);
 		lifeforce = Math.max(0, Math.min(nbt.getShort("Lifeforce"), GlassHearts.inst.configGlassHeartCapacity));
 		lifeforceBuffer = Math.max(0, Math.min(nbt.getShort("LifeforceBuffer"), GlassHearts.inst.configGlassHeartCapacity-lifeforce));
+		hasBeenFull = nbt.getBoolean("HasBeenFull");
 	}
 	
 	@Override
@@ -105,6 +116,7 @@ public class GlassHeartData implements INBTSerializable<NBTTagCompound>, IGlassH
 		tag.setString("Gem", gem.getName());
 		tag.setShort("Lifeforce", (short)lifeforce);
 		tag.setShort("LifeforceBuffer", (short)lifeforceBuffer);
+		tag.setBoolean("HasBeenFull", hasBeenFull);
 		return tag;
 	}
 	
