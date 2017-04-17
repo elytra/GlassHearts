@@ -11,7 +11,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.IStringSerializable;
 
 public enum EnumGem implements IStringSerializable {
-	NONE {
+	NONE(0) {
 		@Override
 		public ItemStack toItemStack() {
 			return ItemStack.EMPTY;
@@ -22,7 +22,7 @@ public enum EnumGem implements IStringSerializable {
 	 * Poison does 2/3 damage while this container is not empty, and poison
 	 * damage to this heart does 1/3 damage. 
 	 */
-	EMERALD {
+	EMERALD(0x41F384) {
 		@Override
 		public ItemStack toItemStack() {
 			return new ItemStack(Items.EMERALD);
@@ -32,51 +32,84 @@ public enum EnumGem implements IStringSerializable {
 	 * Gives you Regeneration when the container is emptied. Note that
 	 * Regeneration does not work on glass hearts.
 	 */
-	AMETHYST,
+	AMETHYST(0x9545E0),
 	/**
 	 * Container immediately refills after being emptied, but the gem shatters.
 	 */
-	RUBY,
+	RUBY(0xBC1B25) {
+		@Override
+		public EnumGemState getState(IGlassHeart igh) {
+			return igh.hasBeenFull() ? EnumGemState.ACTIVE_BENEFICIAL : EnumGemState.INACTIVE;
+		}
+	},
 	/**
 	 * If this container is full, your armor is 40% more effective. If it's
 	 * empty, your armor is 20% less effective.
 	 */
-	DIAMOND {
+	DIAMOND(0x27D9D7) {
 		@Override
 		public ItemStack toItemStack() {
 			return new ItemStack(Items.DIAMOND);
+		}
+		@Override
+		public EnumGemState getState(IGlassHeart igh) {
+			if (igh.getLifeforce() <= 0) {
+				return EnumGemState.ACTIVE_CURSED;
+			}
+			if (igh.getLifeforce() == GlassHearts.inst.configGlassHeartCapacity) {
+				return EnumGemState.ACTIVE_BENEFICIAL;
+			}
+			return EnumGemState.INACTIVE;
 		}
 	},
 	/**
 	 * Gives you Absorption when the container is emptied.
 	 */
-	TOPAZ,
+	TOPAZ(0xE48F00) {
+		@Override
+		public EnumGemState getState(IGlassHeart igh) {
+			return igh.getLifeforce() <= 0 ? EnumGemState.ACTIVE_BENEFICIAL : EnumGemState.INACTIVE;
+		}
+	},
 	/**
 	 * If this container is at least half full, damage dealt will be capped to
 	 * this container only.
 	 */
-	SAPPHIRE,
+	SAPPHIRE(0x1145B5),
 	/**
 	 * Container very slowly refills.
 	 */
-	OPAL,
+	OPAL(0x94BDA8) {
+		@Override
+		public EnumGemState getState(IGlassHeart igh) {
+			return igh.getLifeforceBuffer() <= 0 && igh.getLifeforce() < GlassHearts.inst.configGlassHeartCapacity ? EnumGemState.ACTIVE_BENEFICIAL : EnumGemState.INACTIVE;
+		}
+	},
 	/**
 	 * Wither does 2/3 damage while this container is not empty, and wither
 	 * damage to this heart does 1/3 damage.
 	 */
-	ONYX,
+	ONYX(0x0C0C0C),
 	/**
-	 * 
+	 * Perpetually cursed; cannot be removed and the heart cannot be broken,
+	 * except by explosions.
 	 */
-	AMBER,
+	AMBER(0xFFC300) {
+		@Override
+		public EnumGemState getState(IGlassHeart igh) {
+			return EnumGemState.ACTIVE_CURSED;
+		}
+	},
 	;
 	
 	private final String name;
 	public final String oreDictionary;
+	public final int color;
 	
 	private ItemStack renderingSingleton;
 	
-	private EnumGem() {
+	private EnumGem(int color) {
+		this.color = color;
 		this.name = name().toLowerCase(Locale.ROOT);
 		oreDictionary = "gem"+Character.toString(name().charAt(0))+this.name.substring(1);
 	}
@@ -91,6 +124,10 @@ public enum EnumGem implements IStringSerializable {
 			renderingSingleton = toItemStack();
 		}
 		return renderingSingleton;
+	}
+	
+	public EnumGemState getState(IGlassHeart igh) {
+		return igh.getLifeforce() > 0 ? EnumGemState.ACTIVE_BENEFICIAL : EnumGemState.INACTIVE;
 	}
 	
 	public ItemStack toItemStack() {

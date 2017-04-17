@@ -3,6 +3,7 @@ package com.elytradev.glasshearts.client;
 import org.lwjgl.opengl.GL11;
 
 import com.elytradev.glasshearts.EnumGem;
+import com.elytradev.glasshearts.EnumGemState;
 import com.elytradev.glasshearts.EnumGlassColor;
 import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.block.BlockGlassHeart;
@@ -29,8 +30,14 @@ import net.minecraftforge.client.MinecraftForgeClient;
 
 public class RenderGlassHeart extends TileEntitySpecialRenderer<TileEntityGlassHeart> {
 
+	public static float getAnimTime(TileEntityGlassHeart te, float partialTicks) {
+		return (((te.getWorld().getTotalWorldTime()+te.hashCode())%24000)+partialTicks);
+	}
+	
 	@Override
 	public void renderTileEntityAt(TileEntityGlassHeart te, double x, double y, double z, float partialTicks, int destroyStage) {
+		super.renderTileEntityAt(te, x, y, z, partialTicks, destroyStage);
+		
 		BlockRendererDispatcher brd = Minecraft.getMinecraft().getBlockRendererDispatcher();
 		BlockModelRenderer bmr = brd.getBlockModelRenderer();
 		
@@ -43,7 +50,7 @@ public class RenderGlassHeart extends TileEntitySpecialRenderer<TileEntityGlassH
 		GlStateManager.pushMatrix();
 		
 		GlStateManager.translate(x, y, z);
-		float t = (((te.getWorld().getTotalWorldTime()+te.hashCode())%24000)+partialTicks);
+		float t = getAnimTime(te, partialTicks);
 		GlStateManager.translate(0.5f, 0.5f+(MathHelper.sin(t/12f)/16f), 0.5f);
 		GlStateManager.rotate(t%360, 0, 1, 0);
 		GlStateManager.translate(-0.5f, -0.5f, -0.5f);
@@ -58,32 +65,34 @@ public class RenderGlassHeart extends TileEntitySpecialRenderer<TileEntityGlassH
 			GlStateManager.color(1, 1, 1, 1);
 		}
 		
-		setLightmapDisabled(false);
-		
 		GlStateManager.enableRescaleNormal();
 		GlStateManager.disableBlend();
 		
 		if (MinecraftForgeClient.getRenderPass() == 0) {
-			float partial = te.getLifeforceBuffer() > 0 ? partialTicks : 0;
-			if (te.getGem() == EnumGem.OPAL) {
+			float partial = te.getLifeforceBuffer() > 0 ? partialTicks*GlassHearts.inst.configGlassHeartFillRate : 0;
+			if (te.getGem() == EnumGem.OPAL && te.getGem().getState(te) != EnumGemState.INACTIVE) {
 				partial = ((te.getWorld().getTotalWorldTime()+partialTicks)%10)/10f;
 			}
-			float amt = ((te.getLifeforce()+partial)/GlassHearts.inst.configGlassHeartCapacity)*14f;
-			float bufferAmt = (te.getLifeforceBuffer()/(float)GlassHearts.inst.configGlassHeartCapacity)*14f;
-			
+			float amt = ((te.getLifeforce()+partial)/GlassHearts.inst.configGlassHeartCapacity)*12f;
+			float bufferAmt = (te.getLifeforceBuffer()/(float)GlassHearts.inst.configGlassHeartCapacity)*12f;
+		
 			renderFill(amt);
-
+			if (bufferAmt > 0) {
+				GlStateManager.pushMatrix();
+					GlStateManager.translate(0.5f, 0.5f, 0.5f);
+					GlStateManager.scale(0.99f, 0.99f, 0.99f);
+					GlStateManager.translate(-0.5f, -0.5f, -0.5f);
+					GlStateManager.enableBlend();
+					GlStateManager.tryBlendFuncSeparate(SourceFactor.SRC_ALPHA, DestFactor.ONE,
+							SourceFactor.SRC_ALPHA, DestFactor.ONE);
+					renderFill(bufferAmt+amt);
+				GlStateManager.popMatrix();
+			}
+		}
+		
+		if (MinecraftForgeClient.getRenderPass() == 0) {
 			GlStateManager.pushMatrix();
-			GlStateManager.translate(0.5f, 0.5f, 0.5f);
-			GlStateManager.scale(0.99f, 0.99f, 0.99f);
-			GlStateManager.translate(-0.5f, -0.5f, -0.5f);
-			GlStateManager.enableBlend();
-			GlStateManager.tryBlendFuncSeparate(SourceFactor.SRC_ALPHA, DestFactor.ONE,
-					SourceFactor.SRC_ALPHA, DestFactor.ONE);
-			renderFill(bufferAmt+amt);
-			GlStateManager.popMatrix();
-
-			GlStateManager.pushMatrix();
+				GlStateManager.enableAlpha();
 				GlStateManager.translate(0.5f, 0.55f, 0.5f);
 				GlStateManager.pushMatrix();
 					GlStateManager.translate(0, 0, -0.265f);
@@ -98,7 +107,6 @@ public class RenderGlassHeart extends TileEntitySpecialRenderer<TileEntityGlassH
 			GlStateManager.popMatrix();
 		}
 		
-		GlStateManager.depthMask(true);
 		
 		if (stained) {
 			GlStateManager.enableBlend();
@@ -124,8 +132,6 @@ public class RenderGlassHeart extends TileEntitySpecialRenderer<TileEntityGlassH
 		}
 		
 		GlStateManager.popMatrix();
-		
-		super.renderTileEntityAt(te, x, y, z, partialTicks, destroyStage);
 	}
 
 	private void renderFill(float amt) {
@@ -141,9 +147,13 @@ public class RenderGlassHeart extends TileEntitySpecialRenderer<TileEntityGlassH
 		}
 		if (bottomElement > 0) {
 			renderCube(4, 4, 6, 8, bottomElement, 4, tas, midElement <= 0, false, true);
+			renderCube(4, 4, 6, 2, 0, 4, tas, false, true, false);
+			renderCube(10, 4, 6, 2, 0, 4, tas, false, true, false);
 		}
 		if (midElement > 0) {
 			renderCube(2, 6, 6, 12, midElement, 4, tas, topElement <= 0, false, true);
+			renderCube(2, 6, 6, 2, 0, 4, tas, false, true, false);
+			renderCube(12, 6, 6, 2, 0, 4, tas, false, true, false);
 		}
 		if (topElement > 0) {
 			renderCube(2, 12, 6, 5, topElement, 4, tas, true, false, true);
@@ -168,42 +178,42 @@ public class RenderGlassHeart extends TileEntitySpecialRenderer<TileEntityGlassH
 		
 		float s = 1/16f;
 		
-		vb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+		vb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_NORMAL);
 		if (renderSides) {
-			vb.pos((x+0)*s, (y+h)*s, (z+0)*s).tex(minUX, maxVY).endVertex();
-			vb.pos((x+w)*s, (y+h)*s, (z+0)*s).tex(maxUX, maxVY).endVertex();
-			vb.pos((x+w)*s, (y+0)*s, (z+0)*s).tex(maxUX, minVY).endVertex();
-			vb.pos((x+0)*s, (y+0)*s, (z+0)*s).tex(minUX, minVY).endVertex();
+			vb.pos((x+0)*s, (y+h)*s, (z+0)*s).tex(minUX, maxVY).normal(0, 0, -1).endVertex();
+			vb.pos((x+w)*s, (y+h)*s, (z+0)*s).tex(maxUX, maxVY).normal(0, 0, -1).endVertex();
+			vb.pos((x+w)*s, (y+0)*s, (z+0)*s).tex(maxUX, minVY).normal(0, 0, -1).endVertex();
+			vb.pos((x+0)*s, (y+0)*s, (z+0)*s).tex(minUX, minVY).normal(0, 0, -1).endVertex();
 			
-			vb.pos((x+w)*s, (y+h)*s, (z+d)*s).tex(maxUX, maxVY).endVertex();
-			vb.pos((x+0)*s, (y+h)*s, (z+d)*s).tex(minUX, maxVY).endVertex();
-			vb.pos((x+0)*s, (y+0)*s, (z+d)*s).tex(minUX, minVY).endVertex();
-			vb.pos((x+w)*s, (y+0)*s, (z+d)*s).tex(maxUX, minVY).endVertex();
+			vb.pos((x+w)*s, (y+h)*s, (z+d)*s).tex(maxUX, maxVY).normal(0, 0, 1).endVertex();
+			vb.pos((x+0)*s, (y+h)*s, (z+d)*s).tex(minUX, maxVY).normal(0, 0, 1).endVertex();
+			vb.pos((x+0)*s, (y+0)*s, (z+d)*s).tex(minUX, minVY).normal(0, 0, 1).endVertex();
+			vb.pos((x+w)*s, (y+0)*s, (z+d)*s).tex(maxUX, minVY).normal(0, 0, 1).endVertex();
 			
 			
-			vb.pos((x+0)*s, (y+0)*s, (z+d)*s).tex(maxUZ, minVY).endVertex();
-			vb.pos((x+0)*s, (y+h)*s, (z+d)*s).tex(maxUZ, maxVY).endVertex();
-			vb.pos((x+0)*s, (y+h)*s, (z+0)*s).tex(minUZ, maxVY).endVertex();
-			vb.pos((x+0)*s, (y+0)*s, (z+0)*s).tex(minUZ, minVY).endVertex();
+			vb.pos((x+0)*s, (y+0)*s, (z+d)*s).tex(maxUZ, minVY).normal(-1, 0, 0).endVertex();
+			vb.pos((x+0)*s, (y+h)*s, (z+d)*s).tex(maxUZ, maxVY).normal(-1, 0, 0).endVertex();
+			vb.pos((x+0)*s, (y+h)*s, (z+0)*s).tex(minUZ, maxVY).normal(-1, 0, 0).endVertex();
+			vb.pos((x+0)*s, (y+0)*s, (z+0)*s).tex(minUZ, minVY).normal(-1, 0, 0).endVertex();
 			
-			vb.pos((x+w)*s, (y+0)*s, (z+0)*s).tex(minUZ, minVY).endVertex();
-			vb.pos((x+w)*s, (y+h)*s, (z+0)*s).tex(minUZ, maxVY).endVertex();
-			vb.pos((x+w)*s, (y+h)*s, (z+d)*s).tex(maxUZ, maxVY).endVertex();
-			vb.pos((x+w)*s, (y+0)*s, (z+d)*s).tex(maxUZ, minVY).endVertex();
+			vb.pos((x+w)*s, (y+0)*s, (z+0)*s).tex(minUZ, minVY).normal(1, 0, 0).endVertex();
+			vb.pos((x+w)*s, (y+h)*s, (z+0)*s).tex(minUZ, maxVY).normal(1, 0, 0).endVertex();
+			vb.pos((x+w)*s, (y+h)*s, (z+d)*s).tex(maxUZ, maxVY).normal(1, 0, 0).endVertex();
+			vb.pos((x+w)*s, (y+0)*s, (z+d)*s).tex(maxUZ, minVY).normal(1, 0, 0).endVertex();
 		}
 		
 		if (renderBottom) {
-			vb.pos((x+0)*s, (y+0)*s, (z+0)*s).tex(minUZ, minVX).endVertex();
-			vb.pos((x+w)*s, (y+0)*s, (z+0)*s).tex(minUZ, maxVX).endVertex();
-			vb.pos((x+w)*s, (y+0)*s, (z+d)*s).tex(maxUZ, maxVX).endVertex();
-			vb.pos((x+0)*s, (y+0)*s, (z+d)*s).tex(maxUZ, minVX).endVertex();
+			vb.pos((x+0)*s, (y+0)*s, (z+0)*s).tex(minUZ, minVX).normal(0, -1, 0).endVertex();
+			vb.pos((x+w)*s, (y+0)*s, (z+0)*s).tex(minUZ, maxVX).normal(0, -1, 0).endVertex();
+			vb.pos((x+w)*s, (y+0)*s, (z+d)*s).tex(maxUZ, maxVX).normal(0, -1, 0).endVertex();
+			vb.pos((x+0)*s, (y+0)*s, (z+d)*s).tex(maxUZ, minVX).normal(0, -1, 0).endVertex();
 		}
 		
 		if (renderTop) {
-			vb.pos((x+0)*s, (y+h)*s, (z+0)*s).tex(minUZ, minVX).endVertex();
-			vb.pos((x+0)*s, (y+h)*s, (z+d)*s).tex(maxUZ, minVX).endVertex();
-			vb.pos((x+w)*s, (y+h)*s, (z+d)*s).tex(maxUZ, maxVX).endVertex();
-			vb.pos((x+w)*s, (y+h)*s, (z+0)*s).tex(minUZ, maxVX).endVertex();
+			vb.pos((x+0)*s, (y+h)*s, (z+0)*s).tex(minUZ, minVX).normal(0, 1, 0).endVertex();
+			vb.pos((x+0)*s, (y+h)*s, (z+d)*s).tex(maxUZ, minVX).normal(0, 1, 0).endVertex();
+			vb.pos((x+w)*s, (y+h)*s, (z+d)*s).tex(maxUZ, maxVX).normal(0, 1, 0).endVertex();
+			vb.pos((x+w)*s, (y+h)*s, (z+0)*s).tex(minUZ, maxVX).normal(0, 1, 0).endVertex();
 			
 		}
 		tess.draw();

@@ -3,23 +3,29 @@ package com.elytradev.glasshearts.client;
 import java.util.Iterator;
 import java.util.List;
 
+import org.lwjgl.input.Keyboard;
+
 import com.elytradev.glasshearts.CommonProxy;
+import com.elytradev.glasshearts.EnumGem;
+import com.elytradev.glasshearts.EnumGemState;
 import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.item.ItemGem;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
 import com.google.common.collect.Lists;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.PositionedSoundRecord;
+import net.minecraft.client.particle.ParticleRedstone;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.color.IItemColor;
 import net.minecraft.entity.passive.EntitySheep;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.model.ModelLoader;
@@ -31,13 +37,15 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 
 public class ClientProxy extends CommonProxy {
 	
-	private HeartRenderer heartRenderer = new HeartRenderer();
+	public HeartRenderer heartRenderer = new HeartRenderer();
 	private List<TileEntityGlassHeart> glassHearts = Lists.newArrayList();
+	private List<GuiParticle> guiParticles = Lists.newArrayList();
 	
 	@Override
 	public void onPreInit() {
 		super.onPreInit();
 		ModelLoader.setCustomModelResourceLocation(GlassHearts.inst.LIFEFORCE_BOTTLE, 0, new ModelResourceLocation("glasshearts:lifeforce_bottle#inventory"));
+		ModelLoader.setCustomModelResourceLocation(GlassHearts.inst.STAFF, 0, new ModelResourceLocation("glasshearts:staff#inventory"));
 		
 		ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(GlassHearts.inst.GLASS_HEART), 0, new ModelResourceLocation("glasshearts:glass_heart#inventory"));
 		for (int i = 1; i < 17; i++) {
@@ -73,12 +81,27 @@ public class ClientProxy extends CommonProxy {
 	}
 	
 	@SubscribeEvent
-	public void onRender(RenderGameOverlayEvent.Pre e) {
+	public void onPreRender(RenderGameOverlayEvent.Pre e) {
 		if (e.getType() == ElementType.HEALTH) {
-			if (GlassHearts.inst.configOverrideHealthRenderer) {
+			if (GlassHearts.inst.configOverrideHealthRenderer && !heartRenderer.containers.isEmpty()) {
 				e.setCanceled(true);
 				heartRenderer.renderHealth(e.getResolution(), e.getPartialTicks());
 			}
+		}
+	}
+	
+	@SubscribeEvent
+	public void onPostRender(RenderGameOverlayEvent.Post e) {
+		if (e.getType() == ElementType.ALL) {
+			Minecraft.getMinecraft().mcProfiler.startSection("glasshearts:guiparticlesrender");
+			for (GuiParticle gp : guiParticles) {
+				if (gp.posY > e.getResolution().getScaledHeight()+24 || gp.posX > e.getResolution().getScaledWidth()+24 ||
+						gp.posX < -24) {
+					gp.setExpired();
+				}
+				gp.render(e.getPartialTicks());
+			}
+			Minecraft.getMinecraft().mcProfiler.endSection();
 		}
 	}
 	
@@ -92,45 +115,73 @@ public class ClientProxy extends CommonProxy {
 	}
 	
 	@SubscribeEvent
-	public void onTick(ClientTickEvent e) {
-		if (e.phase == Phase.START && Minecraft.getMinecraft().world != null) {
-			heartRenderer.tick();
-			Iterator<TileEntityGlassHeart> iter = glassHearts.iterator();
-			while (iter.hasNext()) {
-				TileEntityGlassHeart tegh = iter.next();
-				if (tegh.isInvalid()) {
-					iter.remove();
-				} else {
-					GlassHearts.inst.update(tegh, tegh.getWorld().getTotalWorldTime());
-				}
+	public void onText(RenderGameOverlayEvent.Text e) {
+		for (int i = 0; i < e.getLeft().size(); i++) {
+			if (e.getLeft().get(i).startsWith("P:")) {
+				e.getLeft().set(i, e.getLeft().get(i)+", GuiP: "+guiParticles.size());
+				break;
 			}
-			// this effect is actually really annoying
-			if (Integer.valueOf(4).intValue() == 4) return;
-			// !!##!! THE ABOVE LINE DISABLES THE FOLLOWING CODE !!##!! //
-			// (unless you reflected into the int cache and messed with it)
-			// (don't do that)
-			World world = Minecraft.getMinecraft().world;
-			EntityPlayer player = Minecraft.getMinecraft().player;
-			int baseX = (int)(player.posX/16);
-			int baseZ = (int)(player.posZ/16);
-			for (int x = -1; x <= 1; x++) {
-				for (int z = -1; z <= 1; z++) {
-					Chunk c = world.getChunkFromChunkCoords(baseX+x, baseZ+z);
-					for (TileEntity te : c.getTileEntityMap().values()) {
-						if (te instanceof TileEntityGlassHeart && player.getDistanceSqToCenter(te.getPos()) < 25) {
-							double teX = te.getPos().getX()+0.5;
-							double teY = te.getPos().getY()+0.5;
-							double teZ = te.getPos().getZ()+0.5;
-							float r = 0.05f;
-							for (int i = 0; i < 16; i++) {
-								float pX = (float)(world.rand.nextGaussian());
-								float pY = (float)(world.rand.nextGaussian());
-								float pZ = (float)(world.rand.nextGaussian());
-
-								ParticleRedstoneSeekEntity p = new ParticleRedstoneSeekEntity(player, world, teX+(r*pX), teY+(r*pY), teZ+(r*pZ), 1, 0.8f, 0, 0);
-								p.setVelocity(x/128, pY/128, pZ/128);
-								Minecraft.getMinecraft().effectRenderer.addEffect(p);
-							}
+		}
+	}
+	
+	@SubscribeEvent
+	public void onTick(ClientTickEvent e) {
+		if (e.phase == Phase.START ) {
+			if (!Minecraft.getMinecraft().isGamePaused()) {
+				Minecraft.getMinecraft().mcProfiler.startSection("glasshearts:guiparticlesupdate"); {
+					Iterator<GuiParticle> iter = guiParticles.iterator();
+					while (iter.hasNext()) {
+						GuiParticle gp = iter.next();
+						gp.update();
+						if (gp.expired) {
+							iter.remove();
+						}
+					}
+				} Minecraft.getMinecraft().mcProfiler.endSection();
+			}
+			if (Minecraft.getMinecraft().world != null) {
+				if (Keyboard.isKeyDown(Keyboard.KEY_0)) {
+					Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.BLOCK_GLASS_BREAK, 1f));
+					for (int i = 0; i < 81; i++) {
+						guiParticles.add(new GuiParticleHeartFragment(122+(i%9), 191+(i/9), 27+(i%9), 36+(i/9)));
+					}
+				}
+				if (Keyboard.isKeyDown(Keyboard.KEY_1)) {
+					Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.BLOCK_GLASS_BREAK, 2f));
+					for (int i = 0; i < 81; i++) {
+						guiParticles.add(new GuiParticleHeartFragment(122+(i%9), 191+(i/9), 36+(i%9), 54+(i/9)));
+					}
+				}
+				EntityPlayer player = Minecraft.getMinecraft().player;
+				heartRenderer.tick();
+				Iterator<TileEntityGlassHeart> iter = glassHearts.iterator();
+				while (iter.hasNext()) {
+					TileEntityGlassHeart tegh = iter.next();
+					if (tegh.isInvalid()) {
+						iter.remove();
+					} else {
+						GlassHearts.inst.update(tegh, tegh.getWorld().getTotalWorldTime());
+						if (!Minecraft.getMinecraft().isGamePaused() && tegh.getDistanceSq(player.posX, player.posY, player.posZ) < 384) {
+							if (tegh.getGem() != EnumGem.NONE && tegh.getGem().getState(tegh) != EnumGemState.INACTIVE) {
+								float yaw = (float)Math.toRadians(RenderGlassHeart.getAnimTime(tegh, 0)%360);
+								Vec3d base = new Vec3d(tegh.getPos()).addVector(0.5, 0.565, 0.5);
+								float dist = 0.3f;
+								Vec3d dir = new Vec3d(MathHelper.sin(yaw), 0, MathHelper.cos(yaw)).scale(dist);
+								
+								Vec3d aPos = base.add(dir);
+								Vec3d bPos = base.subtract(dir);
+								
+								ParticleRedstone a = new ParticleRedstone(Minecraft.getMinecraft().world, aPos.xCoord, aPos.yCoord, aPos.zCoord, 1f, 1f, 1f, 1f) {};
+								ParticleRedstone b = new ParticleRedstone(Minecraft.getMinecraft().world, bPos.xCoord, bPos.yCoord, bPos.zCoord, 1f, 1f, 1f, 1f) {};
+								
+								int gemColor = tegh.getGem().color;
+								
+								a.setRBGColorF((((gemColor>>16)&0xFF)/255f), (((gemColor>>8)&0xFF)/255f), ((gemColor&0xFF)/255f));
+								b.setRBGColorF((((gemColor>>16)&0xFF)/255f), (((gemColor>>8)&0xFF)/255f), ((gemColor&0xFF)/255f));
+								
+								Minecraft.getMinecraft().effectRenderer.addEffect(a);
+								Minecraft.getMinecraft().effectRenderer.addEffect(b);
+							}						
 						}
 					}
 				}
