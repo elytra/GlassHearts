@@ -1,0 +1,17 @@
+{
+	"forge_marker": 1,
+	"defaults": {
+		"transform": "forge:default-block",
+		"model": "minecraft:cube_all"
+	},
+	"variants": {
+		"variant": {
+			"amethyst": { "textures": { "all": "glasshearts:blocks/amethyst_ore" } },
+			"onyx": { "textures": { "all": "glasshearts:blocks/onyx_ore" } },
+			"opal": { "textures": { "all": "glasshearts:blocks/opal_ore" } },
+			"ruby": { "textures": { "all": "glasshearts:blocks/ruby_ore" } },
+			"sapphire": { "textures": { "all": "glasshearts:blocks/sapphire_ore" } },
+			"topaz": { "textures": { "all": "glasshearts:blocks/topaz_ore" } }
+		}
+	}
+}

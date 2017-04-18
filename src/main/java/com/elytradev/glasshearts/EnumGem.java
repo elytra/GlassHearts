@@ -19,8 +19,7 @@ public enum EnumGem implements IStringSerializable {
 	},
 	
 	/**
-	 * Poison does 2/3 damage while this container is not empty, and poison
-	 * damage to this heart does 1/3 damage. 
+	 * Poison damage to this heart is 80% less effective.
 	 */
 	EMERALD(0x41F384) {
 		@Override
@@ -43,8 +42,8 @@ public enum EnumGem implements IStringSerializable {
 		}
 	},
 	/**
-	 * If this container is full, your armor is 40% more effective. If it's
-	 * empty, your armor is 20% less effective.
+	 * If this container is full, your armor is 2.5% more effective for every
+	 * heart before this one. If it's empty, your armor is 20% less effective.
 	 */
 	DIAMOND(0x27D9D7) {
 		@Override
@@ -86,20 +85,13 @@ public enum EnumGem implements IStringSerializable {
 		}
 	},
 	/**
-	 * Wither does 2/3 damage while this container is not empty, and wither
-	 * damage to this heart does 1/3 damage.
+	 * Wither damage to this heart is 80% less effective.
 	 */
 	ONYX(0x0C0C0C),
 	/**
-	 * Perpetually cursed; cannot be removed and the heart cannot be broken,
-	 * except by explosions.
+	 * All damage to this heart is 50% less effective.
 	 */
-	AMBER(0xFFC300) {
-		@Override
-		public EnumGemState getState(IGlassHeart igh) {
-			return EnumGemState.ACTIVE_CURSED;
-		}
-	},
+	AMBER(0xFFC300),
 	;
 	
 	private final String name;

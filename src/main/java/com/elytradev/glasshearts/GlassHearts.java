@@ -9,11 +9,15 @@ import com.elytradev.concrete.network.NetworkContext;
 import com.elytradev.concrete.reflect.invoker.Invoker;
 import com.elytradev.concrete.reflect.invoker.Invokers;
 import com.elytradev.glasshearts.block.BlockGlassHeart;
+import com.elytradev.glasshearts.block.BlockOre;
+import com.elytradev.glasshearts.block.BlockPetrifiedLog;
 import com.elytradev.glasshearts.item.ItemBlockGlassHeart;
+import com.elytradev.glasshearts.item.ItemBlockOre;
 import com.elytradev.glasshearts.item.ItemGem;
 import com.elytradev.glasshearts.item.ItemLifeforceBottle;
 import com.elytradev.glasshearts.item.ItemStaff;
 import com.elytradev.glasshearts.network.ParticleEffectMessage;
+import com.elytradev.glasshearts.network.PlayHeartEffectMessage;
 import com.elytradev.glasshearts.network.UpdateHeartsMessage;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
 import com.google.common.base.Predicates;
@@ -31,6 +35,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemGlassBottle;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -51,8 +56,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.living.LivingHealEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickItem;
 import net.minecraftforge.fluids.BlockFluidClassic;
 import net.minecraftforge.fluids.Fluid;
@@ -63,10 +66,10 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.eventhandler.Event.Result;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerRespawnEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
@@ -108,6 +111,8 @@ public class GlassHearts {
 	public ItemStaff STAFF;
 	
 	public BlockGlassHeart GLASS_HEART;
+	public BlockOre ORE;
+	public BlockPetrifiedLog PETRIFIED_LOG;
 	
 	public CreativeTabs CREATIVE_TAB = new CreativeTabs("glass_heart") {
 		@Override
@@ -159,9 +164,11 @@ public class GlassHearts {
 		
 		config.save();
 		
-		NETWORK = NetworkContext.forChannel("GlassHearts");
+		// short channel name since update messages might be really frequent
+		NETWORK = NetworkContext.forChannel("gh");
 		NETWORK.register(ParticleEffectMessage.class);
 		NETWORK.register(UpdateHeartsMessage.class);
+		NETWORK.register(PlayHeartEffectMessage.class);
 		
 		LIFEFORCE = new Fluid("glasshearts.lifeforce", new ResourceLocation("glasshearts", "blocks/lifeforce_still"), new ResourceLocation("glasshearts", "blocks/lifeforce_flow"));
 		LIFEFORCE.setViscosity(750);
@@ -203,8 +210,23 @@ public class GlassHearts {
 		GLASS_HEART = new BlockGlassHeart();
 		GLASS_HEART.setRegistryName("glass_heart");
 		GLASS_HEART.setCreativeTab(CREATIVE_TAB);
+		GLASS_HEART.setUnlocalizedName("glasshearts.glass_heart");
 		GameRegistry.register(GLASS_HEART);
 		GameRegistry.register(new ItemBlockGlassHeart(GLASS_HEART).setRegistryName("glass_heart"));
+		
+		ORE = new BlockOre();
+		ORE.setRegistryName("ore");
+		ORE.setCreativeTab(CREATIVE_TAB);
+		ORE.setUnlocalizedName("glasshearts.ore");
+		GameRegistry.register(ORE);
+		GameRegistry.register(new ItemBlockOre(ORE).setRegistryName("ore"));
+		
+		PETRIFIED_LOG = new BlockPetrifiedLog();
+		PETRIFIED_LOG.setRegistryName("petrified_log");
+		PETRIFIED_LOG.setCreativeTab(CREATIVE_TAB);
+		PETRIFIED_LOG.setUnlocalizedName("glasshearts.petrified_log");
+		GameRegistry.register(PETRIFIED_LOG);
+		GameRegistry.register(new ItemBlock(PETRIFIED_LOG).setRegistryName("petrified_log"));
 		
 		SAP = new SoundEvent(new ResourceLocation("glasshearts", "sap"));
 		SAP.setRegistryName("sap");
@@ -213,6 +235,8 @@ public class GlassHearts {
 		ATTUNE = new SoundEvent(new ResourceLocation("glasshearts", "attune"));
 		ATTUNE.setRegistryName("attune");
 		GameRegistry.register(ATTUNE);
+		
+		GameRegistry.registerWorldGenerator(new GenerateGems(), 2);
 		
 		
 		GameRegistry.addRecipe(new ShapedOreRecipe(STAFF,
@@ -273,26 +297,17 @@ public class GlassHearts {
 	
 	@SubscribeEvent
 	public void onLogIn(PlayerLoggedInEvent e) {
-		resyncHealth(e.player, 0);
+		resyncHealth(e.player);
 	}
 	
-	@SubscribeEvent(priority=EventPriority.LOWEST)
-	public void onDamage(LivingHurtEvent e) {
-		if (e.getEntityLiving() instanceof EntityPlayer) {
-			resyncHealth((EntityPlayer)e.getEntityLiving(), -e.getAmount());
-		}
+	@SubscribeEvent
+	public void onRespawn(PlayerRespawnEvent e) {
+		resyncHealth(e.player);
 	}
 	
-	@SubscribeEvent(priority=EventPriority.LOWEST)
-	public void onHeal(LivingHealEvent e) {
-		if (e.getEntityLiving() instanceof EntityPlayer) {
-			resyncHealth((EntityPlayer)e.getEntityLiving(), e.getAmount());
-		}
-	}
-	
-	public void resyncHealth(EntityPlayer player, float change) {
+	public void resyncHealth(EntityPlayer player) {
 		List<HeartContainer> li = Lists.newArrayList();
-		float hp = (player.getHealth()+change)/2;
+		float hp = player.getHealth()/2;
 		System.out.println(hp);
 		for (int i = 0; i < MathHelper.ceil(player.getMaxHealth()/2); i++) {
 			li.add(new HeartContainer(null, EnumGem.NONE, 0, Math.max(Math.min(hp, 1), 0)));
