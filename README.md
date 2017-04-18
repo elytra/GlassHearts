@@ -1,7 +1,7 @@
 <img src="https://github.com/elytra/GlassHearts/raw/1.11.2/doc/logo.png" align="right" width="180px"/>
 
 # Glass Hearts
-*A novel and balanced way to increase your max health.*
+*A novel and balanced way to increase your health.*
 
 Glass Hearts adds five things:
 
