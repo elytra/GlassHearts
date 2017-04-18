@@ -1,0 +1,24 @@
+{
+	"forge_marker": 1,
+	"defaults": {
+		"transform": "forge:default-block",
+		"model": "minecraft:cube_column",
+		"textures": {
+			"end": "glasshearts:blocks/log_petrified_top",
+			"side": "glasshearts:blocks/log_petrified"
+		}
+	},
+	"variants": {
+		"axis": {
+			"y": {},
+			"z": { "x": 90 },
+			"x": { "x": 90, "y": 90 },
+			"none": {
+				"model": "minecraft:cube_all",
+				"textures": {
+					"all": "glasshearts:blocks/log_petrified"
+				}
+			}
+		}
+	}
+}

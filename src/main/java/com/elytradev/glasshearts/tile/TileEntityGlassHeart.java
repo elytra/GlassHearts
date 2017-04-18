@@ -8,6 +8,7 @@ import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.IGlassHeart;
 import com.google.common.base.Optional;
 
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
@@ -22,8 +23,10 @@ import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.FluidTankProperties;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
 
-public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, IGlassHeart {
+public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, IGlassHeart, IItemHandler {
 	
 	private boolean client = false;
 	
@@ -111,6 +114,8 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 	public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
 		if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
 			return true;
+		} else if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
+			return true;
 		}
 		return super.hasCapability(capability, facing);
 	}
@@ -118,6 +123,8 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 	@Override
 	public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
 		if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
+			return (T)this;
+		} else if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
 			return (T)this;
 		}
 		return super.getCapability(capability, facing);
@@ -271,6 +278,49 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 			setLifeforceBuffer(getLifeforceBuffer()-amt);
 		}
 		return amt < 0 ? null : new FluidStack(GlassHearts.inst.LIFEFORCE, amt);
+	}
+
+	@Override
+	public int getSlots() {
+		return 1;
+	}
+
+	@Override
+	public ItemStack getStackInSlot(int slot) {
+		if (slot != 0) return ItemStack.EMPTY;
+		return getGem().toItemStack();
+	}
+
+	@Override
+	public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+		if (slot != 0) return stack;
+		if (getGem() == EnumGem.NONE) {
+			EnumGem eg = EnumGem.fromItemStack(stack);
+			if (eg != null) {
+				ItemStack is = stack.copy();
+				is.shrink(1);
+				if (!simulate) {
+					setGem(eg);
+				}
+				return is;
+			}
+		}
+		return stack;
+	}
+
+	@Override
+	public ItemStack extractItem(int slot, int amount, boolean simulate) {
+		if (slot != 0) return ItemStack.EMPTY;
+		EnumGem gem = getGem();
+		if (!simulate) {
+			setGem(EnumGem.NONE);
+		}
+		return gem.toItemStack();
+	}
+
+	@Override
+	public int getSlotLimit(int slot) {
+		return 1;
 	}
 	
 }

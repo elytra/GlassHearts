@@ -29,8 +29,8 @@ public class HeartRenderer extends Gui {
 	public List<HeartContainer> containers = Lists.newArrayList();
 	
 	public static final ResourceLocation TEX = new ResourceLocation("glasshearts", "textures/gui/heart.png");
-	public static final int TEXTURE_WIDTH = 108;
-	public static final int TEXTURE_HEIGHT = 126;
+	public static final int TEXTURE_WIDTH = 256;
+	public static final int TEXTURE_HEIGHT = 256;
 	
 	private int healthUpdateCounter, updateCounter;
 	private long lastSystemTime;
@@ -65,16 +65,20 @@ public class HeartRenderer extends Gui {
 		boolean highlight = healthUpdateCounter > (long)updateCounter && (healthUpdateCounter - (long)updateCounter) / 3 % 2 == 1;
 
 		boolean anyNotEqual = false;
+		boolean loss = false;
 		for (HeartContainer hc : containers) {
 			if (hc.getLastFillAmount() != hc.getFillAmount()) {
 				anyNotEqual = true;
+				if (hc.getLastFillAmount() > hc.getFillAmount()) {
+					loss = true;
+				}
 				break;
 			}
 		}
 		
-		if (anyNotEqual && player.hurtResistantTime > 0) {
+		if (anyNotEqual && player.hurtResistantTime > 0 && (healthUpdateCounter-updateCounter) < 0) {
 			lastSystemTime = Minecraft.getSystemTime();
-			healthUpdateCounter = updateCounter + 20;
+			healthUpdateCounter = updateCounter + (loss ? 20 : 10);
 		}
 
 		if (Minecraft.getSystemTime() - lastSystemTime > 1000L) {
@@ -84,7 +88,12 @@ public class HeartRenderer extends Gui {
 			}
 		}
 		
-		int healthRows = MathHelper.ceil(containers.size()/10f);
+		float absorb = player.getAbsorptionAmount()/2;
+		int absorbTotal = MathHelper.ceil(absorb);
+		
+		int totalHearts = containers.size()+absorbTotal;
+		
+		int healthRows = MathHelper.ceil(totalHearts/10f);
 		int rowHeight = Math.max(10 - (healthRows - 2), 3);
 
 		rand.setSeed((updateCounter) * 312871L);
@@ -98,21 +107,32 @@ public class HeartRenderer extends Gui {
 
 		float regen = -1;
 		if (player.isPotionActive(MobEffects.REGENERATION)) {
-			regen = (updateCounter+partialTicks) % (containers.size()+15);
+			regen = (updateCounter+partialTicks) % (totalHearts+15);
 		}
 
 		// we can still rely on the player's health value as a total
 		boolean shake = player.getHealth() <= player.getMaxHealth()/5f;
 		
-		int defaultX = left+(((containers.size()+9)%10)*8);
+		int defaultX = left+(((totalHearts+9)%10)*8);
 		int defaultY = top-(healthRows-1)*rowHeight;
 		
 		int x = defaultX;
 		int y = defaultY;
 		
-		
-		for (int i = containers.size()-1; i >= 0; i--) {
-			HeartContainer hc = containers.get(i);
+		for (int i = totalHearts-1; i >= 0; i--) {
+			HeartContainer hc = i >= containers.size() ? null : containers.get(i);
+			
+			float fill;
+			int decay;
+			
+			if (hc == null) {
+				fill = (i == totalHearts-1) ? absorb%1 : 1;
+				decay = -1;
+			} else {
+				fill = hc.getFillAmount();
+				decay = hc.getDecay();
+			}
+			
 			int oldY = y;
 			if (shake) {
 				y += rand.nextInt(2);
@@ -130,13 +150,14 @@ public class HeartRenderer extends Gui {
 			mc.getTextureManager().bindTexture(TEX);
 			
 			int bgFgIdx;
-			if (hc.getGlassColor() == null) {
+			if (hc == null || hc.getGlassColor() == null) {
 				bgFgIdx = 0;
 			} else if (hc.getGlassColor() == EnumGlassColor.NONE) {
 				bgFgIdx = 1;
 			} else {
 				bgFgIdx = 2;
 			}
+			// background
 			drawModalRectWithCustomSizedTexture(x, y, 9+((bgFgIdx*18)+(highlight?9:0)), 27, 9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
 			
 			int fillIdx;
@@ -147,12 +168,18 @@ public class HeartRenderer extends Gui {
 			} else {
 				fillIdx = 0;
 			}
-			if (highlight) {
-				drawModalRectWithCustomSizedTexture(x, y, 9+(hc.getDecay()*9), 72+((fillIdx*18)+9), hc.getLastFillAmount()*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			if (hc != null && highlight) {
+				// health highlight
+				drawModalRectWithCustomSizedTexture(x, y, 36+(decay*9), 72+((fillIdx*18)+9), hc.getLastFillAmount()*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
 			}
-			drawModalRectWithCustomSizedTexture(x, y, 9+(hc.getDecay()*9), 72+((fillIdx*18)), hc.getFillAmount()*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			// health
+			drawModalRectWithCustomSizedTexture(x, y, 36+(decay*9), 72+((fillIdx*18)), fill*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			if (hc != null && hc.getGlassColor() == null) {
+				// glint
+				drawModalRectWithCustomSizedTexture(x, y, 18, 72+((fillIdx*18)), fill*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			}
 			
-			if (hc.getGlassColor() != null && hc.getGlassColor().dye != null) {
+			if (hc != null && hc.getGlassColor() != null && hc.getGlassColor().dye != null) {
 				float[] fleece = EntitySheep.getDyeRgb(hc.getGlassColor().dye);
 				GlStateManager.color(fleece[0], fleece[1], fleece[2]);
 			}
@@ -163,16 +190,17 @@ public class HeartRenderer extends Gui {
 			} else if (x == left+72 || (y == defaultY && x == defaultX)) {
 				ofsR = 0;
 			}
-			float overlay = 1;
-			if (hc.getGlassColor() == null) {
-				overlay = hc.getFillAmount();
-			}
-			drawModalRectWithCustomSizedTexture(x+ofsL, y, 9+ofsL+((bgFgIdx*18)+(highlight?9:0)), 36, (overlay*9)-(ofsL+ofsR), 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			// foreground
+			drawModalRectWithCustomSizedTexture(x+ofsL, y, 9+ofsL+((bgFgIdx*18)+(highlight?9:0)), 36, 9-(ofsL+ofsR), 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
 			GlStateManager.color(1, 1, 1);
-			if (mc.world.getWorldInfo().isHardcoreModeEnabled() && hc.getGlassColor() == null) {
-				drawModalRectWithCustomSizedTexture(x, y, 99, 72+((fillIdx*18)+(highlight?9:0)), hc.getFillAmount()*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			if (mc.world.getWorldInfo().isHardcoreModeEnabled() && hc != null && hc.getGlassColor() == null) {
+				// hardcore eyes
+				drawModalRectWithCustomSizedTexture(x, y, 9, 72+((fillIdx*18)+(highlight?9:0)), fill*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
 			}
-			drawModalRectWithCustomSizedTexture(x, y, 9+(hc.getGem().ordinal()*9), 54, 9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			if (hc != null) {
+				// gem
+				drawModalRectWithCustomSizedTexture(x, y, 9+(hc.getGem().ordinal()*9), 54, 9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			}
 			
 			y = oldY;
 			

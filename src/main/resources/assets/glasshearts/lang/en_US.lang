@@ -29,6 +29,16 @@ item.glasshearts.gem.opal.name=Opal
 item.glasshearts.gem.onyx.name=Onyx
 item.glasshearts.gem.amber.name=Amber
 
+tile.glasshearts.glass_heart.name=Glass Heart
+tile.glasshearts.ore.name=Ore
+tile.glasshearts.ore.amethyst.name=Amethyst Ore
+tile.glasshearts.ore.onyx.name=Onyx Ore
+tile.glasshearts.ore.opal.name=Opal Ore
+tile.glasshearts.ore.ruby.name=Ruby Ore
+tile.glasshearts.ore.sapphire.name=Sapphire Ore
+tile.glasshearts.ore.topaz.name=Topaz Ore
+tile.glasshearts.petrified_log.name=Petrified Log
+
 enchantment.glasshearts.sapping=Sapping
 
 death.attack.glasshearts.transfer=%1$s was too generous

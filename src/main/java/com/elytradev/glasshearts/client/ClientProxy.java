@@ -9,6 +9,7 @@ import com.elytradev.glasshearts.CommonProxy;
 import com.elytradev.glasshearts.EnumGem;
 import com.elytradev.glasshearts.EnumGemState;
 import com.elytradev.glasshearts.GlassHearts;
+import com.elytradev.glasshearts.block.BlockOre;
 import com.elytradev.glasshearts.item.ItemGem;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
 import com.google.common.collect.Lists;
@@ -55,6 +56,11 @@ public class ClientProxy extends CommonProxy {
 		for (int i = 0; i < ItemGem.VALID_GEMS.length; i++) {
 			ModelLoader.setCustomModelResourceLocation(GlassHearts.inst.GEM, i, new ModelResourceLocation("glasshearts:"+ItemGem.VALID_GEMS[i].getName()+"#inventory"));
 		}
+		
+		for (int i = 0; i < BlockOre.VALID_GEMS.length; i++) {
+			ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(GlassHearts.inst.ORE), i, new ModelResourceLocation("glasshearts:ore#variant="+BlockOre.VALID_GEMS[i].getName()));
+		}
+		ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(GlassHearts.inst.PETRIFIED_LOG), 0, new ModelResourceLocation("glasshearts:petrified_log#axis=y"));
 		
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityGlassHeart.class, new RenderGlassHeart());
 		
