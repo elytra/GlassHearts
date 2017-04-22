@@ -128,7 +128,7 @@ public class ClientProxy extends CommonProxy {
 	
 	@SubscribeEvent
 	public void onTick(ClientTickEvent e) {
-		if (e.phase == Phase.START ) {
+		if (e.phase == Phase.START) {
 			if (!Minecraft.getMinecraft().isGamePaused()) {
 				Minecraft.getMinecraft().mcProfiler.startSection("glasshearts:guiparticlesupdate"); {
 					Iterator<GuiParticle> iter = guiParticles.iterator();
@@ -154,7 +154,7 @@ public class ClientProxy extends CommonProxy {
 						if (!Minecraft.getMinecraft().isGamePaused() && tegh.getDistanceSq(player.posX, player.posY, player.posZ) < 384) {
 							if (tegh.getGem() != EnumGem.NONE && tegh.getGem().getState(tegh) != EnumGemState.INACTIVE) {
 								float yaw = (float)Math.toRadians(RenderGlassHeart.getAnimTime(tegh, 0)%360);
-								Vec3d base = new Vec3d(tegh.getPos()).addVector(0.5, 0.565, 0.5);
+								Vec3d base = new Vec3d(tegh.getHeartPos()).addVector(0.5, 0.565, 0.5);
 								float dist = 0.3f;
 								Vec3d dir = new Vec3d(MathHelper.sin(yaw), 0, MathHelper.cos(yaw)).scale(dist);
 								

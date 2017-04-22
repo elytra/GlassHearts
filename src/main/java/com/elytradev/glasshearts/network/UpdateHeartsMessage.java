@@ -40,9 +40,6 @@ public class UpdateHeartsMessage extends Message {
 	protected void handle(EntityPlayer sender) {
 		boolean overwrite = (startIndex & (1 << 7)) != 0;
 		int startIndex = this.startIndex & ~(1 << 7);
-		System.out.println(overwrite);
-		System.out.println(startIndex);
-		System.out.println(containers);
 		List<HeartContainer> li = ((ClientProxy)GlassHearts.proxy).heartRenderer.containers;
 		if (overwrite) {
 			li.clear();

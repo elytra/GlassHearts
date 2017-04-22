@@ -19,6 +19,8 @@ public class GlassHeartWorldData extends WorldSavedData {
 
 	private static final NBTHelper nh = new NBTHelper();
 	
+	private World world;
+	
 	private Map<BlockPos, GlassHeartData> hearts = Maps.newHashMap();
 	
 	public GlassHeartWorldData(String name) {
@@ -28,7 +30,7 @@ public class GlassHeartWorldData extends WorldSavedData {
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
 		for (GlassHeartData ghd : nh.deserialize(() -> new GlassHeartData(this), nbt.getTagList("Hearts", NBT.TAG_COMPOUND))) {
-			hearts.put(ghd.getPos(), ghd);
+			hearts.put(ghd.getHeartPos(), ghd);
 		}
 	}
 
@@ -36,6 +38,14 @@ public class GlassHeartWorldData extends WorldSavedData {
 	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
 		nbt.setTag("Hearts", nh.serialize(hearts.values()));
 		return nbt;
+	}
+	
+	public World getWorld() {
+		return world;
+	}
+	
+	public void setWorld(World world) {
+		this.world = world;
 	}
 	
 	public GlassHeartData create(BlockPos pos, EnumGlassColor color, EnumGem gem, int lifeforce, int lifeforceBuffer) {
@@ -67,6 +77,7 @@ public class GlassHeartWorldData extends WorldSavedData {
 			data = new GlassHeartWorldData("glass_hearts");
 			w.getPerWorldStorage().setData("glass_hearts", data);
 		}
+		data.setWorld(w);
 		return data;
 	}
 
