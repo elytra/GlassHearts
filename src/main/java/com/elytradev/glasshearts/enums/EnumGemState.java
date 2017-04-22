@@ -1,4 +1,4 @@
-package com.elytradev.glasshearts;
+package com.elytradev.glasshearts.enums;
 
 public enum EnumGemState {
 	INACTIVE,

@@ -1,4 +1,4 @@
-package com.elytradev.glasshearts;
+package com.elytradev.glasshearts.enums;
 
 import java.util.Locale;
 

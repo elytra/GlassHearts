@@ -1,4 +1,4 @@
-package com.elytradev.glasshearts;
+package com.elytradev.glasshearts.entity;
 
 import net.minecraft.entity.ai.EntityAIBase;
 

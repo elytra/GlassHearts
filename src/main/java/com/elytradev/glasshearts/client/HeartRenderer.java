@@ -6,8 +6,8 @@ import java.util.Random;
 
 import org.lwjgl.opengl.GL11;
 
-import com.elytradev.glasshearts.EnumGlassColor;
-import com.elytradev.glasshearts.HeartContainer;
+import com.elytradev.glasshearts.enums.EnumGlassColor;
+import com.elytradev.glasshearts.logic.HeartContainer;
 import com.google.common.collect.Lists;
 
 import net.minecraft.client.Minecraft;
@@ -32,11 +32,15 @@ public class HeartRenderer extends Gui {
 	public static final int TEXTURE_WIDTH = 256;
 	public static final int TEXTURE_HEIGHT = 256;
 	
+	public List<PendingEffect> pendingEffects = Lists.newArrayList();
+	
 	private int healthUpdateCounter, updateCounter;
 	private long lastSystemTime;
 	private Random rand = new Random(0);
 	
 	private boolean useMoreSpace;
+	
+	public float decay = 0;
 	
 	public void setUseMoreSpace(boolean useMoreSpace) {
 		this.useMoreSpace = useMoreSpace;
@@ -67,6 +71,7 @@ public class HeartRenderer extends Gui {
 		boolean anyNotEqual = false;
 		boolean loss = false;
 		for (HeartContainer hc : containers) {
+			if (hc == null) continue;
 			if (hc.getLastFillAmount() != hc.getFillAmount()) {
 				anyNotEqual = true;
 				if (hc.getLastFillAmount() > hc.getFillAmount()) {
@@ -84,6 +89,7 @@ public class HeartRenderer extends Gui {
 		if (Minecraft.getSystemTime() - lastSystemTime > 1000L) {
 			lastSystemTime = Minecraft.getSystemTime();
 			for (HeartContainer hc : containers) {
+				if (hc == null) continue;
 				hc.setLastFillAmount(hc.getFillAmount());
 			}
 		}
@@ -110,6 +116,20 @@ public class HeartRenderer extends Gui {
 			regen = (updateCounter+partialTicks) % (totalHearts+15);
 		}
 
+		for (PendingEffect pe : pendingEffects) {
+			int index = pe.getIndex();
+			
+			int x = left;
+			int y = top;
+			
+			int diff = MathHelper.ceil((index+1)/10f) - MathHelper.ceil(Math.min(10, totalHearts)/10f);
+			
+			x += (index%10)*8;
+			y -= (diff*rowHeight);
+			pe.getEffect().spawn(x, y);
+		}
+		pendingEffects.clear();
+		
 		// we can still rely on the player's health value as a total
 		boolean shake = player.getHealth() <= player.getMaxHealth()/5f;
 		
@@ -123,14 +143,17 @@ public class HeartRenderer extends Gui {
 			HeartContainer hc = i >= containers.size() ? null : containers.get(i);
 			
 			float fill;
-			int decay;
+			int uOffset;
+			float nextAlpha;
 			
 			if (hc == null) {
-				fill = (i == totalHearts-1) ? absorb%1 : 1;
-				decay = -1;
+				fill = (i == totalHearts-1) ? ((int)absorb == absorb) ? 1 : absorb%1 : 1;
+				uOffset = -1;
+				nextAlpha = 0;
 			} else {
 				fill = hc.getFillAmount();
-				decay = hc.getDecay();
+				uOffset = (int)decay;
+				nextAlpha = decay%1;
 			}
 			
 			int oldY = y;
@@ -170,10 +193,20 @@ public class HeartRenderer extends Gui {
 			}
 			if (hc != null && highlight) {
 				// health highlight
-				drawModalRectWithCustomSizedTexture(x, y, 36+(decay*9), 72+((fillIdx*18)+9), hc.getLastFillAmount()*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+				drawModalRectWithCustomSizedTexture(x, y, 36+(uOffset*9), 72+((fillIdx*18)+9), hc.getLastFillAmount()*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+				if (nextAlpha > 0) {
+					GlStateManager.color(1, 1, 1, nextAlpha);
+					drawModalRectWithCustomSizedTexture(x, y, 36+((uOffset+1)*9), 72+((fillIdx*18)+9), hc.getLastFillAmount()*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+					GlStateManager.color(1, 1, 1, 1);
+				}
 			}
 			// health
-			drawModalRectWithCustomSizedTexture(x, y, 36+(decay*9), 72+((fillIdx*18)), fill*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			drawModalRectWithCustomSizedTexture(x, y, 36+(uOffset*9), 72+((fillIdx*18)), fill*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			if (nextAlpha > 0) {
+				GlStateManager.color(1, 1, 1, nextAlpha);
+				drawModalRectWithCustomSizedTexture(x, y, 36+((uOffset+1)*9), 72+((fillIdx*18)), fill*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+				GlStateManager.color(1, 1, 1, 1);
+			}
 			if (hc != null && hc.getGlassColor() == null) {
 				// glint
 				drawModalRectWithCustomSizedTexture(x, y, 18, 72+((fillIdx*18)), fill*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
@@ -209,6 +242,13 @@ public class HeartRenderer extends Gui {
 				x = left+72;
 				y += rowHeight;
 			}
+		}
+		
+		if (mc.gameSettings.showDebugInfo && !mc.isReducedDebug()) {
+			String a = Float.toString(player.getHealth()/2f);
+			mc.fontRenderer.drawString(a, left-2-mc.fontRenderer.getStringWidth(a), y-9, 0xFFFF0000);
+			String b = Float.toString(absorb);
+			mc.fontRenderer.drawString(b, left-2-mc.fontRenderer.getStringWidth(b), top-10, 0xFFFFFF00);
 		}
 		
 		GlStateManager.popMatrix();

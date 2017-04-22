@@ -4,8 +4,8 @@ import java.util.Random;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-import com.elytradev.glasshearts.EnumGem;
 import com.elytradev.glasshearts.GlassHearts;
+import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.item.ItemGem;
 
 import net.minecraft.block.Block;

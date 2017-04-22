@@ -2,11 +2,11 @@ package com.elytradev.glasshearts.client;
 
 import org.lwjgl.opengl.GL11;
 
-import com.elytradev.glasshearts.EnumGem;
-import com.elytradev.glasshearts.EnumGemState;
-import com.elytradev.glasshearts.EnumGlassColor;
 import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.block.BlockGlassHeart;
+import com.elytradev.glasshearts.enums.EnumGem;
+import com.elytradev.glasshearts.enums.EnumGemState;
+import com.elytradev.glasshearts.enums.EnumGlassColor;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
 
 import net.minecraft.block.state.IBlockState;

@@ -1,27 +1,38 @@
 package com.elytradev.glasshearts;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.elytradev.concrete.network.NetworkContext;
 import com.elytradev.concrete.reflect.invoker.Invoker;
 import com.elytradev.concrete.reflect.invoker.Invokers;
 import com.elytradev.glasshearts.block.BlockGlassHeart;
 import com.elytradev.glasshearts.block.BlockOre;
 import com.elytradev.glasshearts.block.BlockPetrifiedLog;
+import com.elytradev.glasshearts.enchant.EnchantmentSapping;
+import com.elytradev.glasshearts.entity.EntityAICreeperSeekHeart;
+import com.elytradev.glasshearts.enums.EnumGem;
+import com.elytradev.glasshearts.enums.EnumGemState;
 import com.elytradev.glasshearts.item.ItemBlockGlassHeart;
 import com.elytradev.glasshearts.item.ItemBlockOre;
 import com.elytradev.glasshearts.item.ItemGem;
 import com.elytradev.glasshearts.item.ItemLifeforceBottle;
 import com.elytradev.glasshearts.item.ItemStaff;
+import com.elytradev.glasshearts.logic.IGlassHeart;
+import com.elytradev.glasshearts.logic.PlayerHandler;
 import com.elytradev.glasshearts.network.ParticleEffectMessage;
 import com.elytradev.glasshearts.network.PlayHeartEffectMessage;
 import com.elytradev.glasshearts.network.UpdateHeartsMessage;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
+import com.elytradev.glasshearts.world.GenerateGems;
+import com.elytradev.glasshearts.world.GlassHeartData;
+import com.elytradev.glasshearts.world.GlassHeartWorldData;
 import com.google.common.base.Predicates;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import net.minecraft.block.material.Material;
@@ -40,6 +51,9 @@ import net.minecraft.item.ItemGlassBottle;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
+import net.minecraft.stats.IStatType;
+import net.minecraft.stats.StatBase;
+import net.minecraft.stats.StatBasic;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumParticleTypes;
@@ -47,8 +61,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
@@ -60,6 +74,7 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickItem
 import net.minecraftforge.fluids.BlockFluidClassic;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -68,11 +83,14 @@ import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.eventhandler.Event.Result;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerRespawnEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
@@ -81,6 +99,8 @@ public class GlassHearts {
 	
 	@Instance
 	public static GlassHearts inst;
+	
+	public static final Logger LOG = LogManager.getLogger("GlassHearts");
 	
 	public boolean configLifeforceFromPlayerKillsOnly = false;
 	public boolean configLifeforceFromUndead = false;
@@ -114,6 +134,25 @@ public class GlassHearts {
 	public BlockOre ORE;
 	public BlockPetrifiedLog PETRIFIED_LOG;
 	
+	public IStatType millibucketStatType = mb -> {
+		if (mb > 1000) {
+			return (mb/1000)+"."+((mb/100)%10)+"B";
+		}
+		return mb+"mB";
+	};
+	
+	public StatBase LIFEFORCE_CONSUMED = new StatBasic("glasshearts:stat.lifeforce_consumed", new TextComponentTranslation("stat.glasshearts.lifeforce_consumed"), millibucketStatType)
+			.initIndependentStat()
+			.registerStat();
+	
+	public StatBase LIFEFORCE_COLLECTED = new StatBasic("glasshearts:stat.lifeforce_collected", new TextComponentTranslation("stat.glasshearts.lifeforce_collected"), millibucketStatType)
+			.initIndependentStat()
+			.registerStat();
+	
+	public StatBase HEALTH_TRANSFERRED = new StatBasic("glasshearts:stat.health_transferred", new TextComponentTranslation("stat.glasshearts.health_transferred"), StatBase.simpleStatType)
+			.initIndependentStat()
+			.registerStat();
+	
 	public CreativeTabs CREATIVE_TAB = new CreativeTabs("glass_heart") {
 		@Override
 		public ItemStack getTabIconItem() {
@@ -122,6 +161,8 @@ public class GlassHearts {
 	};
 	
 	private Invoker rayTrace = Invokers.findMethod(Item.class, null, new String[] {"func_77621_a", "rayTrace", "a"}, World.class, EntityPlayer.class, boolean.class);
+	
+	private Map<EntityPlayer, PlayerHandler> playerHandlers = new WeakHashMap<>();
 	
 	static {
 		FluidRegistry.enableUniversalBucket();
@@ -295,29 +336,39 @@ public class GlassHearts {
 		proxy.onPostInit();
 	}
 	
-	@SubscribeEvent
+	@SubscribeEvent(priority=EventPriority.LOWEST)
 	public void onLogIn(PlayerLoggedInEvent e) {
-		resyncHealth(e.player);
+		PlayerHandler ph = new PlayerHandler(e.player);
+		playerHandlers.put(e.player, ph);
+		ph.resync();
+	}
+	
+	@SubscribeEvent(priority=EventPriority.LOWEST)
+	public void onRespawn(PlayerRespawnEvent e) {
+		PlayerHandler ph = new PlayerHandler(e.player);
+		playerHandlers.put(e.player, ph);
+		ph.resync();
 	}
 	
 	@SubscribeEvent
-	public void onRespawn(PlayerRespawnEvent e) {
-		resyncHealth(e.player);
-	}
-	
-	public void resyncHealth(EntityPlayer player) {
-		List<HeartContainer> li = Lists.newArrayList();
-		float hp = player.getHealth()/2;
-		System.out.println(hp);
-		for (int i = 0; i < MathHelper.ceil(player.getMaxHealth()/2); i++) {
-			li.add(new HeartContainer(null, EnumGem.NONE, 0, Math.max(Math.min(hp, 1), 0)));
-			hp--;
+	public void onServerTick(ServerTickEvent e) {
+		for (EntityPlayer ep : FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayers()) {
+			PlayerHandler ph = playerHandlers.get(ep);
+			if (ph == null) {
+				ph = new PlayerHandler(ep);
+				playerHandlers.put(ep, ph);
+			}
+			if (e.phase == Phase.START) {
+				ph.preTick();
+			} else {
+				ph.postTick();
+			}
 		}
-		new UpdateHeartsMessage(0, true, li).sendTo(player);
 	}
 	
 	@SubscribeEvent
 	public void onWorldTick(WorldTickEvent e) {
+		if (e.side != Side.SERVER) return;
 		if (e.phase == Phase.START) {
 			GlassHeartWorldData data = GlassHeartWorldData.getDataFor(e.world);
 			Set<BlockPos> remove = Collections.emptySet();
@@ -332,7 +383,7 @@ public class GlassHearts {
 				if (e.world.isBlockLoaded(ghd.getPos())) {
 					TileEntity te = e.world.getTileEntity(ghd.getPos());
 					if (!(te instanceof TileEntityGlassHeart)) {
-						LogManager.getLogger("GlassHearts").warn("Deleting orphaned Glass Heart at {}, {}, {}", ghd.getPos().getX(), ghd.getPos().getY(), ghd.getPos().getZ());
+						LOG.warn("Deleting orphaned Glass Heart at {}, {}, {}", ghd.getPos().getX(), ghd.getPos().getY(), ghd.getPos().getZ());
 						if (remove.isEmpty()) {
 							remove = Sets.newHashSet();
 						}
@@ -402,6 +453,7 @@ public class GlassHearts {
 					if (p.world.rand.nextInt(10) < lvl) {
 						int amt = p.inventory.clearMatchingItems(Items.GLASS_BOTTLE, 0, 1, null);
 						if (amt == 1) {
+							p.addStat(LIFEFORCE_COLLECTED, configLifeforceBottleSize);
 							if (!p.inventory.addItemStackToInventory(new ItemStack(LIFEFORCE_BOTTLE))) {
 								p.dropItem(LIFEFORCE_BOTTLE, 1);
 							}

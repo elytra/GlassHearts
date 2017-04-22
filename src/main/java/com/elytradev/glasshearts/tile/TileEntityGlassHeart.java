@@ -1,11 +1,11 @@
 package com.elytradev.glasshearts.tile;
 
-import com.elytradev.glasshearts.EnumGem;
-import com.elytradev.glasshearts.EnumGlassColor;
-import com.elytradev.glasshearts.GlassHeartData;
-import com.elytradev.glasshearts.GlassHeartWorldData;
 import com.elytradev.glasshearts.GlassHearts;
-import com.elytradev.glasshearts.IGlassHeart;
+import com.elytradev.glasshearts.enums.EnumGem;
+import com.elytradev.glasshearts.enums.EnumGlassColor;
+import com.elytradev.glasshearts.logic.IGlassHeart;
+import com.elytradev.glasshearts.world.GlassHeartData;
+import com.elytradev.glasshearts.world.GlassHeartWorldData;
 import com.google.common.base.Optional;
 
 import net.minecraft.item.ItemStack;
