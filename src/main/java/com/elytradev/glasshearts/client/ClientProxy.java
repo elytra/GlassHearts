@@ -3,25 +3,21 @@ package com.elytradev.glasshearts.client;
 import java.util.Iterator;
 import java.util.List;
 
-import org.lwjgl.input.Keyboard;
-
 import com.elytradev.glasshearts.CommonProxy;
-import com.elytradev.glasshearts.EnumGem;
-import com.elytradev.glasshearts.EnumGemState;
 import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.block.BlockOre;
+import com.elytradev.glasshearts.enums.EnumGem;
+import com.elytradev.glasshearts.enums.EnumGemState;
 import com.elytradev.glasshearts.item.ItemGem;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
 import com.google.common.collect.Lists;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.particle.ParticleRedstone;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.color.IItemColor;
 import net.minecraft.entity.passive.EntitySheep;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -40,7 +36,7 @@ public class ClientProxy extends CommonProxy {
 	
 	public HeartRenderer heartRenderer = new HeartRenderer();
 	private List<TileEntityGlassHeart> glassHearts = Lists.newArrayList();
-	private List<GuiParticle> guiParticles = Lists.newArrayList();
+	public List<GuiParticle> guiParticles = Lists.newArrayList();
 	
 	@Override
 	public void onPreInit() {
@@ -146,18 +142,6 @@ public class ClientProxy extends CommonProxy {
 				} Minecraft.getMinecraft().mcProfiler.endSection();
 			}
 			if (Minecraft.getMinecraft().world != null) {
-				if (Keyboard.isKeyDown(Keyboard.KEY_0)) {
-					Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.BLOCK_GLASS_BREAK, 1f));
-					for (int i = 0; i < 81; i++) {
-						guiParticles.add(new GuiParticleHeartFragment(122+(i%9), 191+(i/9), 27+(i%9), 36+(i/9)));
-					}
-				}
-				if (Keyboard.isKeyDown(Keyboard.KEY_1)) {
-					Minecraft.getMinecraft().getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.BLOCK_GLASS_BREAK, 2f));
-					for (int i = 0; i < 81; i++) {
-						guiParticles.add(new GuiParticleHeartFragment(122+(i%9), 191+(i/9), 36+(i%9), 54+(i/9)));
-					}
-				}
 				EntityPlayer player = Minecraft.getMinecraft().player;
 				heartRenderer.tick();
 				Iterator<TileEntityGlassHeart> iter = glassHearts.iterator();
@@ -182,8 +166,11 @@ public class ClientProxy extends CommonProxy {
 								
 								int gemColor = tegh.getGem().color;
 								
-								a.setRBGColorF((((gemColor>>16)&0xFF)/255f), (((gemColor>>8)&0xFF)/255f), ((gemColor&0xFF)/255f));
-								b.setRBGColorF((((gemColor>>16)&0xFF)/255f), (((gemColor>>8)&0xFF)/255f), ((gemColor&0xFF)/255f));
+								float c1 = (player.world.rand.nextFloat()-0.5f)/8;
+								float c2 = (player.world.rand.nextFloat()-0.5f)/8;
+								
+								a.setRBGColorF((((gemColor>>16)&0xFF)/255f)+c1, (((gemColor>>8)&0xFF)/255f)+c1, ((gemColor&0xFF)/255f)+c1);
+								b.setRBGColorF((((gemColor>>16)&0xFF)/255f)+c2, (((gemColor>>8)&0xFF)/255f)+c2, ((gemColor&0xFF)/255f)+c2);
 								
 								Minecraft.getMinecraft().effectRenderer.addEffect(a);
 								Minecraft.getMinecraft().effectRenderer.addEffect(b);

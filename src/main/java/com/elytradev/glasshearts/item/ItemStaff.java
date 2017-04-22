@@ -13,7 +13,7 @@ import net.minecraft.util.EnumHand;
 
 public class ItemStaff extends Item {
 
-	private final DamageSource TRANSFER = new DamageSource("glasshearts.transfer");
+	private final DamageSource TRANSFER = new DamageSource("glasshearts.transfer").setDamageBypassesArmor().setDamageIsAbsolute();
 	
 	public ItemStaff() {
 		setMaxStackSize(1);
@@ -53,6 +53,7 @@ public class ItemStaff extends Item {
 		}
 		stack.damageItem(4, playerIn);
 		target.playSound(GlassHearts.inst.SAP, 1f, 1f);
+		playerIn.addStat(GlassHearts.inst.HEALTH_TRANSFERRED, 2);
 		new ParticleEffectMessage(playerIn.posX, playerIn.posY, playerIn.posZ, target, 0).sendToAllWatching(target);
 		return true;
 	}

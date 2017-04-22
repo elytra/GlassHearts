@@ -1,11 +1,12 @@
-package com.elytradev.glasshearts;
+package com.elytradev.glasshearts.world;
 
 
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-
 import com.elytradev.concrete.NBTHelper;
+import com.elytradev.glasshearts.GlassHearts;
+import com.elytradev.glasshearts.enums.EnumGem;
+import com.elytradev.glasshearts.enums.EnumGlassColor;
 import com.google.common.collect.Maps;
 
 import net.minecraft.nbt.NBTTagCompound;
@@ -59,7 +60,7 @@ public class GlassHeartWorldData extends WorldSavedData {
 	
 	public static GlassHeartWorldData getDataFor(World w) {
 		if (w.isRemote) {
-			LogManager.getLogger("GlassHearts").warn("getDataFor called on the client-side");
+			GlassHearts.LOG.warn("getDataFor called on the client-side");
 		}
 		GlassHeartWorldData data = (GlassHeartWorldData)w.getPerWorldStorage().getOrLoadData(GlassHeartWorldData.class, "glass_hearts");
 		if (data == null) {

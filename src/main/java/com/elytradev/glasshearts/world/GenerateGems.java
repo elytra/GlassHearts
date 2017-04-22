@@ -1,8 +1,10 @@
-package com.elytradev.glasshearts;
+package com.elytradev.glasshearts.world;
 
 import java.util.Random;
 
+import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.block.BlockOre;
+import com.elytradev.glasshearts.enums.EnumGem;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;

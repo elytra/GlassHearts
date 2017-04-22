@@ -1,4 +1,7 @@
-package com.elytradev.glasshearts;
+package com.elytradev.glasshearts.logic;
+
+import com.elytradev.glasshearts.enums.EnumGem;
+import com.elytradev.glasshearts.enums.EnumGlassColor;
 
 import net.minecraft.util.math.BlockPos;
 

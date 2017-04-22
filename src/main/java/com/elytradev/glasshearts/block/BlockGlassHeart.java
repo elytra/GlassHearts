@@ -1,13 +1,15 @@
 package com.elytradev.glasshearts.block;
 
 import org.apache.logging.log4j.LogManager;
-import com.elytradev.glasshearts.EnumGem;
-import com.elytradev.glasshearts.EnumGemState;
-import com.elytradev.glasshearts.EnumGlassColor;
-import com.elytradev.glasshearts.GlassHeartWorldData;
+
 import com.elytradev.glasshearts.GlassHearts;
+import com.elytradev.glasshearts.enums.EnumGem;
+import com.elytradev.glasshearts.enums.EnumGemState;
+import com.elytradev.glasshearts.enums.EnumGlassColor;
 import com.elytradev.glasshearts.network.ParticleEffectMessage;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
+import com.elytradev.glasshearts.world.GlassHeartWorldData;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;

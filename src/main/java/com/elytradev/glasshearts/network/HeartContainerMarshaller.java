@@ -1,14 +1,12 @@
 package com.elytradev.glasshearts.network;
 
-import java.util.Map;
-
 import com.elytradev.concrete.network.Marshaller;
-import com.elytradev.glasshearts.EnumGem;
-import com.elytradev.glasshearts.EnumGlassColor;
-import com.elytradev.glasshearts.HeartContainer;
-import com.google.common.collect.ImmutableBiMap;
-import com.google.common.collect.Maps;
-
+import com.elytradev.concrete.network.exception.BadMessageException;
+import com.elytradev.glasshearts.enums.EnumGem;
+import com.elytradev.glasshearts.enums.EnumGlassColor;
+import com.elytradev.glasshearts.logic.HeartContainer;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import io.netty.buffer.ByteBuf;
 
 public class HeartContainerMarshaller implements Marshaller<HeartContainer> {
@@ -16,42 +14,46 @@ public class HeartContainerMarshaller implements Marshaller<HeartContainer> {
 	public static final String NAME = "com.elytradev.glasshearts.network.HeartContainerMarshaller";
 	public static final HeartContainerMarshaller INSTANCE = new HeartContainerMarshaller();
 	
-	private static final ImmutableBiMap<Integer, HeartContainer> states;
+	private static final BiMap<Integer, HeartContainer> states;
 	
 	static {
-		Map<Integer, HeartContainer> builder = Maps.newHashMapWithExpectedSize(256);
+		states = HashBiMap.create(256);
 		int id = 0;
-		for (int i = 0; i < 10; i++) {
-			builder.put(id++, new HeartContainer(null, EnumGem.NONE, i, 0f));
-		}
-		for (EnumGlassColor color : EnumGlassColor.values()) {
-			for (EnumGem gem : EnumGem.values()) {
-				builder.put(id++, new HeartContainer(color, gem, 0, 0f));
+		
+		states.put(id++, null);
+		for (EnumGem gem : EnumGem.values()) {
+			states.put(id++, HeartContainer.createNatural(gem, 0));
+			for (EnumGlassColor color : EnumGlassColor.values()) {
+				states.put(id++, HeartContainer.createGlass(color, gem, 0));
 			}
 		}
-		if (builder.size() > 256) {
-			throw new AssertionError("Too many states! ("+builder.size()+" > 256)");
+		if (states.size() > 256) {
+			throw new AssertionError("Too many states! ("+states.size()+" > 256)");
 		}
-		states = ImmutableBiMap.copyOf(builder);
 	}
 	
 	@Override
 	public HeartContainer unmarshal(ByteBuf in) {
-		HeartContainer hc = states.get((int)in.readUnsignedByte()).copy();
+		int id = in.readUnsignedByte();
+		if (id == 0) return null;
+		HeartContainer template = states.get(id);
+		if (template == null) throw new BadMessageException("Invalid heart state ID "+id);
+		HeartContainer hc = template.copy();
 		float fill = in.readUnsignedByte()/255f;
 		hc.setFillAmount(fill);
 		return hc;
 	}
 	@Override
 	public void marshal(ByteBuf out, HeartContainer t) {
-		HeartContainer prototype = t.copy();
-		if (prototype.getGlassColor() != null) {
-			prototype.setDecay(0);
+		if (t == null) {
+			out.writeByte(0);
+			return;
 		}
+		HeartContainer prototype = t.copy();
 		prototype.setFillAmount(0f);
 		Integer idx = states.inverse().get(prototype);
 		if (idx == null) {
-			throw new AssertionError("Cannot find a state for "+t);
+			throw new IllegalArgumentException("Cannot find a state ID for "+t);
 		}
 		out.writeByte(idx);
 		out.writeByte((int)(t.getFillAmount()*255));

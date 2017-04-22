@@ -1,6 +1,6 @@
 package com.elytradev.glasshearts.item;
 
-import com.elytradev.glasshearts.EnumGem;
+import com.elytradev.glasshearts.enums.EnumGem;
 
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;

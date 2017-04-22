@@ -1,22 +1,22 @@
 fluid.glasshearts.lifeforce=Lifeforce
 
-item.glasshearts.glass_heart.0.name=Glass Heart
-item.glasshearts.glass_heart.1.name=White Stained Glass Heart
-item.glasshearts.glass_heart.2.name=Orange Stained Glass Heart
-item.glasshearts.glass_heart.3.name=Magenta Stained Glass Heart
-item.glasshearts.glass_heart.4.name=Light Blue Stained Glass Heart
-item.glasshearts.glass_heart.5.name=Yellow Stained Glass Heart
-item.glasshearts.glass_heart.6.name=Lime Stained Glass Heart
-item.glasshearts.glass_heart.7.name=Pink Stained Glass Heart
-item.glasshearts.glass_heart.8.name=Gray Stained Glass Heart
-item.glasshearts.glass_heart.9.name=Light Gray Stained Glass Heart
-item.glasshearts.glass_heart.10.name=Cyan Stained Glass Heart
-item.glasshearts.glass_heart.11.name=Purple Stained Glass Heart
-item.glasshearts.glass_heart.12.name=Blue Stained Glass Heart
-item.glasshearts.glass_heart.13.name=Brown Stained Glass Heart
-item.glasshearts.glass_heart.14.name=Green Stained Glass Heart
-item.glasshearts.glass_heart.15.name=Red Stained Glass Heart
-item.glasshearts.glass_heart.16.name=Black Stained Glass Heart
+item.glasshearts.glass_heart.none.name=Glass Heart
+item.glasshearts.glass_heart.white.name=White Stained Glass Heart
+item.glasshearts.glass_heart.orange.name=Orange Stained Glass Heart
+item.glasshearts.glass_heart.magenta.name=Magenta Stained Glass Heart
+item.glasshearts.glass_heart.light_blue.name=Light Blue Stained Glass Heart
+item.glasshearts.glass_heart.yellow.name=Yellow Stained Glass Heart
+item.glasshearts.glass_heart.lime.name=Lime Stained Glass Heart
+item.glasshearts.glass_heart.pink.name=Pink Stained Glass Heart
+item.glasshearts.glass_heart.gray.name=Gray Stained Glass Heart
+item.glasshearts.glass_heart.silver.name=Light Gray Stained Glass Heart
+item.glasshearts.glass_heart.cyan.name=Cyan Stained Glass Heart
+item.glasshearts.glass_heart.purple.name=Purple Stained Glass Heart
+item.glasshearts.glass_heart.blue.name=Blue Stained Glass Heart
+item.glasshearts.glass_heart.brown.name=Brown Stained Glass Heart
+item.glasshearts.glass_heart.green.name=Green Stained Glass Heart
+item.glasshearts.glass_heart.red.name=Red Stained Glass Heart
+item.glasshearts.glass_heart.black.name=Black Stained Glass Heart
 
 item.glasshearts.lifeforce_bottle.name=Bottle of Lifeforce
 item.glasshearts.staff.name=Opal Staff
@@ -42,3 +42,7 @@ tile.glasshearts.petrified_log.name=Petrified Log
 enchantment.glasshearts.sapping=Sapping
 
 death.attack.glasshearts.transfer=%1$s was too generous
+
+stat.glasshearts.lifeforce_consumed=Lifeforce Consumed
+stat.glasshearts.lifeforce_collected=Lifeforce Collected
+stat.glasshearts.health_transferred=Health Transferred

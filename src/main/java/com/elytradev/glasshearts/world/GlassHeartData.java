@@ -1,7 +1,11 @@
-package com.elytradev.glasshearts;
+package com.elytradev.glasshearts.world;
 
 import java.util.Locale;
 
+import com.elytradev.glasshearts.GlassHearts;
+import com.elytradev.glasshearts.enums.EnumGem;
+import com.elytradev.glasshearts.enums.EnumGlassColor;
+import com.elytradev.glasshearts.logic.IGlassHeart;
 import com.google.common.base.Enums;
 
 import net.minecraft.nbt.NBTTagCompound;

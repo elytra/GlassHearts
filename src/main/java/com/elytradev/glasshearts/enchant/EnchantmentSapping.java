@@ -1,4 +1,4 @@
-package com.elytradev.glasshearts;
+package com.elytradev.glasshearts.enchant;
 
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnumEnchantmentType;
@@ -6,7 +6,7 @@ import net.minecraft.inventory.EntityEquipmentSlot;
 
 public class EnchantmentSapping extends Enchantment {
 
-	protected EnchantmentSapping() {
+	public EnchantmentSapping() {
 		super(Rarity.UNCOMMON, EnumEnchantmentType.WEAPON, new EntityEquipmentSlot[] {EntityEquipmentSlot.MAINHAND});
 		setName("glasshearts.sapping");
 	}

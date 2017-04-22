@@ -7,8 +7,8 @@ import com.elytradev.concrete.network.NetworkContext;
 import com.elytradev.concrete.network.annotation.field.MarshalledAs;
 import com.elytradev.concrete.network.annotation.type.ReceivedOn;
 import com.elytradev.glasshearts.GlassHearts;
-import com.elytradev.glasshearts.HeartContainer;
 import com.elytradev.glasshearts.client.ClientProxy;
+import com.elytradev.glasshearts.logic.HeartContainer;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.relauncher.Side;
@@ -30,7 +30,7 @@ public class UpdateHeartsMessage extends Message {
 		super(GlassHearts.inst.NETWORK);
 		this.startIndex = startIndex;
 		if (overwrite) {
-			startIndex |= (1 << 7);
+			this.startIndex |= (1 << 7);
 		}
 		this.containers = containers;
 	}
@@ -40,6 +40,9 @@ public class UpdateHeartsMessage extends Message {
 	protected void handle(EntityPlayer sender) {
 		boolean overwrite = (startIndex & (1 << 7)) != 0;
 		int startIndex = this.startIndex & ~(1 << 7);
+		System.out.println(overwrite);
+		System.out.println(startIndex);
+		System.out.println(containers);
 		List<HeartContainer> li = ((ClientProxy)GlassHearts.proxy).heartRenderer.containers;
 		if (overwrite) {
 			li.clear();
@@ -50,9 +53,12 @@ public class UpdateHeartsMessage extends Message {
 			} else {
 				HeartContainer old = li.get(startIndex+i);
 				HeartContainer nw = containers.get(i);
-				if (old.getGlassColor() == nw.getGlassColor() &&
-						old.getGem() == nw.getGem() &&
-						old.getDecay() == nw.getDecay()) {
+				if (nw == null) {
+					li.remove(startIndex+i);
+					startIndex++;
+				} else if (old != null &&
+						old.getGlassColor() == nw.getGlassColor() &&
+						old.getGem() == nw.getGem()) {
 					old.setLastFillAmount(old.getLastFillAmount());
 					old.setFillAmount(nw.getFillAmount());
 				} else {
