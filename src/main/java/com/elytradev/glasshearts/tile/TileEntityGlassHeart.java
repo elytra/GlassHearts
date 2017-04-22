@@ -14,8 +14,10 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fluids.FluidStack;
@@ -81,7 +83,7 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 	
 	@Override
 	public SPacketUpdateTileEntity getUpdatePacket() {
-		return new SPacketUpdateTileEntity(getPos(), 0, getUpdateTag());
+		return new SPacketUpdateTileEntity(getHeartPos(), 0, getUpdateTag());
 	}
 	
 	@Override
@@ -131,7 +133,7 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 	}
 
 	public Optional<GlassHeartData> getData() {
-		return hasWorld() && !world.isRemote ? Optional.fromNullable(GlassHeartWorldData.getDataFor(world).get(getPos())) : Optional.absent();
+		return hasWorld() && !world.isRemote ? Optional.fromNullable(GlassHeartWorldData.getDataFor(world).get(getHeartPos())) : Optional.absent();
 	}
 	
 	public GlassHeartData getOrCreateData() {
@@ -140,7 +142,7 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 			return cur.get();
 		}
 		GlassHeartWorldData ghwd = GlassHeartWorldData.getDataFor(world);
-		return ghwd.create(getPos(), EnumGlassColor.NONE, EnumGem.NONE, 0, 0);
+		return ghwd.create(getHeartPos(), EnumGlassColor.NONE, EnumGem.NONE, 0, 0);
 	}
 	
 	public String getName() {
@@ -236,6 +238,16 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 		if (oldHasBeenFull != hasBeenFull) {
 			GlassHearts.sendUpdatePacket(this);
 		}
+	}
+	
+	@Override
+	public BlockPos getHeartPos() {
+		return getPos();
+	}
+	
+	@Override
+	public World getHeartWorld() {
+		return getWorld();
 	}
 	
 	public void setClient(boolean client) {

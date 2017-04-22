@@ -10,6 +10,7 @@ import com.google.common.base.Enums;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.common.util.INBTSerializable;
 
 public class GlassHeartData implements INBTSerializable<NBTTagCompound>, IGlassHeart {
@@ -54,7 +55,7 @@ public class GlassHeartData implements INBTSerializable<NBTTagCompound>, IGlassH
 	}
 	
 	@Override
-	public BlockPos getPos() {
+	public BlockPos getHeartPos() {
 		return pos;
 	}
 	
@@ -63,8 +64,14 @@ public class GlassHeartData implements INBTSerializable<NBTTagCompound>, IGlassH
 		return lifeforceBuffer;
 	}
 	
+	@Override
 	public boolean hasBeenFull() {
 		return hasBeenFull;
+	}
+	
+	@Override
+	public World getHeartWorld() {
+		return parent.getWorld();
 	}
 	
 	
@@ -86,12 +93,13 @@ public class GlassHeartData implements INBTSerializable<NBTTagCompound>, IGlassH
 		parent.markDirty();
 	}
 	
+	@Override
 	public void setHasBeenFull(boolean hasBeenFull) {
 		this.hasBeenFull = hasBeenFull;
 		parent.markDirty();
 	}
 	
-	public void setPos(BlockPos pos) {
+	public void setHeartPos(BlockPos pos) {
 		this.pos = pos;
 		parent.markDirty();
 	}

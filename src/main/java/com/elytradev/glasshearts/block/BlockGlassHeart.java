@@ -3,12 +3,16 @@ package com.elytradev.glasshearts.block;
 import org.apache.logging.log4j.LogManager;
 
 import com.elytradev.glasshearts.GlassHearts;
+import com.elytradev.glasshearts.capability.CapabilityHealthHandler;
+import com.elytradev.glasshearts.capability.IHealthHandler;
 import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.enums.EnumGemState;
 import com.elytradev.glasshearts.enums.EnumGlassColor;
+import com.elytradev.glasshearts.logic.HeartContainer;
 import com.elytradev.glasshearts.network.ParticleEffectMessage;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
 import com.elytradev.glasshearts.world.GlassHeartWorldData;
+import com.google.common.base.Objects;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -118,10 +122,23 @@ public class BlockGlassHeart extends Block {
 					return true;
 				}
 			} else if (stack.getItem() == GlassHearts.inst.STAFF) {
-				stack.damageItem(1, playerIn);
-				worldIn.playSound(null, pos, GlassHearts.inst.ATTUNE, SoundCategory.PLAYERS, 1f, 2f);
-				new ParticleEffectMessage(pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5, playerIn, 1).sendToAllWatchingAndSelf(playerIn);
-				return true;
+				if (playerIn.hasCapability(CapabilityHealthHandler.CAPABILITY, null)) {
+					IHealthHandler cap = playerIn.getCapability(CapabilityHealthHandler.CAPABILITY, null);
+					for (int i = 0; i < cap.getContainers(); i++) {
+						HeartContainer hc = cap.getContainer(i);
+						if (Objects.equal(hc.getOwnerPos(), pos)) {
+							cap.removeContainer(i);
+							return true;
+						}
+					}
+					cap.addContainer(HeartContainer.createGlass(tegh));
+					stack.damageItem(1, playerIn);
+					worldIn.playSound(null, pos, GlassHearts.inst.ATTUNE, SoundCategory.PLAYERS, 1f, 2f);
+					new ParticleEffectMessage(pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5, playerIn, 1).sendToAllWatchingAndSelf(playerIn);
+					return true;
+				} else {
+					return false;
+				}
 			} else if (stack.getItem() != GlassHearts.inst.LIFEFORCE_BOTTLE && tegh.getLifeforceBuffer() < GlassHearts.inst.configGlassHeartCapacity) {
 				try {
 					if (stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {

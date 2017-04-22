@@ -4,14 +4,19 @@ import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.List;
 
+import com.elytradev.glasshearts.GlassHearts;
+import com.elytradev.glasshearts.capability.CapabilityHealthHandler;
+import com.elytradev.glasshearts.capability.IHealthHandler;
 import com.elytradev.glasshearts.enums.EnumGem;
+import com.elytradev.glasshearts.enums.EnumGlassColor;
+import com.elytradev.glasshearts.network.PlayHeartEffectMessage;
 import com.elytradev.glasshearts.network.UpdateHeartsMessage;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.util.INBTSerializable;
 
 public class PlayerHandler implements INBTSerializable<NBTTagCompound> {
@@ -19,7 +24,6 @@ public class PlayerHandler implements INBTSerializable<NBTTagCompound> {
 	private final WeakReference<EntityPlayer> player;
 	
 	private final List<HeartContainer> lastContainers = Lists.newArrayList();
-	private final List<HeartContainer> containers = Lists.newArrayList();
 	
 	public PlayerHandler(EntityPlayer player) {
 		this.player = new WeakReference<>(player);
@@ -30,26 +34,40 @@ public class PlayerHandler implements INBTSerializable<NBTTagCompound> {
 		return ep == null || ep.isDead ? null : ep;
 	}
 	
+	protected IHealthHandler getHealthHandler(Entity entity) {
+		if (entity == null) return null;
+		if (entity.hasCapability(CapabilityHealthHandler.CAPABILITY, null)) {
+			return entity.getCapability(CapabilityHealthHandler.CAPABILITY, null);
+		}
+		return null;
+	}
+	
 	public void preTick() {
 		EntityPlayer player = getPlayer();
 		if (player == null) return;
-		if (containers.isEmpty()) {
-			// is this a safe assumption? that all hearts on an uninitialized
-			// player are natural?
-			int max = MathHelper.ceil(player.getMaxHealth()/2);
-			float hp = player.getHealth()/2;
-			for (int i = 0; i < max; i++) {
-				containers.add(HeartContainer.createNatural(EnumGem.NONE, Math.min(Math.max(hp, 0), 1)));
-				hp--;
+		IHealthHandler ihh = getHealthHandler(player);
+		if (ihh == null) return;
+		float hp = 0;
+		for (int i = 0; i < ihh.getContainers(); i++) {
+			HeartContainer hc = ihh.getContainer(i);
+			IGlassHeart igh = hc.getOwner();
+			if (igh != null) {
+				int amt = (int)((igh.getLifeforce()/((float)GlassHearts.inst.configGlassHeartCapacity))*255);
+				if (hc.getFillAmountInt() != amt) {
+					hc = hc.copy();
+					hc.setFillAmountInt(amt);
+					ihh.setContainer(i, hc);
+				}
+			} else if (hc.getOwnerPos() != null) {
+				ihh.removeContainer(i);
+				new PlayHeartEffectMessage(hc.getGlassColor().ordinal(), i).sendTo(player);
+				if (hc.getGem() != EnumGem.NONE) {
+					new PlayHeartEffectMessage(hc.getGem().ordinal()+(EnumGlassColor.values().length), i).sendTo(player);
+				}
+				i--;
 			}
 		}
-		if (containers.size() < 10) {
-			containers.add(HeartContainer.createNatural(EnumGem.NONE, 1));
-		} else if (containers.size() > 10) {
-			containers.remove(0);
-		}
-		float hp = 0;
-		for (HeartContainer hc : containers) {
+		for (HeartContainer hc : ihh) {
 			hp += hc.getFillAmount();
 		}
 		player.setHealth(hp*2);
@@ -66,16 +84,20 @@ public class PlayerHandler implements INBTSerializable<NBTTagCompound> {
 	public void resync() {
 		EntityPlayer player = getPlayer();
 		if (player == null) return;
+		IHealthHandler ihh = getHealthHandler(player);
+		if (ihh == null) return;
 		if (lastContainers.isEmpty()) {
-			lastContainers.addAll(containers);
-			new UpdateHeartsMessage(0, true, containers).sendTo(player);
+			for (HeartContainer hc : ihh) {
+				lastContainers.add(hc);
+			}
+			new UpdateHeartsMessage(0, true, Lists.newArrayList(ihh)).sendTo(player);
 		} else {
 			int start = -1;
 			List<HeartContainer> sync = Collections.emptyList();
 			int lastChanged = -1;
-			for (int i = 0; i < Math.max(lastContainers.size(), containers.size()); i++) {
+			for (int i = 0; i < Math.max(lastContainers.size(), ihh.getContainers()); i++) {
 				HeartContainer last = (i >= lastContainers.size()) ? null : lastContainers.get(i);
-				HeartContainer cur = (i >= containers.size()) ? null : containers.get(i);
+				HeartContainer cur = (i >= ihh.getContainers()) ? null : ihh.getContainer(i);
 				if (start == -1) {
 					if (!Objects.equal(last, cur)) {
 						start = i;
@@ -91,7 +113,9 @@ public class PlayerHandler implements INBTSerializable<NBTTagCompound> {
 			}
 			if (start != -1) {
 				lastContainers.clear();
-				lastContainers.addAll(containers);
+				for (HeartContainer hc : ihh) {
+					lastContainers.add(hc);
+				}
 				List<HeartContainer> sub = sync.subList(0, (lastChanged-start)+1);
 				new UpdateHeartsMessage(start, false, sub).sendTo(player);
 			}

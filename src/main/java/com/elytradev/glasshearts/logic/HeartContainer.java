@@ -12,7 +12,9 @@ import com.google.common.base.Objects;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.Constants.NBT;
@@ -23,33 +25,58 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 	private float fillAmount;
 	private float lastFillAmount;
 	
+	private World ownerWorld;
 	private BlockPos ownerPos;
 
 	public HeartContainer() {}
 
-	public HeartContainer(EnumGlassColor glassColor, EnumGem gem, float fillAmount, BlockPos ownerPos) {
+	public HeartContainer(EnumGlassColor glassColor, EnumGem gem, float fillAmount, World ownerWorld, BlockPos ownerPos) {
 		if (gem == null) throw new IllegalArgumentException("Null gem is invalid, use EnumGem.NONE");
 		this.glassColor = glassColor;
 		this.gem = gem;
 		this.fillAmount = fillAmount;
+		this.ownerWorld = ownerWorld;
+		this.ownerPos = ownerPos;
 	}
 	
-	
+	// factory methods
 	
 	public static HeartContainer createNatural(EnumGem gem, float fillAmount) {
-		return new HeartContainer(null, gem, fillAmount, null);
+		return new HeartContainer(null, gem, fillAmount, null, null);
 	}
 	
 	public static HeartContainer createGlass(EnumGlassColor color, EnumGem gem, float fillAmount) {
 		if (color == null) throw new IllegalArgumentException("Null color is not permitted in createGlass, use the constructor directly or createNatural");
-		return new HeartContainer(color, gem, fillAmount, null);
+		return new HeartContainer(color, gem, fillAmount, null, null);
 	}
 	
 	public static HeartContainer createGlass(IGlassHeart igh) {
-		return new HeartContainer(igh.getColor(), igh.getGem(), igh.getLifeforce()/(float)GlassHearts.inst.configGlassHeartCapacity, igh.getPos());
+		return new HeartContainer(igh.getColor(), igh.getGem(), igh.getLifeforce()/(float)GlassHearts.inst.configGlassHeartCapacity, igh.getHeartWorld(), igh.getHeartPos());
 	}
 	
 	
+	// intended-to-be-overridden methods
+	
+	public boolean canHeal() {
+		return glassColor == null;
+	}
+	
+	public void damage(float amount, DamageSource src) {
+		fillAmount -= amount;
+		IGlassHeart igh = getOwner();
+		if (igh != null) {
+			igh.setLifeforce(MathHelper.ceil(igh.getLifeforce()-(GlassHearts.inst.configGlassHeartCapacity*amount)));
+		}
+	}
+	
+	public void heal(float amount) {
+		if (!canHeal()) return;
+		fillAmount += amount;
+	}
+	
+	
+	
+	// basic getters and setters
 	
 	public float getFillAmount() {
 		return fillAmount;
@@ -71,28 +98,10 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		return ownerPos;
 	}
 	
-	public IGlassHeart getOwner(World world) {
-		if (ownerPos == null) return null;
-		if (world.isBlockLoaded(ownerPos)) {
-			// so this can sometimes work on clients
-			TileEntity te = world.getTileEntity(ownerPos);
-			if (te instanceof TileEntityGlassHeart) {
-				return (TileEntityGlassHeart)te;
-			} else {
-				return null;
-			}
-		}
-		GlassHeartWorldData ghwd = GlassHeartWorldData.getDataFor(world);
-		return ghwd.get(ownerPos);
+	public World getOwnerWorld() {
+		return ownerWorld;
 	}
 	
-	public int getFillAmountInt() {
-		return ((int)(fillAmount*255f))&0xFF;
-	}
-	
-	public byte getFillAmountByte() {
-		return (byte)getFillAmountInt();
-	}
 	
 	
 	public void setFillAmount(float fillAmount) {
@@ -116,6 +125,42 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		this.ownerPos = ownerPos;
 	}
 	
+	public void setOwnerWorld(World ownerWorld) {
+		this.ownerWorld = ownerWorld;
+	}
+	
+	public HeartContainer copy() {
+		return new HeartContainer(glassColor, gem, fillAmount, ownerWorld, ownerPos);
+	}
+	
+	
+	
+	// convenience getters and setters
+	
+	public IGlassHeart getOwner() {
+		if (ownerPos == null) return null;
+		if (ownerWorld == null) return null;
+		if (ownerWorld.isBlockLoaded(ownerPos)) {
+			// so this can sometimes work on clients
+			TileEntity te = ownerWorld.getTileEntity(ownerPos);
+			if (te instanceof TileEntityGlassHeart) {
+				return (TileEntityGlassHeart)te;
+			} else {
+				return null;
+			}
+		}
+		GlassHeartWorldData ghwd = GlassHeartWorldData.getDataFor(ownerWorld);
+		return ghwd.get(ownerPos);
+	}
+	
+	public int getFillAmountInt() {
+		return ((int)(fillAmount*255f))&0xFF;
+	}
+	
+	public byte getFillAmountByte() {
+		return (byte)getFillAmountInt();
+	}
+	
 	public void setFillAmountInt(int fillAmount) {
 		setFillAmount((fillAmount&0xFF)/255f);
 	}
@@ -124,11 +169,9 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		setFillAmountInt(fillAmount&0xFF);
 	}
 	
-	public HeartContainer copy() {
-		return new HeartContainer(glassColor, gem, fillAmount, ownerPos);
-	}
 	
 	
+	// interface implementations
 	
 	@Override
 	public String toString() {
@@ -187,6 +230,12 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		setFillAmountByte(nbt.getByte("Fill"));
 		lastFillAmount = fillAmount;
 		ownerPos = nbt.hasKey("OwnerPos", NBT.TAG_LONG) ? BlockPos.fromLong(nbt.getLong("OwnerPos")) : null;
+	}
+	
+	public static HeartContainer createFromNBT(NBTTagCompound nbt) {
+		HeartContainer hc = new HeartContainer(null, EnumGem.NONE, 0, null, null);
+		hc.deserializeNBT(nbt);
+		return hc;
 	}
 	
 	@Override

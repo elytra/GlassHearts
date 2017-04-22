@@ -4,13 +4,15 @@ import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.enums.EnumGlassColor;
 
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 public interface IGlassHeart {
 	int getLifeforce();
 	int getLifeforceBuffer();
 	EnumGem getGem();
 	EnumGlassColor getColor();
-	BlockPos getPos();
+	BlockPos getHeartPos();
+	World getHeartWorld();
 	boolean hasBeenFull();
 	
 	void setLifeforce(int lifeforce);

@@ -14,6 +14,9 @@ import com.elytradev.concrete.reflect.invoker.Invokers;
 import com.elytradev.glasshearts.block.BlockGlassHeart;
 import com.elytradev.glasshearts.block.BlockOre;
 import com.elytradev.glasshearts.block.BlockPetrifiedLog;
+import com.elytradev.glasshearts.capability.CapabilityHealthHandler;
+import com.elytradev.glasshearts.capability.EntityHealthHandler;
+import com.elytradev.glasshearts.capability.IHealthHandler;
 import com.elytradev.glasshearts.enchant.EnchantmentSapping;
 import com.elytradev.glasshearts.entity.EntityAICreeperSeekHeart;
 import com.elytradev.glasshearts.enums.EnumGem;
@@ -38,6 +41,7 @@ import com.google.common.collect.Sets;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EnumCreatureAttribute;
 import net.minecraft.entity.monster.EntityCreeper;
@@ -56,6 +60,7 @@ import net.minecraft.stats.StatBase;
 import net.minecraft.stats.StatBasic;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
@@ -67,9 +72,14 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingHealEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickItem;
 import net.minecraftforge.fluids.BlockFluidClassic;
 import net.minecraftforge.fluids.Fluid;
@@ -350,6 +360,49 @@ public class GlassHearts {
 		ph.resync();
 	}
 	
+	@SubscribeEvent(priority=EventPriority.LOWEST)
+	public void onHurt(LivingHurtEvent e) {
+		float amt = e.getAmount();
+		if (amt > e.getEntityLiving().getAbsorptionAmount()) {
+			amt -= e.getEntityLiving().getAbsorptionAmount();
+			if (e.getEntityLiving().hasCapability(CapabilityHealthHandler.CAPABILITY, null)) {
+				IHealthHandler cap = e.getEntityLiving().getCapability(CapabilityHealthHandler.CAPABILITY, null);
+				cap.damage(amt/2f, e.getSource());
+			}
+		}
+	}
+	
+	@SubscribeEvent(priority=EventPriority.LOWEST)
+	public void onHeal(LivingHealEvent e) {
+		if (e.getEntityLiving().hasCapability(CapabilityHealthHandler.CAPABILITY, null)) {
+			IHealthHandler cap = e.getEntityLiving().getCapability(CapabilityHealthHandler.CAPABILITY, null);
+			cap.heal(e.getAmount()/2f);
+		}
+	}
+	
+	@SubscribeEvent
+	public void onPlayerAttachCapabilities(AttachCapabilitiesEvent<Entity> e) {
+		if (e.getObject() instanceof EntityPlayer) {
+			EntityPlayer player = (EntityPlayer)e.getObject();
+			EntityHealthHandler bhh = new EntityHealthHandler(player);
+			e.addCapability(new ResourceLocation("glasshearts", "health"), new ICapabilityProvider() {
+				
+				@Override
+				public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
+					return facing == null && capability == CapabilityHealthHandler.CAPABILITY;
+				}
+				
+				@Override
+				public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
+					if (capability == CapabilityHealthHandler.CAPABILITY && facing == null) {
+						return (T)bhh;
+					}
+					return null;
+				}
+			});
+		}
+	}
+	
 	@SubscribeEvent
 	public void onServerTick(ServerTickEvent e) {
 		for (EntityPlayer ep : FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayers()) {
@@ -375,19 +428,19 @@ public class GlassHearts {
 			for (GlassHeartData ghd : data.all()) {
 				if (ghd.getGem() == EnumGem.RUBY && ghd.getLifeforce() == 0 && ghd.hasBeenFull() && e.world instanceof WorldServer) {
 					((WorldServer)e.world).spawnParticle(EnumParticleTypes.ITEM_CRACK,
-							ghd.getPos().getX()+0.5, ghd.getPos().getY()+0.5, ghd.getPos().getZ()+0.5, 32,
+							ghd.getHeartPos().getX()+0.5, ghd.getHeartPos().getY()+0.5, ghd.getHeartPos().getZ()+0.5, 32,
 							0, 0, 0, 0.2, Item.getIdFromItem(GEM), 1);
-					e.world.playSound(null, ghd.getPos(), SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.BLOCKS, 1f, 2f);
+					e.world.playSound(null, ghd.getHeartPos(), SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.BLOCKS, 1f, 2f);
 				}
 				update(ghd, e.world.getTotalWorldTime());
-				if (e.world.isBlockLoaded(ghd.getPos())) {
-					TileEntity te = e.world.getTileEntity(ghd.getPos());
+				if (e.world.isBlockLoaded(ghd.getHeartPos())) {
+					TileEntity te = e.world.getTileEntity(ghd.getHeartPos());
 					if (!(te instanceof TileEntityGlassHeart)) {
-						LOG.warn("Deleting orphaned Glass Heart at {}, {}, {}", ghd.getPos().getX(), ghd.getPos().getY(), ghd.getPos().getZ());
+						LOG.warn("Deleting orphaned Glass Heart at {}, {}, {}", ghd.getHeartPos().getX(), ghd.getHeartPos().getY(), ghd.getHeartPos().getZ());
 						if (remove.isEmpty()) {
 							remove = Sets.newHashSet();
 						}
-						remove.add(ghd.getPos());
+						remove.add(ghd.getHeartPos());
 					}
 				}
 			}
