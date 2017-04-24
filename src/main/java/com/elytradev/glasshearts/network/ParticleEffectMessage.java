@@ -9,6 +9,8 @@ import com.elytradev.glasshearts.client.ParticleAttune;
 import com.elytradev.glasshearts.client.ParticleRedstoneSeekEntity;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.particle.Particle;
+import net.minecraft.client.particle.ParticleSpell;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.relauncher.Side;
@@ -17,6 +19,11 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @ReceivedOn(Side.CLIENT)
 public class ParticleEffectMessage extends Message {
 
+	public static final int EFFECT_SAP = 0;
+	public static final int EFFECT_ATTUNE = 1;
+	public static final int EFFECT_AMETHYST = 2;
+	public static final int EFFECT_TOPAZ = 3;
+	
 	@MarshalledAs("i32")
 	public int posXFixed;
 	@MarshalledAs("i32")
@@ -59,13 +66,21 @@ public class ParticleEffectMessage extends Message {
 			float y = (float)(target.world.rand.nextGaussian());
 			float z = (float)(target.world.rand.nextGaussian());
 
-			if (effect == 0) {
+			if (effect == EFFECT_SAP) {
 				ParticleRedstoneSeekEntity p = new ParticleRedstoneSeekEntity(target, target.world, posX+(r*x), posY+(r*y), posZ+(r*z), 1, 0.8f, 0, 0);
 				p.setVelocity(x/4, y/4, z/4);
 				Minecraft.getMinecraft().effectRenderer.addEffect(p);
-			} else if (effect == 1) {
+			} else if (effect == EFFECT_ATTUNE) {
 				ParticleAttune p = new ParticleAttune(target, target.world, posX+(r*x), posY+(r*y), posZ+(r*z), 1, 0.8f, 0, 0);
 				p.setVelocity(x/4, y/4, z/4);
+				Minecraft.getMinecraft().effectRenderer.addEffect(p);
+			} else if (effect == EFFECT_AMETHYST) {
+				Particle p = new ParticleSpell.MobFactory().createParticle(0, target.world, posX+x, posY+y, posZ+z, 0.80, 0.36, 0.67);
+				p.multiplyVelocity(4);
+				Minecraft.getMinecraft().effectRenderer.addEffect(p);
+			} else if (effect == EFFECT_TOPAZ) {
+				Particle p = new ParticleSpell.MobFactory().createParticle(0, target.world, posX+x, posY+y, posZ+z, 0.15, 0.32, 0.65);
+				p.multiplyVelocity(4);
 				Minecraft.getMinecraft().effectRenderer.addEffect(p);
 			}
 		}

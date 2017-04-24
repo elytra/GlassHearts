@@ -46,13 +46,15 @@ public class UpdateHeartsMessage extends Message {
 		}
 		for (int i = 0; i < containers.size(); i++) {
 			if (startIndex+i >= li.size()) {
-				li.add(containers.get(i));
+				if (containers.get(i) != null) {
+					li.add(containers.get(i));
+				}
 			} else {
 				HeartContainer old = li.get(startIndex+i);
 				HeartContainer nw = containers.get(i);
 				if (nw == null) {
 					li.remove(startIndex+i);
-					startIndex++;
+					startIndex--;
 				} else if (old != null &&
 						old.getGlassColor() == nw.getGlassColor() &&
 						old.getGem() == nw.getGem()) {

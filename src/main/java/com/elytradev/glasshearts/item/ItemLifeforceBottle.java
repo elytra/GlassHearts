@@ -160,7 +160,7 @@ public class ItemLifeforceBottle extends Item {
 			if (!te.getWorld().isRemote) {
 				IFluidHandler ifh = te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, facing);
 				int amt = ifh.fill(new FluidStack(GlassHearts.inst.LIFEFORCE, GlassHearts.inst.configLifeforceBottleSize), false);
-				if (amt == GlassHearts.inst.configLifeforceBottleSize) {
+				if (amt > 20 && amt <= GlassHearts.inst.configLifeforceBottleSize) {
 					ifh.fill(new FluidStack(GlassHearts.inst.LIFEFORCE, GlassHearts.inst.configLifeforceBottleSize), true);
 					te.getWorld().playSound(null, te.getPos(), SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1f, 1f);
 					return EnumActionResult.SUCCESS;

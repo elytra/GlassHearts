@@ -4,11 +4,9 @@ import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.List;
 
-import com.elytradev.glasshearts.GlassHearts;
-import com.elytradev.glasshearts.capability.CapabilityHealthHandler;
-import com.elytradev.glasshearts.capability.IHealthHandler;
+import com.elytradev.glasshearts.capability.CapabilityHeartHandler;
+import com.elytradev.glasshearts.capability.IHeartHandler;
 import com.elytradev.glasshearts.enums.EnumGem;
-import com.elytradev.glasshearts.enums.EnumGlassColor;
 import com.elytradev.glasshearts.network.PlayHeartEffectMessage;
 import com.elytradev.glasshearts.network.UpdateHeartsMessage;
 import com.google.common.base.Objects;
@@ -16,10 +14,8 @@ import com.google.common.collect.Lists;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.common.util.INBTSerializable;
 
-public class PlayerHandler implements INBTSerializable<NBTTagCompound> {
+public class PlayerHandler {
 
 	private final WeakReference<EntityPlayer> player;
 	
@@ -34,10 +30,10 @@ public class PlayerHandler implements INBTSerializable<NBTTagCompound> {
 		return ep == null || ep.isDead ? null : ep;
 	}
 	
-	protected IHealthHandler getHealthHandler(Entity entity) {
+	protected IHeartHandler getHealthHandler(Entity entity) {
 		if (entity == null) return null;
-		if (entity.hasCapability(CapabilityHealthHandler.CAPABILITY, null)) {
-			return entity.getCapability(CapabilityHealthHandler.CAPABILITY, null);
+		if (entity.hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
+			return entity.getCapability(CapabilityHeartHandler.CAPABILITY, null);
 		}
 		return null;
 	}
@@ -45,32 +41,39 @@ public class PlayerHandler implements INBTSerializable<NBTTagCompound> {
 	public void preTick() {
 		EntityPlayer player = getPlayer();
 		if (player == null) return;
-		IHealthHandler ihh = getHealthHandler(player);
+		IHeartHandler ihh = getHealthHandler(player);
 		if (ihh == null) return;
 		float hp = 0;
+		int destroyed = 0;
 		for (int i = 0; i < ihh.getContainers(); i++) {
 			HeartContainer hc = ihh.getContainer(i);
 			IGlassHeart igh = hc.getOwner();
 			if (igh != null) {
-				int amt = (int)((igh.getLifeforce()/((float)GlassHearts.inst.configGlassHeartCapacity))*255);
-				if (hc.getFillAmountInt() != amt) {
+				int amt = (int)((igh.getLifeforce()/((float)igh.getLifeforceCapacity()))*255);
+				if (hc.getFillAmountInt() != amt || hc.getGem() != igh.getGem()) {
 					hc = hc.copy();
 					hc.setFillAmountInt(amt);
+					hc.setGem(igh.getGem());
 					ihh.setContainer(i, hc);
 				}
 			} else if (hc.getOwnerPos() != null) {
 				ihh.removeContainer(i);
-				new PlayHeartEffectMessage(hc.getGlassColor().ordinal(), i).sendTo(player);
+				new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_HEART_SHATTER, hc.getGlassColor().ordinal(), i+destroyed).sendTo(player);
 				if (hc.getGem() != EnumGem.NONE) {
-					new PlayHeartEffectMessage(hc.getGem().ordinal()+(EnumGlassColor.values().length), i).sendTo(player);
+					new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_GEM_SHATTER, hc.getGem().ordinal(), i+destroyed).sendTo(player);
 				}
+				destroyed++;
 				i--;
 			}
 		}
 		for (HeartContainer hc : ihh) {
 			hp += hc.getFillAmount();
 		}
-		player.setHealth(hp*2);
+		if (player.isEntityAlive()) {
+			player.setHealth(hp*2);
+		} else {
+			player.setHealth(0);
+		}
 	}
 	
 	public void postTick() {
@@ -84,7 +87,7 @@ public class PlayerHandler implements INBTSerializable<NBTTagCompound> {
 	public void resync() {
 		EntityPlayer player = getPlayer();
 		if (player == null) return;
-		IHealthHandler ihh = getHealthHandler(player);
+		IHeartHandler ihh = getHealthHandler(player);
 		if (ihh == null) return;
 		if (lastContainers.isEmpty()) {
 			for (HeartContainer hc : ihh) {
@@ -120,18 +123,6 @@ public class PlayerHandler implements INBTSerializable<NBTTagCompound> {
 				new UpdateHeartsMessage(start, false, sub).sendTo(player);
 			}
 		}
-	}
-
-	@Override
-	public NBTTagCompound serializeNBT() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void deserializeNBT(NBTTagCompound nbt) {
-		// TODO Auto-generated method stub
-		
 	}
 	
 }

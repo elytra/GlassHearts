@@ -152,8 +152,13 @@ public class HeartRenderer extends Gui {
 				nextAlpha = 0;
 			} else {
 				fill = hc.getFillAmount();
-				uOffset = (int)decay;
-				nextAlpha = decay%1;
+				if (hc.getGlassColor() == null) {
+					uOffset = (int)decay;
+					nextAlpha = decay%1;
+				} else {
+					uOffset = 0;
+					nextAlpha = 0;
+				}
 			}
 			
 			int oldY = y;
@@ -181,7 +186,11 @@ public class HeartRenderer extends Gui {
 				bgFgIdx = 2;
 			}
 			// background
-			drawModalRectWithCustomSizedTexture(x, y, 9+((bgFgIdx*18)+(highlight?9:0)), 27, 9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			drawModalRectWithCustomSizedTexture(x, y, 9+(bgFgIdx*18), 27, 9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			if (highlight) {
+				// highlight overlay
+				drawModalRectWithCustomSizedTexture(x, y, 18+(bgFgIdx*18), 27, 9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			}
 			
 			int fillIdx;
 			if (player.isPotionActive(MobEffects.WITHER)) {
@@ -224,8 +233,11 @@ public class HeartRenderer extends Gui {
 				ofsR = 0;
 			}
 			// foreground
-			drawModalRectWithCustomSizedTexture(x+ofsL, y, 9+ofsL+((bgFgIdx*18)+(highlight?9:0)), 36, 9-(ofsL+ofsR), 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			drawModalRectWithCustomSizedTexture(x+ofsL, y, 9+ofsL+(bgFgIdx*18), 36, 9-(ofsL+ofsR), 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
 			GlStateManager.color(1, 1, 1);
+			if (highlight) {
+				drawModalRectWithCustomSizedTexture(x+ofsL, y, 18+ofsL+(bgFgIdx*18), 36, 9-(ofsL+ofsR), 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			}
 			if (mc.world.getWorldInfo().isHardcoreModeEnabled() && hc != null && hc.getGlassColor() == null) {
 				// hardcore eyes
 				drawModalRectWithCustomSizedTexture(x, y, 9, 72+((fillIdx*18)+(highlight?9:0)), fill*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);

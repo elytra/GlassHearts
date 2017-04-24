@@ -13,6 +13,7 @@ import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
 import com.google.common.collect.Lists;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.particle.ParticleRedstone;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.color.IItemColor;
@@ -88,6 +89,7 @@ public class ClientProxy extends CommonProxy {
 			if (GlassHearts.inst.configOverrideHealthRenderer && !heartRenderer.containers.isEmpty()) {
 				e.setCanceled(true);
 				heartRenderer.renderHealth(e.getResolution(), e.getPartialTicks());
+				Minecraft.getMinecraft().getTextureManager().bindTexture(Gui.ICONS);
 			}
 		}
 	}
@@ -178,6 +180,8 @@ public class ClientProxy extends CommonProxy {
 						}
 					}
 				}
+			} else {
+				glassHearts.clear();
 			}
 		}
 	}

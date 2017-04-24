@@ -1,6 +1,7 @@
 package com.elytradev.glasshearts;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -14,9 +15,9 @@ import com.elytradev.concrete.reflect.invoker.Invokers;
 import com.elytradev.glasshearts.block.BlockGlassHeart;
 import com.elytradev.glasshearts.block.BlockOre;
 import com.elytradev.glasshearts.block.BlockPetrifiedLog;
-import com.elytradev.glasshearts.capability.CapabilityHealthHandler;
-import com.elytradev.glasshearts.capability.EntityHealthHandler;
-import com.elytradev.glasshearts.capability.IHealthHandler;
+import com.elytradev.glasshearts.capability.CapabilityHeartHandler;
+import com.elytradev.glasshearts.capability.EntityHeartHandler;
+import com.elytradev.glasshearts.capability.IHeartHandler;
 import com.elytradev.glasshearts.enchant.EnchantmentSapping;
 import com.elytradev.glasshearts.entity.EntityAICreeperSeekHeart;
 import com.elytradev.glasshearts.enums.EnumGem;
@@ -26,6 +27,7 @@ import com.elytradev.glasshearts.item.ItemBlockOre;
 import com.elytradev.glasshearts.item.ItemGem;
 import com.elytradev.glasshearts.item.ItemLifeforceBottle;
 import com.elytradev.glasshearts.item.ItemStaff;
+import com.elytradev.glasshearts.logic.HeartContainer;
 import com.elytradev.glasshearts.logic.IGlassHeart;
 import com.elytradev.glasshearts.logic.PlayerHandler;
 import com.elytradev.glasshearts.network.ParticleEffectMessage;
@@ -36,6 +38,7 @@ import com.elytradev.glasshearts.world.GenerateGems;
 import com.elytradev.glasshearts.world.GlassHeartData;
 import com.elytradev.glasshearts.world.GlassHeartWorldData;
 import com.google.common.base.Predicates;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import net.minecraft.block.material.Material;
@@ -171,6 +174,8 @@ public class GlassHearts {
 	};
 	
 	private Invoker rayTrace = Invokers.findMethod(Item.class, null, new String[] {"func_77621_a", "rayTrace", "a"}, World.class, EntityPlayer.class, boolean.class);
+	private Invoker applyArmorCalculations = Invokers.findMethod(EntityLivingBase.class, null, new String[] { "func_70655_b", "applyArmorCalculations", "b" }, DamageSource.class, float.class);
+	private Invoker applyPotionDamageCalculations = Invokers.findMethod(EntityLivingBase.class, null, new String[] { "func_70672_c", "applyPotionDamageCalculations", "c" }, DamageSource.class, float.class);
 	
 	private Map<EntityPlayer, PlayerHandler> playerHandlers = new WeakHashMap<>();
 	
@@ -363,20 +368,33 @@ public class GlassHearts {
 	@SubscribeEvent(priority=EventPriority.LOWEST)
 	public void onHurt(LivingHurtEvent e) {
 		float amt = e.getAmount();
-		if (amt > e.getEntityLiving().getAbsorptionAmount()) {
-			amt -= e.getEntityLiving().getAbsorptionAmount();
-			if (e.getEntityLiving().hasCapability(CapabilityHealthHandler.CAPABILITY, null)) {
-				IHealthHandler cap = e.getEntityLiving().getCapability(CapabilityHealthHandler.CAPABILITY, null);
-				cap.damage(amt/2f, e.getSource());
+		if (e.getEntityLiving().hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
+			IHeartHandler cap = e.getEntityLiving().getCapability(CapabilityHeartHandler.CAPABILITY, null);
+			amt = (Float)applyArmorCalculations.invoke(e.getEntityLiving(), e.getSource(), amt);
+			amt = (Float)applyPotionDamageCalculations.invoke(e.getEntityLiving(), e.getSource(), amt);
+
+			if (amt != 0) {
+				e.getEntityLiving().getCombatTracker().trackDamage(e.getSource(), cap.totalHealth()*2, amt);
+				e.getEntityLiving().setAbsorptionAmount(e.getEntityLiving().getAbsorptionAmount() - amt);
+				cap.damage(amt/2, e.getSource());
 			}
+			e.setAmount(0);
 		}
 	}
 	
 	@SubscribeEvent(priority=EventPriority.LOWEST)
 	public void onHeal(LivingHealEvent e) {
-		if (e.getEntityLiving().hasCapability(CapabilityHealthHandler.CAPABILITY, null)) {
-			IHealthHandler cap = e.getEntityLiving().getCapability(CapabilityHealthHandler.CAPABILITY, null);
-			cap.heal(e.getAmount()/2f);
+		if (e.getEntityLiving().hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
+			IHeartHandler cap = e.getEntityLiving().getCapability(CapabilityHeartHandler.CAPABILITY, null);
+			float amt = e.getAmount()/2f;
+			float taken = cap.heal(amt);
+			if (taken < amt) {
+				float waste = (amt-taken);
+				if (waste >= 0.5f && e.getEntityLiving() instanceof EntityPlayer) {
+					new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_WASTED_HEALING, (int)(waste*2)-1, cap.getContainers()-1).sendTo((EntityPlayer)e.getEntityLiving());
+				}
+			}
+			e.setAmount(0);
 		}
 	}
 	
@@ -384,17 +402,17 @@ public class GlassHearts {
 	public void onPlayerAttachCapabilities(AttachCapabilitiesEvent<Entity> e) {
 		if (e.getObject() instanceof EntityPlayer) {
 			EntityPlayer player = (EntityPlayer)e.getObject();
-			EntityHealthHandler bhh = new EntityHealthHandler(player);
+			EntityHeartHandler bhh = new EntityHeartHandler(player);
 			e.addCapability(new ResourceLocation("glasshearts", "health"), new ICapabilityProvider() {
 				
 				@Override
 				public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
-					return facing == null && capability == CapabilityHealthHandler.CAPABILITY;
+					return facing == null && capability == CapabilityHeartHandler.CAPABILITY;
 				}
 				
 				@Override
 				public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
-					if (capability == CapabilityHealthHandler.CAPABILITY && facing == null) {
+					if (capability == CapabilityHeartHandler.CAPABILITY && facing == null) {
 						return (T)bhh;
 					}
 					return null;
@@ -426,13 +444,6 @@ public class GlassHearts {
 			GlassHeartWorldData data = GlassHeartWorldData.getDataFor(e.world);
 			Set<BlockPos> remove = Collections.emptySet();
 			for (GlassHeartData ghd : data.all()) {
-				if (ghd.getGem() == EnumGem.RUBY && ghd.getLifeforce() == 0 && ghd.hasBeenFull() && e.world instanceof WorldServer) {
-					((WorldServer)e.world).spawnParticle(EnumParticleTypes.ITEM_CRACK,
-							ghd.getHeartPos().getX()+0.5, ghd.getHeartPos().getY()+0.5, ghd.getHeartPos().getZ()+0.5, 32,
-							0, 0, 0, 0.2, Item.getIdFromItem(GEM), 1);
-					e.world.playSound(null, ghd.getHeartPos(), SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.BLOCKS, 1f, 2f);
-				}
-				update(ghd, e.world.getTotalWorldTime());
 				if (e.world.isBlockLoaded(ghd.getHeartPos())) {
 					TileEntity te = e.world.getTileEntity(ghd.getHeartPos());
 					if (!(te instanceof TileEntityGlassHeart)) {
@@ -441,7 +452,11 @@ public class GlassHearts {
 							remove = Sets.newHashSet();
 						}
 						remove.add(ghd.getHeartPos());
+					} else {
+						update((TileEntityGlassHeart)te, e.world.getTotalWorldTime());
 					}
+				} else {
+					update(ghd, e.world.getTotalWorldTime());
 				}
 			}
 			for (BlockPos pos : remove) {
@@ -451,28 +466,48 @@ public class GlassHearts {
 	}
 	
 	public void update(IGlassHeart igh, long ticks) {
-		if (igh.getLifeforceBuffer() > 0 && igh.getLifeforce() < configGlassHeartCapacity) {
-			int amt = Math.min(configGlassHeartFillRate, Math.min(igh.getLifeforceBuffer(), configGlassHeartCapacity-igh.getLifeforce()));
-			igh.setLifeforceBuffer(igh.getLifeforceBuffer()-amt);
-			igh.setLifeforce(igh.getLifeforce()+amt);
-		}
-		if (igh.getGem().getState(igh) != EnumGemState.INACTIVE) {
-			if (igh.getGem() == EnumGem.OPAL) {
-				if (ticks%10 == 0) {
-					if (igh.getLifeforce() < configGlassHeartCapacity) {
-						igh.setLifeforce(igh.getLifeforce()+1);
+		if (igh.getGem() != EnumGem.NONE && igh.getGem().getState(igh) != EnumGemState.INACTIVE) {
+			EnumGem originalGem = igh.getGem();
+			igh.getGem().update(igh, ticks);
+			if (igh.getLifeforce() == 0 && igh.hasBeenFull()) {
+				igh.getGem().onEmpty(igh);
+			}
+			if (igh.getGem() == EnumGem.NONE) {
+				if (igh.getHeartWorld() instanceof WorldServer) {
+					ItemStack is = originalGem.getRenderingSingleton();
+					((WorldServer)igh.getHeartWorld()).spawnParticle(EnumParticleTypes.ITEM_CRACK,
+							igh.getHeartPos().getX()+0.5, igh.getHeartPos().getY()+0.5, igh.getHeartPos().getZ()+0.5, 32,
+							0, 0, 0, 0.2, Item.getIdFromItem(is.getItem()), is.getMetadata());
+					igh.getHeartWorld().playSound(null, igh.getHeartPos(), SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.BLOCKS, 1f, 2f);
+				}
+				for (EntityPlayer ep : getAllOnlineAttunedPlayers(igh)) {
+					IHeartHandler ihh = ep.getCapability(CapabilityHeartHandler.CAPABILITY, null);
+					for (int i = 0; i < ihh.getContainers(); i++) {
+						HeartContainer hc = ihh.getContainer(i);
+						if (igh.getHeartPos().equals(hc.getOwnerPos())) {
+							hc = hc.copy();
+							hc.setGem(EnumGem.NONE);
+							ihh.setContainer(i, hc);
+							new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_GEM_SHATTER, originalGem.ordinal()-1, i).sendTo(ep);
+						}
 					}
 				}
-			} else if (igh.getGem() == EnumGem.RUBY && igh.getLifeforce() == 0) {
-				igh.setGem(EnumGem.NONE);
-				igh.setLifeforce(configGlassHeartCapacity);
 			}
 		}
-		if (igh.getLifeforce() == 0) {
-			igh.setHasBeenFull(false);
+		if (igh.getHeartWorld() == null || !igh.getHeartWorld().isRemote) {
+			if (igh.getLifeforce() == 0) {
+				igh.setHasBeenFull(false);
+			}
+			if (igh.getLifeforce() == igh.getLifeforceCapacity()) {
+				igh.setHasBeenFull(true);
+			}
 		}
-		if (igh.getLifeforce() == configGlassHeartCapacity) {
-			igh.setHasBeenFull(true);
+		
+		if (igh.getLifeforceBuffer() > 0 && igh.getLifeforce() < igh.getLifeforceCapacity()) {
+			int rate = igh.getGem().adjustFillRate(configGlassHeartFillRate);
+			int amt = Math.min(rate, Math.min(igh.getLifeforceBuffer(), igh.getLifeforceCapacity()-igh.getLifeforce()));
+			igh.setLifeforceBuffer(igh.getLifeforceBuffer()-amt);
+			igh.setLifeforce(igh.getLifeforce()+amt);
 		}
 	}
 	
@@ -549,14 +584,38 @@ public class GlassHearts {
 		}
 	}
 	
+	public static List<EntityPlayer> getAllOnlineAttunedPlayers(IGlassHeart igh) {
+		Iterable<? extends EntityPlayer> players;
+		if (igh.getHeartWorld() != null) {
+			if (igh.getHeartWorld().getMinecraftServer() != null) {
+				players = igh.getHeartWorld().getMinecraftServer().getPlayerList().getPlayers();
+			} else {
+				players = igh.getHeartWorld().playerEntities;
+			}
+		} else {
+			return Collections.emptyList();
+		}
+		List<EntityPlayer> li = Lists.newArrayList();
+		for (EntityPlayer ep : players) {
+			if (ep.hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
+				IHeartHandler ihh = ep.getCapability(CapabilityHeartHandler.CAPABILITY, null);
+				for (HeartContainer hc : ihh) {
+					if (igh.getHeartPos().equals(hc.getOwnerPos())) {
+						li.add(ep);
+						break;
+					}
+				}
+			}
+		}
+		return li;
+	}
+	
 	public static void sendUpdatePacket(TileEntity te) {
 		sendUpdatePacket(te, te.getUpdateTag());
 	}
 	
 	public static void sendUpdatePacket(TileEntity te, NBTTagCompound nbt) {
 		if (!te.hasWorld() || te.getWorld().isRemote) return;
-		Thread.dumpStack();
-		System.out.println("SYNC "+te.getPos().getX()+", "+te.getPos().getY()+", "+te.getPos().getZ());
 		WorldServer ws = (WorldServer)te.getWorld();
 		Chunk c = te.getWorld().getChunkFromBlockCoords(te.getPos());
 		SPacketUpdateTileEntity packet = new SPacketUpdateTileEntity(te.getPos(), te.getBlockMetadata(), nbt);

@@ -3,8 +3,8 @@ package com.elytradev.glasshearts.block;
 import org.apache.logging.log4j.LogManager;
 
 import com.elytradev.glasshearts.GlassHearts;
-import com.elytradev.glasshearts.capability.CapabilityHealthHandler;
-import com.elytradev.glasshearts.capability.IHealthHandler;
+import com.elytradev.glasshearts.capability.CapabilityHeartHandler;
+import com.elytradev.glasshearts.capability.IHeartHandler;
 import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.enums.EnumGemState;
 import com.elytradev.glasshearts.enums.EnumGlassColor;
@@ -37,6 +37,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -90,6 +91,21 @@ public class BlockGlassHeart extends Block {
 	}
 	
 	@Override
+	public boolean hasComparatorInputOverride(IBlockState state) {
+		return true;
+	}
+	
+	@Override
+	public int getComparatorInputOverride(IBlockState blockState, World worldIn, BlockPos pos) {
+		TileEntity te = worldIn.getTileEntity(pos);
+		if (te instanceof TileEntityGlassHeart) {
+			TileEntityGlassHeart tegh = (TileEntityGlassHeart)te;
+			return (int)(((tegh.getLifeforce()+tegh.getLifeforceBuffer())/(float)tegh.getLifeforceCapacity())*15);
+		}
+		return super.getComparatorInputOverride(blockState, worldIn, pos);
+	}
+	
+	@Override
 	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
 		ItemStack stack = playerIn.getHeldItem(hand);
 		TileEntity te = worldIn.getTileEntity(pos);
@@ -122,28 +138,36 @@ public class BlockGlassHeart extends Block {
 					return true;
 				}
 			} else if (stack.getItem() == GlassHearts.inst.STAFF) {
-				if (playerIn.hasCapability(CapabilityHealthHandler.CAPABILITY, null)) {
-					IHealthHandler cap = playerIn.getCapability(CapabilityHealthHandler.CAPABILITY, null);
+				if (worldIn.isRemote) return true;
+				if (playerIn.hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
+					IHeartHandler cap = playerIn.getCapability(CapabilityHeartHandler.CAPABILITY, null);
 					for (int i = 0; i < cap.getContainers(); i++) {
 						HeartContainer hc = cap.getContainer(i);
 						if (Objects.equal(hc.getOwnerPos(), pos)) {
+							if (tegh.getGem().getState(tegh) == EnumGemState.ACTIVE_CURSED) {
+								return false;
+							}
 							cap.removeContainer(i);
 							return true;
 						}
 					}
-					cap.addContainer(HeartContainer.createGlass(tegh));
-					stack.damageItem(1, playerIn);
-					worldIn.playSound(null, pos, GlassHearts.inst.ATTUNE, SoundCategory.PLAYERS, 1f, 2f);
-					new ParticleEffectMessage(pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5, playerIn, 1).sendToAllWatchingAndSelf(playerIn);
+					if (cap.getContainers() < 40) {
+						cap.addContainer(HeartContainer.createGlass(tegh));
+						stack.damageItem(1, playerIn);
+						worldIn.playSound(null, pos, GlassHearts.inst.ATTUNE, SoundCategory.PLAYERS, 1f, 2f);
+						new ParticleEffectMessage(pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5, playerIn, 1).sendToAllWatchingAndSelf(playerIn);
+					} else {
+						playerIn.sendStatusMessage(new TextComponentTranslation("msg.glasshearts.limitReached"), true);
+					}
 					return true;
 				} else {
 					return false;
 				}
-			} else if (stack.getItem() != GlassHearts.inst.LIFEFORCE_BOTTLE && tegh.getLifeforceBuffer() < GlassHearts.inst.configGlassHeartCapacity) {
+			} else if (stack.getItem() != GlassHearts.inst.LIFEFORCE_BOTTLE && tegh.getLifeforceBuffer() < tegh.getLifeforceCapacity()) {
 				try {
 					if (stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
 						IFluidHandlerItem ifhi = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
-						FluidStack rtrn = ifhi.drain(new FluidStack(GlassHearts.inst.LIFEFORCE, (GlassHearts.inst.configGlassHeartCapacity-tegh.getLifeforce())-tegh.getLifeforceBuffer()), !worldIn.isRemote);
+						FluidStack rtrn = ifhi.drain(new FluidStack(GlassHearts.inst.LIFEFORCE, (tegh.getLifeforceCapacity()-tegh.getLifeforce())-tegh.getLifeforceBuffer()), !worldIn.isRemote);
 						if (rtrn != null) {
 							if (rtrn.getFluid() == GlassHearts.inst.LIFEFORCE) {
 								if (stack.getItem() == GlassHearts.inst.LIFEFORCE_BOTTLE) {

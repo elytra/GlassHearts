@@ -73,8 +73,8 @@ public class RenderGlassHeart extends TileEntitySpecialRenderer<TileEntityGlassH
 			if (te.getGem() == EnumGem.OPAL && te.getGem().getState(te) != EnumGemState.INACTIVE) {
 				partial = ((te.getWorld().getTotalWorldTime()+partialTicks)%10)/10f;
 			}
-			float amt = ((te.getLifeforce()+partial)/GlassHearts.inst.configGlassHeartCapacity)*12f;
-			float bufferAmt = (te.getLifeforceBuffer()/(float)GlassHearts.inst.configGlassHeartCapacity)*12f;
+			float amt = ((te.getLifeforce()+partial)/te.getLifeforceCapacity())*12f;
+			float bufferAmt = (te.getLifeforceBuffer()/(float)te.getLifeforceCapacity())*12f;
 		
 			renderFill(amt);
 			if (bufferAmt > 0) {

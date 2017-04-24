@@ -33,6 +33,7 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 	private boolean client = false;
 	
 	private int clientLifeforce = 0;
+	private int clientLifeforceCapacity = 0;
 	private int clientLifeforceBuffer = 0;
 	private EnumGlassColor clientColor = EnumGlassColor.NONE;
 	private EnumGem clientGem = EnumGem.NONE;
@@ -55,9 +56,11 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 	public NBTTagCompound getUpdateTag() {
 		NBTTagCompound tag = super.getUpdateTag();
 		tag.setShort("Lifeforce", (short)getLifeforce());
+		tag.setShort("LifeforceCapacity", (short)getLifeforceCapacity());
 		tag.setShort("LifeforceBuffer", (short)getLifeforceBuffer());
 		tag.setByte("Color", (byte)getColor().ordinal());
 		tag.setByte("Gem", (byte)getGem().ordinal());
+		tag.setBoolean("HasBeenFull", hasBeenFull());
 		if (name != null) {
 			tag.setString("Name", name);
 		}
@@ -97,8 +100,10 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 		client = true;
 		clientLifeforce = tag.getInteger("Lifeforce");
 		clientLifeforceBuffer = tag.getInteger("LifeforceBuffer");
+		clientLifeforceCapacity = tag.getInteger("LifeforceCapacity");
 		clientColor = EnumGlassColor.values()[tag.getByte("Color")];
 		clientGem = EnumGem.values()[tag.getByte("Gem")];
+		clientHasBeenFull = tag.getBoolean("HasBeenFull");
 		name = tag.hasKey("Name", NBT.TAG_STRING) ? tag.getString("Name") : null;
 	}
 	
@@ -156,6 +161,12 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 	}
 	
 	@Override
+	public int getLifeforceCapacity() {
+		if (client) return clientLifeforceCapacity;
+		return getData().transform(GlassHeartData::getLifeforceCapacity).or(0);
+	}
+	
+	@Override
 	public EnumGlassColor getColor() {
 		if (client) return clientColor;
 		return getData().transform(GlassHeartData::getColor).or(EnumGlassColor.NONE);
@@ -193,6 +204,7 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 		getOrCreateData().setLifeforce(lifeforce);
 		if (oldLifeforce != lifeforce) {
 			GlassHearts.sendUpdatePacket(this);
+			getWorld().updateComparatorOutputLevel(getPos(), getBlockType());
 		}
 	}
 	
@@ -226,6 +238,7 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 		getOrCreateData().setLifeforceBuffer(lifeforceBuffer);
 		if (oldLifeforceBuffer != lifeforceBuffer) {
 			GlassHearts.sendUpdatePacket(this);
+			getWorld().updateComparatorOutputLevel(getPos(), getBlockType());
 		}
 	}
 	
@@ -257,15 +270,15 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 	@Override
 	public IFluidTankProperties[] getTankProperties() {
 		return new IFluidTankProperties[] {
-			new FluidTankProperties(new FluidStack(GlassHearts.inst.LIFEFORCE, getLifeforceBuffer()), GlassHearts.inst.configGlassHeartCapacity-getLifeforce(), true, false),
-			new FluidTankProperties(new FluidStack(GlassHearts.inst.LIFEFORCE, getLifeforce()), GlassHearts.inst.configGlassHeartCapacity, false, false)
+			new FluidTankProperties(new FluidStack(GlassHearts.inst.LIFEFORCE, getLifeforceBuffer()), getLifeforceCapacity()-getLifeforce(), true, false),
+			new FluidTankProperties(new FluidStack(GlassHearts.inst.LIFEFORCE, getLifeforce()), getLifeforceCapacity(), false, false)
 		};
 	}
 
 	@Override
 	public int fill(FluidStack resource, boolean doFill) {
 		if (resource != null && resource.getFluid() == GlassHearts.inst.LIFEFORCE) {
-			int max = (GlassHearts.inst.configGlassHeartCapacity-getLifeforce()) - getLifeforceBuffer();
+			int max = (getLifeforceCapacity()-getLifeforce()) - getLifeforceBuffer();
 			int amt = Math.min(resource.amount, max);
 			if (doFill) {
 				setLifeforceBuffer(getLifeforceBuffer()+amt);
