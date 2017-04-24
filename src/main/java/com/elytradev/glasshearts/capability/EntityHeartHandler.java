@@ -7,12 +7,12 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.MathHelper;
 
-public class EntityHealthHandler extends BasicHealthHandler {
+public class EntityHeartHandler extends BasicHeartHandler {
 
 	protected EntityLivingBase elb;
 	protected boolean initialized = false;
 	
-	public EntityHealthHandler(EntityLivingBase elb) {
+	public EntityHeartHandler(EntityLivingBase elb) {
 		this.elb = elb;
 	}
 	

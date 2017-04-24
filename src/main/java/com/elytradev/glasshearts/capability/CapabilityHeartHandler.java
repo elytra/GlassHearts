@@ -13,15 +13,15 @@ import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 
-public class CapabilityHealthHandler {
-	@CapabilityInject(IHealthHandler.class)
-	public static Capability<IHealthHandler> CAPABILITY;
+public class CapabilityHeartHandler {
+	@CapabilityInject(IHeartHandler.class)
+	public static Capability<IHeartHandler> CAPABILITY;
 	
 	public static void register() {
-		CapabilityManager.INSTANCE.register(IHealthHandler.class, new IStorage<IHealthHandler>() {
+		CapabilityManager.INSTANCE.register(IHeartHandler.class, new IStorage<IHeartHandler>() {
 
 			@Override
-			public NBTBase writeNBT(Capability<IHealthHandler> capability, IHealthHandler instance, EnumFacing side) {
+			public NBTBase writeNBT(Capability<IHeartHandler> capability, IHeartHandler instance, EnumFacing side) {
 				if (instance instanceof INBTSerializable) {
 					return ((INBTSerializable) instance).serializeNBT();
 				}
@@ -36,7 +36,7 @@ public class CapabilityHealthHandler {
 			}
 
 			@Override
-			public void readNBT(Capability<IHealthHandler> capability, IHealthHandler instance, EnumFacing side, NBTBase nbt) {
+			public void readNBT(Capability<IHeartHandler> capability, IHeartHandler instance, EnumFacing side, NBTBase nbt) {
 				if (instance instanceof INBTSerializable) {
 					((INBTSerializable) instance).deserializeNBT(nbt);
 					return;
@@ -50,6 +50,6 @@ public class CapabilityHealthHandler {
 				}
 			}
 			
-		}, BasicHealthHandler::new);
+		}, BasicHeartHandler::new);
 	}
 }

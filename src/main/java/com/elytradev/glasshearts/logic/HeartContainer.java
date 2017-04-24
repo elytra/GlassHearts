@@ -2,7 +2,6 @@ package com.elytradev.glasshearts.logic;
 
 import java.util.Locale;
 
-import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.enums.EnumGlassColor;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
@@ -51,7 +50,7 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 	}
 	
 	public static HeartContainer createGlass(IGlassHeart igh) {
-		return new HeartContainer(igh.getColor(), igh.getGem(), igh.getLifeforce()/(float)GlassHearts.inst.configGlassHeartCapacity, igh.getHeartWorld(), igh.getHeartPos());
+		return new HeartContainer(igh.getColor(), igh.getGem(), igh.getLifeforce()/(float)igh.getLifeforceCapacity(), igh.getHeartWorld(), igh.getHeartPos());
 	}
 	
 	
@@ -61,17 +60,36 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		return glassColor == null;
 	}
 	
-	public void damage(float amount, DamageSource src) {
-		fillAmount -= amount;
+	public float damage(float amount, DamageSource src) {
+		if (fillAmount <= 0) return 0;
+		float mult = gem.getMultiplier(src);
+		if (amount*mult > fillAmount && gem.doesBlockDamage(src, this)) {
+			fillAmount = 0;
+			IGlassHeart igh = getOwner();
+			if (igh != null) {
+				igh.setLifeforce(0);
+			}
+			return amount;
+		}
+		amount *= mult;
+		float dmg = Math.min(amount, fillAmount);
+		fillAmount -= dmg;
 		IGlassHeart igh = getOwner();
 		if (igh != null) {
-			igh.setLifeforce(MathHelper.ceil(igh.getLifeforce()-(GlassHearts.inst.configGlassHeartCapacity*amount)));
+			igh.setLifeforce(MathHelper.ceil(igh.getLifeforce()-(igh.getLifeforceCapacity()*dmg)));
 		}
+		return dmg / mult;
 	}
 	
-	public void heal(float amount) {
-		if (!canHeal()) return;
-		fillAmount += amount;
+	public float heal(float amount) {
+		if (!canHeal()) return 0;
+		float heal = Math.min(amount, 1-fillAmount);
+		fillAmount += heal;
+		IGlassHeart igh = getOwner();
+		if (igh != null) {
+			igh.setLifeforce(MathHelper.ceil(igh.getLifeforce()+(igh.getLifeforceCapacity()*heal)));
+		}
+		return heal;
 	}
 	
 	

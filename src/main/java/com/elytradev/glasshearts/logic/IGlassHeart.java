@@ -9,6 +9,7 @@ import net.minecraft.world.World;
 public interface IGlassHeart {
 	int getLifeforce();
 	int getLifeforceBuffer();
+	int getLifeforceCapacity();
 	EnumGem getGem();
 	EnumGlassColor getColor();
 	BlockPos getHeartPos();

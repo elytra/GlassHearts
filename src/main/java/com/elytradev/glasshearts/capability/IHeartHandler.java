@@ -4,20 +4,22 @@ import com.elytradev.glasshearts.logic.HeartContainer;
 
 import net.minecraft.util.DamageSource;
 
-public interface IHealthHandler extends Iterable<HeartContainer> {
+public interface IHeartHandler extends Iterable<HeartContainer> {
 	/**
 	 * Damage this IHealthHandler for {@code amount} <b>hearts</b>. This differs
 	 * from vanilla, which uses half-hearts.
 	 * @param amount The amount of damage to apply, in <b>hearts</b>.
 	 * @param src The source of the damage
+	 * @return The amount of damage that was applied
 	 */
-	void damage(float amount, DamageSource src);
+	float damage(float amount, DamageSource src);
 	/**
 	 * Heal this IHealthHandler for {@code amount} <b>hearts</b>. This differs
 	 * from vanilla, which uses half-hearts.
-	 * @param amount The amount of damage to apply, in <b>hearts</b>.
+	 * @param amount The amount of healing to apply, in <b>hearts</b>.
+	 * @return The amount of healing that was applied
 	 */
-	void heal(float amount);
+	float heal(float amount);
 	
 	/**
 	 * @return the amount of containers currently in this IHealthHandler
@@ -100,4 +102,9 @@ public interface IHealthHandler extends Iterable<HeartContainer> {
 	 * Remove all containers from this IHealthHandler.
 	 */
 	void clear();
+	
+	/**
+	 * @return The total amount of health stored in this handler, in hearts.
+	 */
+	float totalHealth();
 }

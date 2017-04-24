@@ -65,6 +65,11 @@ public class GlassHeartData implements INBTSerializable<NBTTagCompound>, IGlassH
 	}
 	
 	@Override
+	public int getLifeforceCapacity() {
+		return GlassHearts.inst.configGlassHeartCapacity;
+	}
+	
+	@Override
 	public boolean hasBeenFull() {
 		return hasBeenFull;
 	}
@@ -115,8 +120,8 @@ public class GlassHeartData implements INBTSerializable<NBTTagCompound>, IGlassH
 		pos = BlockPos.fromLong(nbt.getLong("Pos"));
 		color = Enums.getIfPresent(EnumGlassColor.class, nbt.getString("Color").toUpperCase(Locale.ROOT)).or(EnumGlassColor.NONE);
 		gem = Enums.getIfPresent(EnumGem.class, nbt.getString("Gem").toUpperCase(Locale.ROOT)).or(EnumGem.NONE);
-		lifeforce = Math.max(0, Math.min(nbt.getShort("Lifeforce"), GlassHearts.inst.configGlassHeartCapacity));
-		lifeforceBuffer = Math.max(0, Math.min(nbt.getShort("LifeforceBuffer"), GlassHearts.inst.configGlassHeartCapacity-lifeforce));
+		lifeforce = Math.max(0, Math.min(nbt.getShort("Lifeforce"), getLifeforceCapacity()));
+		lifeforceBuffer = Math.max(0, Math.min(nbt.getShort("LifeforceBuffer"), getLifeforceCapacity()-lifeforce));
 		hasBeenFull = nbt.getBoolean("HasBeenFull");
 	}
 	
