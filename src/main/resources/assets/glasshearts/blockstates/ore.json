@@ -11,7 +11,8 @@
 			"opal": { "textures": { "all": "glasshearts:blocks/opal_ore" } },
 			"ruby": { "textures": { "all": "glasshearts:blocks/ruby_ore" } },
 			"sapphire": { "textures": { "all": "glasshearts:blocks/sapphire_ore" } },
-			"topaz": { "textures": { "all": "glasshearts:blocks/topaz_ore" } }
+			"topaz": { "textures": { "all": "glasshearts:blocks/topaz_ore" } },
+			"agate": { "textures": { "all": "glasshearts:blocks/agate_ore" } }
 		}
 	}
 }

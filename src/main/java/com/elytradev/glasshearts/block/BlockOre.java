@@ -31,7 +31,8 @@ public class BlockOre extends Block {
 		EnumGem.TOPAZ,
 		EnumGem.SAPPHIRE,
 		EnumGem.OPAL,
-		EnumGem.ONYX
+		EnumGem.ONYX,
+		EnumGem.AGATE,
 	};
 	
 	public static final PropertyEnum<EnumGem> VARIANT = PropertyEnum.create("variant", EnumGem.class, VALID_GEMS);

@@ -69,7 +69,7 @@ public class RenderGlassHeart extends TileEntitySpecialRenderer<TileEntityGlassH
 		GlStateManager.disableBlend();
 		
 		if (MinecraftForgeClient.getRenderPass() == 0) {
-			float partial = te.getLifeforceBuffer() > 0 ? partialTicks*GlassHearts.inst.configGlassHeartFillRate : 0;
+			float partial = te.getLifeforceBuffer() > 0 ? partialTicks*te.getGem().adjustFillRate(GlassHearts.inst.configGlassHeartFillRate) : 0;
 			if (te.getGem() == EnumGem.OPAL && te.getGem().getState(te) != EnumGemState.INACTIVE) {
 				partial = ((te.getWorld().getTotalWorldTime()+partialTicks)%10)/10f;
 			}

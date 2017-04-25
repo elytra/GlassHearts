@@ -23,6 +23,7 @@ public class ParticleEffectMessage extends Message {
 	public static final int EFFECT_ATTUNE = 1;
 	public static final int EFFECT_AMETHYST = 2;
 	public static final int EFFECT_TOPAZ = 3;
+	public static final int EFFECT_AGATE = 4;
 	
 	@MarshalledAs("i32")
 	public int posXFixed;
@@ -60,27 +61,42 @@ public class ParticleEffectMessage extends Message {
 		double posY = posYFixed/32D;
 		double posZ = posZFixed/32D;
 		
-		float r = 0.1f;
-		for (int i = 0; i < (effect == 0 ? 128 : 256); i++) {
-			float x = (float)(target.world.rand.nextGaussian());
-			float y = (float)(target.world.rand.nextGaussian());
-			float z = (float)(target.world.rand.nextGaussian());
-
-			if (effect == EFFECT_SAP) {
-				ParticleRedstoneSeekEntity p = new ParticleRedstoneSeekEntity(target, target.world, posX+(r*x), posY+(r*y), posZ+(r*z), 1, 0.8f, 0, 0);
-				p.setVelocity(x/4, y/4, z/4);
-				Minecraft.getMinecraft().effectRenderer.addEffect(p);
-			} else if (effect == EFFECT_ATTUNE) {
-				ParticleAttune p = new ParticleAttune(target, target.world, posX+(r*x), posY+(r*y), posZ+(r*z), 1, 0.8f, 0, 0);
-				p.setVelocity(x/4, y/4, z/4);
-				Minecraft.getMinecraft().effectRenderer.addEffect(p);
-			} else if (effect == EFFECT_AMETHYST) {
-				Particle p = new ParticleSpell.MobFactory().createParticle(0, target.world, posX+x, posY+y, posZ+z, 0.80, 0.36, 0.67);
-				p.multiplyVelocity(4);
-				Minecraft.getMinecraft().effectRenderer.addEffect(p);
-			} else if (effect == EFFECT_TOPAZ) {
-				Particle p = new ParticleSpell.MobFactory().createParticle(0, target.world, posX+x, posY+y, posZ+z, 0.15, 0.32, 0.65);
-				p.multiplyVelocity(4);
+		if (effect == EFFECT_SAP || effect == EFFECT_ATTUNE) {
+			float r = 0.1f;
+			for (int i = 0; i < (effect == EFFECT_SAP ? 128 : 256); i++) {
+				float x = (float)(target.world.rand.nextGaussian());
+				float y = (float)(target.world.rand.nextGaussian());
+				float z = (float)(target.world.rand.nextGaussian());
+	
+				if (effect == EFFECT_SAP) {
+					ParticleRedstoneSeekEntity p = new ParticleRedstoneSeekEntity(target, target.world, posX+(r*x), posY+(r*y), posZ+(r*z), 1, 0.8f, 0, 0);
+					p.setVelocity(x/4, y/4, z/4);
+					Minecraft.getMinecraft().effectRenderer.addEffect(p);
+				} else if (effect == EFFECT_ATTUNE) {
+					ParticleAttune p = new ParticleAttune(target, target.world, posX+(r*x), posY+(r*y), posZ+(r*z), 1, 0.8f, 0, 0);
+					p.setVelocity(x/4, y/4, z/4);
+					Minecraft.getMinecraft().effectRenderer.addEffect(p);
+				}
+			}
+		} else {
+			for (int i = 0; i < 64; i++) {
+				double r = 0;
+				double g = 0;
+				double b = 0;
+				if (effect == EFFECT_AMETHYST) {
+					r = 0.80;
+					g = 0.36;
+					b = 0.67;
+				} else if (effect == EFFECT_TOPAZ) {
+					r = 0.15;
+					g = 0.32;
+					b = 0.65;
+				} else if (effect == EFFECT_AGATE) {
+					r = 0.58;
+					g = 0.14;
+					b = 0.14;
+				}
+				Particle p = new ParticleSpell.MobFactory().createParticle(0, target.world, posX, posY+(target.world.rand.nextGaussian()/2), posZ, r, g, b);
 				Minecraft.getMinecraft().effectRenderer.addEffect(p);
 			}
 		}

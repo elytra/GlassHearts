@@ -54,7 +54,7 @@ public enum EnumGem implements IStringSerializable {
 		@Override
 		public void onEmpty(IGlassHeart igh) {
 			for (EntityPlayer ep : GlassHearts.getAllOnlineAttunedPlayers(igh)) {
-				new ParticleEffectMessage(ep.posX, ep.posY, ep.posZ, ep, ParticleEffectMessage.EFFECT_AMETHYST).sendToAllWatching(ep);
+				new ParticleEffectMessage(ep.posX, ep.posY+(ep.height/2), ep.posZ, ep, ParticleEffectMessage.EFFECT_AMETHYST).sendToAllWatchingAndSelf(ep);
 				// 10 seconds of Regen II
 				ep.addPotionEffect(new PotionEffect(MobEffects.REGENERATION, 200, 1));
 			}
@@ -103,7 +103,7 @@ public enum EnumGem implements IStringSerializable {
 		@Override
 		public void onEmpty(IGlassHeart igh) {
 			for (EntityPlayer ep : GlassHearts.getAllOnlineAttunedPlayers(igh)) {
-				new ParticleEffectMessage(ep.posX, ep.posY, ep.posZ, ep, ParticleEffectMessage.EFFECT_TOPAZ).sendToAllWatching(ep);
+				new ParticleEffectMessage(ep.posX, ep.posY+(ep.height/2), ep.posZ, ep, ParticleEffectMessage.EFFECT_TOPAZ).sendToAllWatchingAndSelf(ep);
 				// 30 seconds of Absorption
 				ep.addPotionEffect(new PotionEffect(MobEffects.ABSORPTION, 600, 0));
 			}
@@ -159,6 +159,24 @@ public enum EnumGem implements IStringSerializable {
 		@Override
 		public float getMultiplier(DamageSource src) {
 			return 0.5f;
+		}
+	},
+	
+	/**
+	 * Gives you Strength when the container is emptied.
+	 */
+	AGATE(0x804632) {
+		@Override
+		public EnumGemState getState(IGlassHeart igh) {
+			return igh.hasBeenFull() ? EnumGemState.ACTIVE_BENEFICIAL : EnumGemState.INACTIVE;
+		}
+		@Override
+		public void onEmpty(IGlassHeart igh) {
+			for (EntityPlayer ep : GlassHearts.getAllOnlineAttunedPlayers(igh)) {
+				new ParticleEffectMessage(ep.posX, ep.posY+(ep.height/2), ep.posZ, ep, ParticleEffectMessage.EFFECT_AGATE).sendToAllWatchingAndSelf(ep);
+				// 60 seconds of Strength II
+				ep.addPotionEffect(new PotionEffect(MobEffects.STRENGTH, 1200, 1));
+			}
 		}
 	},
 	;

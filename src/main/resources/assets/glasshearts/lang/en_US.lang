@@ -28,6 +28,7 @@ item.glasshearts.gem.sapphire.name=Sapphire
 item.glasshearts.gem.opal.name=Opal
 item.glasshearts.gem.onyx.name=Onyx
 item.glasshearts.gem.amber.name=Amber
+item.glasshearts.gem.agate.name=Agate
 
 tile.glasshearts.glass_heart.name=Glass Heart
 tile.glasshearts.ore.name=Ore
@@ -37,6 +38,7 @@ tile.glasshearts.ore.opal.name=Opal Ore
 tile.glasshearts.ore.ruby.name=Ruby Ore
 tile.glasshearts.ore.sapphire.name=Sapphire Ore
 tile.glasshearts.ore.topaz.name=Topaz Ore
+tile.glasshearts.ore.agate.name=Agate Ore
 tile.glasshearts.petrified_log.name=Petrified Log
 
 enchantment.glasshearts.sapping=Sapping
