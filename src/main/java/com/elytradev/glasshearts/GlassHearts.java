@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -93,6 +94,7 @@ import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickItem;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
+import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -188,6 +190,8 @@ public class GlassHearts {
 	private Invoker rayTrace = Invokers.findMethod(Item.class, null, new String[] {"func_77621_a", "rayTrace", "a"}, World.class, EntityPlayer.class, boolean.class);
 	private Invoker applyArmorCalculations = Invokers.findMethod(EntityLivingBase.class, null, new String[] { "func_70655_b", "applyArmorCalculations", "b" }, DamageSource.class, float.class);
 	private Invoker applyPotionDamageCalculations = Invokers.findMethod(EntityLivingBase.class, null, new String[] { "func_70672_c", "applyPotionDamageCalculations", "c" }, DamageSource.class, float.class);
+	
+	private Invoker explode = Invokers.findMethod(EntityCreeper.class, null, new String[] { "func_146077_cc", "explode", "dn" });
 	
 	private Map<EntityPlayer, PlayerHandler> playerHandlers = new WeakHashMap<>();
 	
@@ -434,7 +438,8 @@ public class GlassHearts {
 			if (taken < amt) {
 				float waste = (amt-taken);
 				if (waste >= 0.5f && e.getEntityLiving() instanceof EntityPlayer) {
-					new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_WASTED_HEALING, (int)(waste*2)-1, cap.getContainers()-1).sendTo((EntityPlayer)e.getEntityLiving());
+					// I like this effect, but it triggers randomly due to hunger and such
+					//new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_WASTED_HEALING, (int)(waste*2)-1, cap.getContainers()-1).sendTo((EntityPlayer)e.getEntityLiving());
 				}
 			}
 			e.setAmount(0);
@@ -445,6 +450,45 @@ public class GlassHearts {
 	public void onChunkPopulate(PopulateChunkEvent.Pre e) {
 		if (configGeneratePetrifiedTrees) {
 			new GeneratePetrifiedTree().generate(e.getRand(), e.getChunkX(), e.getChunkZ(), e.getWorld(), e.getGen(), e.getWorld().getChunkProvider());
+		}
+	}
+	
+	@SubscribeEvent
+	public void onExplode(ExplosionEvent.Detonate e) {
+		if (e.getExplosion().getExplosivePlacedBy() instanceof EntityCreeper) {
+			EntityCreeper ec = ((EntityCreeper)e.getExplosion().getExplosivePlacedBy());
+			if (ec.getTags().contains("glasshearts:found_heart")) {
+				if (configCreeperFakeExplosions || !e.getWorld().getGameRules().getBoolean("mobGriefing")) {
+					Iterator<BlockPos> iter = e.getAffectedBlocks().iterator();
+					while (iter.hasNext()) {
+						BlockPos pos = iter.next();
+						if (e.getWorld().getBlockState(pos).getBlock() != GLASS_HEART) {
+							iter.remove();
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public void onExplosionStart(ExplosionEvent.Start e) {
+		if (e.getExplosion().getExplosivePlacedBy() instanceof EntityCreeper) {
+			EntityCreeper ec = ((EntityCreeper)e.getExplosion().getExplosivePlacedBy());
+			if (ec.getTags().contains("glasshearts:found_heart")) {
+				if (!e.getWorld().getGameRules().getBoolean("mobGriefing")) {
+					e.setCanceled(true);
+					boolean oldFakeExplosions = configCreeperFakeExplosions;
+					try {
+						e.getWorld().getGameRules().setOrCreateGameRule("mobGriefing", "true");
+						configCreeperFakeExplosions = true;
+						explode.invoke(ec);
+					} finally {
+						e.getWorld().getGameRules().setOrCreateGameRule("mobGriefing", "false");
+						configCreeperFakeExplosions = oldFakeExplosions;
+					}
+				}
+			}
 		}
 	}
 	
@@ -603,7 +647,7 @@ public class GlassHearts {
 		if (e.getEntity() instanceof EntityCreeper) {
 			if (configCreepersSeekHearts) {
 				EntityCreeper creeper = ((EntityCreeper)e.getEntity());
-				creeper.tasks.addTask(10, new EntityAICreeperSeekHeart());
+				creeper.tasks.addTask(3, new EntityAICreeperSeekHeart(creeper, 1));
 			}
 		}
 	}
