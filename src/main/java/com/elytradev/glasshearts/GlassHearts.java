@@ -1,5 +1,7 @@
 package com.elytradev.glasshearts;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +60,8 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemGlassBottle;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompressedStreamTools;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.stats.IStatType;
@@ -85,6 +89,7 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHealEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickItem;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.fluids.Fluid;
@@ -227,6 +232,8 @@ public class GlassHearts {
 		NETWORK.register(ParticleEffectMessage.class);
 		NETWORK.register(UpdateHeartsMessage.class);
 		NETWORK.register(PlayHeartEffectMessage.class);
+		
+		CapabilityHeartHandler.register();
 		
 		LIFEFORCE = new Fluid("glasshearts.lifeforce", new ResourceLocation("glasshearts", "blocks/lifeforce_still"), new ResourceLocation("glasshearts", "blocks/lifeforce_flow"));
 		LIFEFORCE.setViscosity(750);
@@ -403,6 +410,43 @@ public class GlassHearts {
 	@SubscribeEvent(priority=EventPriority.HIGHEST)
 	public void onChunkPopulate(PopulateChunkEvent.Pre e) {
 		new GeneratePetrifiedTree().generate(e.getRand(), e.getChunkX(), e.getChunkZ(), e.getWorld(), e.getGen(), e.getWorld().getChunkProvider());
+	}
+	
+	@SubscribeEvent
+	public void onPlayerSave(PlayerEvent.SaveToFile e) {
+		if (e.getEntityPlayer().hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
+			IHeartHandler cap = e.getEntityPlayer().getCapability(CapabilityHeartHandler.CAPABILITY, null);
+			
+			File f = e.getPlayerFile("glasshearts.dat");
+			
+			NBTBase nbt = CapabilityHeartHandler.CAPABILITY.writeNBT(cap, null);
+			NBTTagCompound tag = new NBTTagCompound();
+			tag.setTag("Hearts", nbt);
+			
+			try {
+				CompressedStreamTools.safeWrite(tag, f);
+			} catch (IOException ex) {
+				LOG.error("Error while saving player heart data for {}", e.getEntityPlayer().getName(), ex);
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public void onPlayerLoad(PlayerEvent.LoadFromFile e) {
+		File f = e.getPlayerFile("glasshearts.dat");
+		if (f.exists()) {
+			if (e.getEntityPlayer().hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
+				IHeartHandler cap = e.getEntityPlayer().getCapability(CapabilityHeartHandler.CAPABILITY, null);
+				
+				try {
+					NBTTagCompound tag = CompressedStreamTools.read(f);
+					NBTBase nbt = tag.getTag("Hearts");
+					CapabilityHeartHandler.CAPABILITY.readNBT(cap, null, nbt);
+				} catch (IOException ex) {
+					LOG.error("Error while loading player heart data for {}", e.getEntityPlayer().getName(), ex);
+				}
+			}
+		}
 	}
 	
 	@SubscribeEvent
