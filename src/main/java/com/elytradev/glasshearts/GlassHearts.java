@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import com.elytradev.concrete.network.NetworkContext;
 import com.elytradev.concrete.reflect.invoker.Invoker;
 import com.elytradev.concrete.reflect.invoker.Invokers;
+import com.elytradev.glasshearts.block.BlockFluidLifeforce;
 import com.elytradev.glasshearts.block.BlockGlassHeart;
 import com.elytradev.glasshearts.block.BlockOre;
 import com.elytradev.glasshearts.block.BlockPetrifiedLog;
@@ -84,7 +85,6 @@ import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHealEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickItem;
-import net.minecraftforge.fluids.BlockFluidClassic;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -132,7 +132,7 @@ public class GlassHearts {
 	public NetworkContext NETWORK;
 	
 	public Fluid LIFEFORCE;
-	public BlockFluidClassic LIFEFORCE_BLOCK;
+	public BlockFluidLifeforce LIFEFORCE_BLOCK;
 	
 	public EnchantmentSapping SAPPING;
 	
@@ -230,7 +230,7 @@ public class GlassHearts {
 		LIFEFORCE.setViscosity(750);
 		FluidRegistry.registerFluid(LIFEFORCE);
 		
-		LIFEFORCE_BLOCK = new BlockFluidClassic(LIFEFORCE, Material.WATER);
+		LIFEFORCE_BLOCK = new BlockFluidLifeforce(LIFEFORCE, Material.WATER);
 		LIFEFORCE.setBlock(LIFEFORCE_BLOCK);
 		
 		FluidRegistry.addBucketForFluid(LIFEFORCE);
