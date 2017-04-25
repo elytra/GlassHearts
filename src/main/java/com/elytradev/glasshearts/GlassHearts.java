@@ -3,6 +3,7 @@ package com.elytradev.glasshearts;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -133,6 +134,10 @@ public class GlassHearts {
 	public boolean configCreepersSeekHearts = true;
 	public boolean configCreeperFakeExplosions = false;
 	
+	public boolean configGeneratePetrifiedTrees = true;
+	
+	public Set<EnumGem> configGenerateGems = EnumSet.allOf(EnumGem.class);
+	
 	@SidedProxy(clientSide="com.elytradev.glasshearts.client.ClientProxy", serverSide="com.elytradev.glasshearts.CommonProxy")
 	public static Proxy proxy;
 	
@@ -224,6 +229,33 @@ public class GlassHearts {
 		configCreeperFakeExplosions = config.getBoolean("creeperFakeExplosions", "Balance", false,
 				  "If true, Creepers exploding on Glass Hearts will only\n"
 				+ "destroy the heart, even if mobGriefing is true.");
+		
+		configGeneratePetrifiedTrees = config.getBoolean("generatePetrifiedTrees", "World", true,
+				  "If true, Petrified Trees will generate in forests, which can\n"
+				+ "be broken for amber and sticks.\n");
+		
+		configGenerateGems.clear();
+		if (config.getBoolean("generateAmethystOre", "World", true, "")) {
+			configGenerateGems.add(EnumGem.AMETHYST);
+		}
+		if (config.getBoolean("generateRubyOre", "World", true, "")) {
+			configGenerateGems.add(EnumGem.RUBY);
+		}
+		if (config.getBoolean("generateTopazOre", "World", true, "")) {
+			configGenerateGems.add(EnumGem.TOPAZ);
+		}
+		if (config.getBoolean("generateSapphireOre", "World", true, "")) {
+			configGenerateGems.add(EnumGem.SAPPHIRE);
+		}
+		if (config.getBoolean("generateOpalOre", "World", true, "")) {
+			configGenerateGems.add(EnumGem.OPAL);
+		}
+		if (config.getBoolean("generateOnyxOre", "World", true, "")) {
+			configGenerateGems.add(EnumGem.ONYX);
+		}
+		if (config.getBoolean("generateAgateOre", "World", true, "")) {
+			configGenerateGems.add(EnumGem.AGATE);
+		}
 		
 		config.save();
 		
@@ -411,7 +443,9 @@ public class GlassHearts {
 	
 	@SubscribeEvent(priority=EventPriority.HIGHEST)
 	public void onChunkPopulate(PopulateChunkEvent.Pre e) {
-		new GeneratePetrifiedTree().generate(e.getRand(), e.getChunkX(), e.getChunkZ(), e.getWorld(), e.getGen(), e.getWorld().getChunkProvider());
+		if (configGeneratePetrifiedTrees) {
+			new GeneratePetrifiedTree().generate(e.getRand(), e.getChunkX(), e.getChunkZ(), e.getWorld(), e.getGen(), e.getWorld().getChunkProvider());
+		}
 	}
 	
 	@SubscribeEvent
