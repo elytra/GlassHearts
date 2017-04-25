@@ -16,7 +16,8 @@ public class ItemGem extends Item {
 		EnumGem.SAPPHIRE,
 		EnumGem.OPAL,
 		EnumGem.ONYX,
-		EnumGem.AMBER
+		EnumGem.AMBER,
+		EnumGem.AGATE,
 	};
 	
 	public ItemGem() {
