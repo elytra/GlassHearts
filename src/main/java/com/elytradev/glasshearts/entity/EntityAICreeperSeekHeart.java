@@ -35,7 +35,7 @@ public class EntityAICreeperSeekHeart extends EntityAIMoveToBlock {
 		super.updateTask();
 		creeper.getLookHelper().setLookPosition(destinationBlock.getX() + 0.5, destinationBlock.getY() + 1, destinationBlock.getZ() + 0.5, 10f, creeper.getVerticalFaceSpeed());
 
-		if (getIsAboveDestination()) {
+		if (creeper.getDistanceSqToCenter(destinationBlock) < 4) {
 			creeper.ignite();
 			creeper.addTag("glasshearts:found_heart");
 		}
