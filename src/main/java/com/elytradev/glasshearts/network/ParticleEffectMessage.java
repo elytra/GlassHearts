@@ -5,8 +5,8 @@ import com.elytradev.concrete.network.NetworkContext;
 import com.elytradev.concrete.network.annotation.field.MarshalledAs;
 import com.elytradev.concrete.network.annotation.type.ReceivedOn;
 import com.elytradev.glasshearts.GlassHearts;
-import com.elytradev.glasshearts.client.ParticleAttune;
-import com.elytradev.glasshearts.client.ParticleRedstoneSeekEntity;
+import com.elytradev.glasshearts.client.particle.ParticleAttune;
+import com.elytradev.glasshearts.client.particle.ParticleRedstoneSeekEntity;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.Particle;

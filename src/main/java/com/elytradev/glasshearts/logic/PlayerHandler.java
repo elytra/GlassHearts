@@ -13,6 +13,7 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.player.EntityPlayer;
 
 public class PlayerHandler {
@@ -70,8 +71,11 @@ public class PlayerHandler {
 		for (HeartContainer hc : ihh) {
 			hp += hc.getFillAmount();
 		}
+		player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(ihh.getContainers()*2);
 		if (player.isEntityAlive()) {
-			player.setHealth(hp*2);
+			// vanilla does not handle overly accurate health values very well
+			// it tends to spam damage wobble effects
+			player.setHealth((int)(hp*2));
 		} else {
 			player.setHealth(0);
 		}

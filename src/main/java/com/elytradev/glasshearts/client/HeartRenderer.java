@@ -6,6 +6,7 @@ import java.util.Random;
 
 import org.lwjgl.opengl.GL11;
 
+import com.elytradev.glasshearts.client.guiparticle.PendingEffect;
 import com.elytradev.glasshearts.enums.EnumGlassColor;
 import com.elytradev.glasshearts.logic.HeartContainer;
 import com.google.common.collect.Lists;
@@ -261,6 +262,7 @@ public class HeartRenderer extends Gui {
 			mc.fontRenderer.drawString(a, left-2-mc.fontRenderer.getStringWidth(a), y-9, 0xFFFF0000);
 			String b = Float.toString(absorb);
 			mc.fontRenderer.drawString(b, left-2-mc.fontRenderer.getStringWidth(b), top-10, 0xFFFFFF00);
+			GlStateManager.color(1, 1, 1);
 		}
 		
 		GlStateManager.popMatrix();

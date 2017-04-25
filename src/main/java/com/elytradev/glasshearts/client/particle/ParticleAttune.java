@@ -1,4 +1,4 @@
-package com.elytradev.glasshearts.client;
+package com.elytradev.glasshearts.client.particle;
 
 import net.minecraft.client.particle.ParticleRedstone;
 import net.minecraft.entity.Entity;
