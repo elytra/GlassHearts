@@ -48,3 +48,5 @@ stat.glasshearts.lifeforce_collected=Lifeforce Collected
 stat.glasshearts.health_transferred=Health Transferred
 
 msg.glasshearts.limitReached=You can't attune to any more hearts.
+
+itemGroup.glass_heart=Glass Hearts

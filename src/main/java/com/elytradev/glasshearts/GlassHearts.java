@@ -547,7 +547,7 @@ public class GlassHearts {
 							}
 							p.world.playSound(null, p.posX, p.posY, p.posZ, SAP, SoundCategory.NEUTRAL, 1f, 1f);
 							EntityLivingBase el = e.getEntityLiving();
-							new ParticleEffectMessage(el.posX, el.posY, el.posZ, p, 0).sendToAllWatching(el);
+							new ParticleEffectMessage(el.posX, el.posY, el.posZ, p, ParticleEffectMessage.EFFECT_SAP).sendToAllWatching(el);
 						}
 					}
 				}

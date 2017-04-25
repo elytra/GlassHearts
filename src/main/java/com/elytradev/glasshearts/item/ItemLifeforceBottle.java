@@ -145,7 +145,7 @@ public class ItemLifeforceBottle extends Item {
 		ItemStack stack = player.getHeldItem(hand);
 		EnumActionResult result = fill(stack, facing, te);
 		if (result == EnumActionResult.SUCCESS) {
-			if (!worldIn.isRemote) {
+			if (!worldIn.isRemote && !player.isCreative()) {
 				stack.shrink(1);
 				if (!player.inventory.addItemStackToInventory(new ItemStack(Items.GLASS_BOTTLE))) {
 					player.dropItem(new ItemStack(Items.GLASS_BOTTLE), false);

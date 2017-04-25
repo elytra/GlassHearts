@@ -49,7 +49,8 @@ public class PlayerHandler {
 			HeartContainer hc = ihh.getContainer(i);
 			IGlassHeart igh = hc.getOwner();
 			if (igh != null) {
-				int amt = (int)((igh.getLifeforce()/((float)igh.getLifeforceCapacity()))*255);
+				float fill = (igh.getLifeforce()/((float)igh.getLifeforceCapacity()));
+				int amt = (int)(fill*255);
 				if (hc.getFillAmountInt() != amt || hc.getGem() != igh.getGem()) {
 					hc = hc.copy();
 					hc.setFillAmountInt(amt);
