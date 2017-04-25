@@ -36,6 +36,7 @@ import com.elytradev.glasshearts.network.PlayHeartEffectMessage;
 import com.elytradev.glasshearts.network.UpdateHeartsMessage;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
 import com.elytradev.glasshearts.world.GenerateGems;
+import com.elytradev.glasshearts.world.GeneratePetrifiedTree;
 import com.elytradev.glasshearts.world.GlassHeartData;
 import com.elytradev.glasshearts.world.GlassHeartWorldData;
 import com.google.common.base.Predicates;
@@ -85,6 +86,7 @@ import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHealEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickItem;
+import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -396,6 +398,11 @@ public class GlassHearts {
 			}
 			e.setAmount(0);
 		}
+	}
+	
+	@SubscribeEvent(priority=EventPriority.HIGHEST)
+	public void onChunkPopulate(PopulateChunkEvent.Pre e) {
+		new GeneratePetrifiedTree().generate(e.getRand(), e.getChunkX(), e.getChunkZ(), e.getWorld(), e.getGen(), e.getWorld().getChunkProvider());
 	}
 	
 	@SubscribeEvent

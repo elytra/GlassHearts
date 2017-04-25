@@ -83,5 +83,5 @@ public class BlockPetrifiedLog extends BlockLog {
 
 		return i;
 	}
-
+	
 }
