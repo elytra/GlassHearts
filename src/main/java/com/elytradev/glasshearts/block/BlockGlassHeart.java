@@ -155,7 +155,7 @@ public class BlockGlassHeart extends Block {
 						cap.addContainer(HeartContainer.createGlass(tegh));
 						stack.damageItem(1, playerIn);
 						worldIn.playSound(null, pos, GlassHearts.inst.ATTUNE, SoundCategory.PLAYERS, 1f, 2f);
-						new ParticleEffectMessage(pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5, playerIn, 1).sendToAllWatchingAndSelf(playerIn);
+						new ParticleEffectMessage(pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5, playerIn, ParticleEffectMessage.EFFECT_ATTUNE).sendToAllWatchingAndSelf(playerIn);
 					} else {
 						playerIn.sendStatusMessage(new TextComponentTranslation("msg.glasshearts.limitReached"), true);
 					}

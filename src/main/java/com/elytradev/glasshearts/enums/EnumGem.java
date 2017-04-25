@@ -89,7 +89,7 @@ public enum EnumGem implements IStringSerializable {
 		}
 		@Override
 		public int adjustFillRate(int fillRate) {
-			return fillRate*2;
+			return fillRate+(fillRate/2);
 		}
 	},
 	/**

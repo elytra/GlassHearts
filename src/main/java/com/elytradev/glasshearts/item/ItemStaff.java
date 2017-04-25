@@ -38,7 +38,7 @@ public class ItemStaff extends Item {
 		attacker.heal(1f);
 		stack.damageItem(8, attacker);
 		target.playSound(GlassHearts.inst.SAP, 1f, 1f);
-		new ParticleEffectMessage(target.posX, target.posY, target.posZ, attacker, 0).sendToAllWatching(target);
+		new ParticleEffectMessage(target.posX, target.posY, target.posZ, attacker, ParticleEffectMessage.EFFECT_SAP).sendToAllWatching(target);
 		return true;
 	}
 	
@@ -54,7 +54,7 @@ public class ItemStaff extends Item {
 		stack.damageItem(4, playerIn);
 		target.playSound(GlassHearts.inst.SAP, 1f, 1f);
 		playerIn.addStat(GlassHearts.inst.HEALTH_TRANSFERRED, 2);
-		new ParticleEffectMessage(playerIn.posX, playerIn.posY, playerIn.posZ, target, 0).sendToAllWatching(target);
+		new ParticleEffectMessage(playerIn.posX, playerIn.posY, playerIn.posZ, target, ParticleEffectMessage.EFFECT_SAP).sendToAllWatching(target);
 		return true;
 	}
 	
