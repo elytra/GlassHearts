@@ -30,7 +30,7 @@ public class PlayerHandler {
 		return ep == null || ep.isDead ? null : ep;
 	}
 	
-	protected IHeartHandler getHealthHandler(Entity entity) {
+	protected IHeartHandler getHeartHandler(Entity entity) {
 		if (entity == null) return null;
 		if (entity.hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
 			return entity.getCapability(CapabilityHeartHandler.CAPABILITY, null);
@@ -41,7 +41,7 @@ public class PlayerHandler {
 	public void preTick() {
 		EntityPlayer player = getPlayer();
 		if (player == null) return;
-		IHeartHandler ihh = getHealthHandler(player);
+		IHeartHandler ihh = getHeartHandler(player);
 		if (ihh == null) return;
 		float hp = 0;
 		int destroyed = 0;
@@ -61,7 +61,7 @@ public class PlayerHandler {
 				ihh.removeContainer(i);
 				new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_HEART_SHATTER, hc.getGlassColor().ordinal(), i+destroyed).sendTo(player);
 				if (hc.getGem() != EnumGem.NONE) {
-					new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_GEM_SHATTER, hc.getGem().ordinal(), i+destroyed).sendTo(player);
+					new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_GEM_SHATTER, hc.getGem().ordinal()-1, i+destroyed).sendTo(player);
 				}
 				destroyed++;
 				i--;
@@ -88,7 +88,7 @@ public class PlayerHandler {
 	public void resync() {
 		EntityPlayer player = getPlayer();
 		if (player == null) return;
-		IHeartHandler ihh = getHealthHandler(player);
+		IHeartHandler ihh = getHeartHandler(player);
 		if (ihh == null) return;
 		if (lastContainers.isEmpty()) {
 			for (HeartContainer hc : ihh) {

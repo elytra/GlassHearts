@@ -15,6 +15,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.Constants.NBT;
 
@@ -248,6 +249,7 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		setFillAmountByte(nbt.getByte("Fill"));
 		lastFillAmount = fillAmount;
 		ownerPos = nbt.hasKey("OwnerPos", NBT.TAG_LONG) ? BlockPos.fromLong(nbt.getLong("OwnerPos")) : null;
+		ownerWorld = nbt.hasKey("OwnerWorld", NBT.TAG_INT) ? DimensionManager.getWorld(nbt.getInteger("OwnerWorld")) : null;
 	}
 	
 	public static HeartContainer createFromNBT(NBTTagCompound nbt) {
@@ -266,6 +268,9 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		tag.setByte("Fill", getFillAmountByte());
 		if (ownerPos != null) {
 			tag.setLong("OwnerPos", ownerPos.toLong());
+		}
+		if (ownerWorld != null) {
+			tag.setInteger("OwnerWorld", ownerWorld.provider.getDimension());
 		}
 		return tag;
 	}
