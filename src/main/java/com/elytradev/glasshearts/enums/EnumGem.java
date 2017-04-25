@@ -76,7 +76,7 @@ public enum EnumGem implements IStringSerializable {
 		}
 	},
 	/**
-	 * The lifeforce buffer drains into the main buffer twice as fast.
+	 * The lifeforce buffer drains into the main buffer 50% faster.
 	 */
 	DIAMOND(0x81C2B5) {
 		@Override
@@ -120,11 +120,12 @@ public enum EnumGem implements IStringSerializable {
 		}
 		@Override
 		public boolean doesBlockDamage(DamageSource src, HeartContainer hc) {
-			return hc.getFillAmount() >= 0.5f;
+			return src.isDamageAbsolute() ? false : hc.getFillAmount() >= 0.5f;
 		}
 	},
 	/**
-	 * Container very slowly refills.
+	 * Container very slowly refills without input. Buffer draining is 25%
+	 * slower.
 	 */
 	OPAL(0x94B1AC) {
 		@Override
@@ -138,6 +139,10 @@ public enum EnumGem implements IStringSerializable {
 					igh.setLifeforce(igh.getLifeforce()+1);
 				}
 			}
+		}
+		@Override
+		public int adjustFillRate(int fillRate) {
+			return fillRate/2+(fillRate/4);
 		}
 	},
 	/**
