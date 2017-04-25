@@ -384,7 +384,9 @@ public class GlassHearts {
 
 			if (amt != 0) {
 				e.getEntityLiving().getCombatTracker().trackDamage(e.getSource(), cap.totalHealth()*2, amt);
-				e.getEntityLiving().setAbsorptionAmount(e.getEntityLiving().getAbsorptionAmount() - amt);
+				float absorb = Math.min(amt, e.getEntityLiving().getAbsorptionAmount());
+				e.getEntityLiving().setAbsorptionAmount(e.getEntityLiving().getAbsorptionAmount() - absorb);
+				amt -= absorb;
 				cap.damage(amt/2, e.getSource());
 			}
 			e.setAmount(0);
