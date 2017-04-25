@@ -6,9 +6,9 @@ import com.elytradev.concrete.network.annotation.field.MarshalledAs;
 import com.elytradev.concrete.network.annotation.type.ReceivedOn;
 import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.client.ClientProxy;
-import com.elytradev.glasshearts.client.GuiParticleHeartFragment;
-import com.elytradev.glasshearts.client.GuiParticleSmoke;
-import com.elytradev.glasshearts.client.PendingEffect;
+import com.elytradev.glasshearts.client.guiparticle.GuiParticleHeartFragment;
+import com.elytradev.glasshearts.client.guiparticle.GuiParticleSmoke;
+import com.elytradev.glasshearts.client.guiparticle.PendingEffect;
 import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.enums.EnumGlassColor;
 

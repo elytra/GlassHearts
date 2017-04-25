@@ -1,4 +1,6 @@
-package com.elytradev.glasshearts.client;
+package com.elytradev.glasshearts.client.guiparticle;
+
+import com.elytradev.glasshearts.client.HeartRenderer;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;

@@ -1,4 +1,4 @@
-package com.elytradev.glasshearts.client;
+package com.elytradev.glasshearts.client.guiparticle;
 
 import java.util.Random;
 

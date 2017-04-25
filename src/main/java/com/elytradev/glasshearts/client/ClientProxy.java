@@ -6,6 +6,7 @@ import java.util.List;
 import com.elytradev.glasshearts.CommonProxy;
 import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.block.BlockOre;
+import com.elytradev.glasshearts.client.guiparticle.GuiParticle;
 import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.enums.EnumGemState;
 import com.elytradev.glasshearts.item.ItemGem;
