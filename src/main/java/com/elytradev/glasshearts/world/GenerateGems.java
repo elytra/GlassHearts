@@ -25,7 +25,9 @@ public class GenerateGems implements IWorldGenerator {
 			BlockPos pos = new BlockPos(x, y, z);
 			if (world.getBlockState(pos).getBlock() == Blocks.STONE) {
 				EnumGem gem = BlockOre.VALID_GEMS[random.nextInt(BlockOre.VALID_GEMS.length)];
-				world.setBlockState(pos, GlassHearts.inst.ORE.getDefaultState().withProperty(BlockOre.VARIANT, gem));
+				if (GlassHearts.inst.configGenerateGems.contains(gem)) {
+					world.setBlockState(pos, GlassHearts.inst.ORE.getDefaultState().withProperty(BlockOre.VARIANT, gem));
+				}
 			}
 		}
 	}
