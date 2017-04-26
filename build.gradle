@@ -28,7 +28,7 @@ apply plugin: 'me.tatarka.retrolambda'
 
 apply from: 'project.gradle'
 
-println("Elytra Project Skeleton v1.0")
+println("Elytra Project Skeleton v1.0.1")
 println("https://github.com/elytra/skel")
 println()
 println("Project Name: "+project.ext.projectName)
@@ -36,7 +36,7 @@ println("Version: "+project.ext.version)
 println()
 println("Package: "+project.ext.package)
 println()
-if (project.ext.includeConcrete) {
+if (!project.ext.concreteModules.isEmpty()) {
 	println("Concrete Version: "+project.ext.concreteVersion)
 }
 println("Forge Version: "+project.ext.forge)
@@ -69,69 +69,37 @@ if (project.ext.enforceLicenseHeaders) {
 	apply plugin: 'net.minecrell.licenser'
 }
 
-if (project.ext.includeConcrete) {
+if (!project.ext.concreteModules.isEmpty()) {
 	apply plugin: 'com.github.johnrengelman.shadow'
-
-	task proguard(type: proguard.gradle.ProGuardTask) {
-		dependsOn shadowJar
-
-		injars 'build/libs/'+archivesBaseName+'-'+version+'-fat.jar'
-		libraryjars "${System.properties.'java.home'}/lib/rt.jar"
-		outjars 'build/tmp/proguard.jar'
-		// keep everything that isn't concrete
-		keep 'class !'+project.ext.package+'.repackage.com.elytradev.concrete.** {*;}'
-		// if part of a concrete class is kept, keep the whole class
-		// since we have an incomplete classpath, this is neccessary
-		keepclasseswithmembers 'class '+project.ext.package+'.repackage.com.elytradev.concrete.**'
-		// just shrink
-		dontobfuscate
-		dontoptimize
-
-		// we're only removing unreferenced classes within this jar, we don't
-		// need to resolve the entire classpath. either way, optimization and
-		// obfuscation are disabled, which is where this becomes an issue
-		if (project.ext.verbose) {
-			ignorewarnings
-		} else {
-			dontwarn '**'
-			dontnote '**'
-		}
-	}
-
-	task proguardJar(type: Jar) {
-		dependsOn proguard
-		from(zipTree(file('build/tmp/proguard.jar')))
-	}
 
 	jar {
 		classifier = 'slim'
 	}
 
 	shadowJar {
-		classifier = 'fat'
 		relocate 'com.elytradev.concrete', project.ext.package+'.repackage.com.elytradev.concrete'
 		configurations = [project.configurations.shadow]
 	}
 
 	reobf {
-		proguardJar { mappingType = 'SEARGE' }
+		shadowJar { mappingType = 'SEARGE' }
 	}
 
 	tasks.reobfJar.doLast {
 		file('build/libs/'+archivesBaseName+'-'+version+'-slim.jar').delete()
-		file('build/libs/'+archivesBaseName+'-'+version+'-fat.jar').delete()
 	}
 
-	tasks.build.dependsOn reobfProguardJar
-	tasks.build.dependsOn proguardJar
+	tasks.build.dependsOn reobfShadowJar
 
 	artifacts {
-		archives shadowJar, proguardJar
+		archives shadowJar
 	}
 
 	dependencies {
-		shadow 'com.elytradev:concrete:'+project.ext.concreteVersion
-		compile 'com.elytradev:concrete:'+project.ext.concreteVersion
+		for (String module : project.ext.concreteModules) {
+			shadow 'com.elytradev:concrete:'+project.ext.concreteVersion+':'+module
+			compile 'com.elytradev:concrete:'+project.ext.concreteVersion+':'+module
+		}
 	}
 }
 
