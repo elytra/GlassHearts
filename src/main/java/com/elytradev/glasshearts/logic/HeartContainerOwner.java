@@ -17,4 +17,6 @@ public abstract class HeartContainerOwner implements INBTSerializable<NBTTagComp
 	
 	public abstract HeartContainer sync(HeartContainer hc);
 	
+	public abstract boolean isValid();
+	
 }

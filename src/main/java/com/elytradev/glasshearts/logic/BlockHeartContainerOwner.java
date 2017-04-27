@@ -73,6 +73,11 @@ public class BlockHeartContainerOwner extends HeartContainerOwner {
 		}
 		return hc;
 	}
+	
+	@Override
+	public boolean isValid() {
+		return getGlassHeart() != null;
+	}
 
 	public BlockPos getPos() {
 		return pos;

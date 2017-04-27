@@ -137,7 +137,7 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 	}
 	
 	public HeartContainer copy() {
-		return new HeartContainer(glassColor, gem, fillAmount, owner.copy());
+		return new HeartContainer(glassColor, gem, fillAmount, owner == null ? null : owner.copy());
 	}
 	
 	
