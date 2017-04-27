@@ -427,6 +427,7 @@ public class GlassHearts {
 				amt -= absorb;
 				cap.damage(amt/2, e.getSource());
 			}
+			e.getEntityLiving().setHealth((int)(cap.totalHealth()*2));
 			e.setAmount(0);
 		}
 	}
@@ -444,6 +445,7 @@ public class GlassHearts {
 					//new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_WASTED_HEALING, (int)(waste*2)-1, cap.getContainers()-1).sendTo((EntityPlayer)e.getEntityLiving());
 				}
 			}
+			e.getEntityLiving().setHealth((int)(cap.totalHealth()*2));
 			e.setAmount(0);
 		}
 	}

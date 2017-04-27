@@ -50,19 +50,21 @@ public class PlayerHandler {
 			HeartContainer hc = ihh.getContainer(i);
 			HeartContainerOwner owner = hc.getOwner();
 			if (owner != null) {
-				HeartContainer original = hc;
-				hc = owner.sync(hc);
-				if (original != hc) {
-					ihh.setContainer(i, hc);
+				if (owner.isValid()) {
+					HeartContainer original = hc;
+					hc = owner.sync(hc);
+					if (original != hc) {
+						ihh.setContainer(i, hc);
+					}
+				} else {
+					ihh.removeContainer(i);
+					new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_HEART_SHATTER, hc.getGlassColor().ordinal(), i+destroyed).sendTo(player);
+					if (hc.getGem() != EnumGem.NONE) {
+						new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_GEM_SHATTER, hc.getGem().ordinal()-1, i+destroyed).sendTo(player);
+					}
+					destroyed++;
+					i--;
 				}
-			} else {
-				ihh.removeContainer(i);
-				new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_HEART_SHATTER, hc.getGlassColor().ordinal(), i+destroyed).sendTo(player);
-				if (hc.getGem() != EnumGem.NONE) {
-					new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_GEM_SHATTER, hc.getGem().ordinal()-1, i+destroyed).sendTo(player);
-				}
-				destroyed++;
-				i--;
 			}
 		}
 		for (HeartContainer hc : ihh) {
