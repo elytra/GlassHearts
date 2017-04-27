@@ -1,6 +1,8 @@
 <img src="https://github.com/elytra/GlassHearts/raw/1.11.2/doc/logo.png" align="right" width="180px"/>
 
 # Glass Hearts
+[>> Downloads <<](https://github.com/elytra/GlassHearts/releases)
+
 *A novel and balanced way to increase your health.*
 
 Glass Hearts adds five things:
