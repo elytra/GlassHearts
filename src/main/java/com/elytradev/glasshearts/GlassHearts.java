@@ -711,10 +711,12 @@ public class GlassHearts {
 							world.playSound(player, player.posX, player.posY, player.posZ, SoundEvents.ITEM_BOTTLE_FILL, SoundCategory.NEUTRAL, 0.75f, 1f);
 							world.setBlockToAir(pos);
 							e.setResult(Result.DENY);
-							e.getItemStack().shrink(1);
-							ItemStack res = new ItemStack(LIFEFORCE_BOTTLE);
-							if (!player.inventory.addItemStackToInventory(res)) {
-								player.dropItem(res, false);
+							if (!player.isCreative()) {
+								e.getItemStack().shrink(1);
+								ItemStack res = new ItemStack(LIFEFORCE_BOTTLE);
+								if (!player.inventory.addItemStackToInventory(res)) {
+									player.dropItem(res, false);
+								}
 							}
 						}
 					}
