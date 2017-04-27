@@ -2,19 +2,19 @@ ext.package = 'com.elytradev.glasshearts'
 ext.projectName = 'GlassHearts'
 ext.version = '0.0.1'
 
-// 0.2.1 is the earliest Concrete version supported by the skeleton.
-ext.concreteVersion = '0.2.1'
-ext.concreteModules = [ 'common', 'network', 'reflect' ]
+// 0.0.9 is the last Concrete version supported by the 1.10.2 skeleton backport.
+ext.concreteVersion = '0.0.9'
+ext.includeConcrete = true
 
-ext.forge = '1.11.2-13.20.0.2226'
-ext.mappings = 'snapshot_20170205'
+ext.forge = '1.10.2-12.18.3.2281'
+ext.mappings = 'stable_29'
 
 ext.enforceLicenseHeaders = false
 
 ext.verbose = false
 
 repositories {
-	// the skeleton already defines mavenCentral, jcenter, and the Elytra repo
+	// the skeleton already defines mavenCentral, jcenter, the Elytra repo, and unascribed's maven
 	maven {
 		name = 'jei'
 		url = 'http://dvs1.progwml6.com/files/maven'
@@ -22,6 +22,6 @@ repositories {
 }
 
 dependencies {
-	compile 'mezz.jei:jei_1.11.2:4.2.6.235:api'
-	runtime 'mezz.jei:jei_1.11.2:4.2.6.235'
+	compile 'mezz.jei:jei_1.10.2:3.9.7.260:api'
+	runtime 'mezz.jei:jei_1.10.2:3.9.7.260'
 }

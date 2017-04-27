@@ -1,11 +1,12 @@
 package com.elytradev.glasshearts.item;
 
+import java.util.List;
+
 import com.elytradev.glasshearts.enums.EnumGem;
 
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
 
 public class ItemGem extends Item {
 
@@ -30,7 +31,7 @@ public class ItemGem extends Item {
 	}
 	
 	@Override
-	public void getSubItems(Item itemIn, CreativeTabs tab, NonNullList<ItemStack> subItems) {
+	public void getSubItems(Item itemIn, CreativeTabs tab, List<ItemStack> subItems) {
 		for (int i = 0; i < VALID_GEMS.length; i++) {
 			subItems.add(new ItemStack(itemIn, 1, i));
 		}

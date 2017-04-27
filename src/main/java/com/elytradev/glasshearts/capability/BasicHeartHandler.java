@@ -1,14 +1,16 @@
 package com.elytradev.glasshearts.capability;
 
 import java.util.Iterator;
+import java.util.List;
 
 import com.elytradev.glasshearts.logic.HeartContainer;
+import com.google.common.collect.Lists;
+
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.NonNullList;
 
 public class BasicHeartHandler implements IHeartHandler {
 	
-	protected final NonNullList<HeartContainer> list = NonNullList.create();
+	protected final List<HeartContainer> list = Lists.newArrayList();
 
 	@Override
 	public float damage(float amount, DamageSource src) {
@@ -40,7 +42,7 @@ public class BasicHeartHandler implements IHeartHandler {
 		return origAmount-amount;
 	}
 	
-	protected NonNullList<HeartContainer> getList() {
+	protected List<HeartContainer> getList() {
 		return list;
 	}
 	

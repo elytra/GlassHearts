@@ -312,18 +312,19 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 
 	@Override
 	public ItemStack getStackInSlot(int slot) {
-		if (slot != 0) return ItemStack.EMPTY;
+		if (slot != 0) return null;
 		return getGem().toItemStack();
 	}
 
 	@Override
 	public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+		if (stack == null) return null;
 		if (slot != 0) return stack;
 		if (getGem() == EnumGem.NONE) {
 			EnumGem eg = EnumGem.fromItemStack(stack);
 			if (eg != null) {
 				ItemStack is = stack.copy();
-				is.shrink(1);
+				is.stackSize--;
 				if (!simulate) {
 					setGem(eg);
 				}
@@ -335,17 +336,12 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 
 	@Override
 	public ItemStack extractItem(int slot, int amount, boolean simulate) {
-		if (slot != 0) return ItemStack.EMPTY;
+		if (slot != 0) return null;
 		EnumGem gem = getGem();
 		if (!simulate) {
 			setGem(EnumGem.NONE);
 		}
 		return gem.toItemStack();
-	}
-
-	@Override
-	public int getSlotLimit(int slot) {
-		return 1;
 	}
 	
 }

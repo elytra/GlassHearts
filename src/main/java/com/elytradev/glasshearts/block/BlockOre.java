@@ -1,5 +1,6 @@
 package com.elytradev.glasshearts.block;
 
+import java.util.List;
 import java.util.Random;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -18,7 +19,6 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
@@ -61,7 +61,7 @@ public class BlockOre extends Block {
 	}
 	
 	@Override
-	public void getSubBlocks(Item itemIn, CreativeTabs tab, NonNullList<ItemStack> list) {
+	public void getSubBlocks(Item itemIn, CreativeTabs tab, List<ItemStack> list) {
 		for (int i = 0; i < VALID_GEMS.length; i++) {
 			list.add(new ItemStack(itemIn, 1, i));
 		}

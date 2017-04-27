@@ -1,5 +1,7 @@
 package com.elytradev.glasshearts.block;
 
+import java.util.List;
+
 import org.apache.logging.log4j.LogManager;
 
 import com.elytradev.glasshearts.GlassHearts;
@@ -35,7 +37,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
@@ -47,7 +48,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk.EnumCreateEntityType;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 
 public class BlockGlassHeart extends Block {
 	
@@ -108,12 +109,11 @@ public class BlockGlassHeart extends Block {
 	}
 	
 	@Override
-	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-		ItemStack stack = playerIn.getHeldItem(hand);
+	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, ItemStack stack, EnumFacing facing, float hitX, float hitY, float hitZ) {
 		TileEntity te = worldIn.getTileEntity(pos);
 		if (te instanceof TileEntityGlassHeart) {
 			TileEntityGlassHeart tegh = (TileEntityGlassHeart)te;
-			if (stack.isEmpty() && tegh.getGem() != EnumGem.NONE) {
+			if (stack == null && tegh.getGem() != EnumGem.NONE) {
 				if (tegh.getGem().getState(tegh) == EnumGemState.ACTIVE_CURSED) {
 					return false;
 				}
@@ -123,7 +123,7 @@ public class BlockGlassHeart extends Block {
 					worldIn.playSound(null, pos, SoundEvents.ITEM_ARMOR_EQUIP_DIAMOND, SoundCategory.BLOCKS, 1f, 1f);
 				}
 				return true;
-			} else if (stack.getItem() == Items.DIAMOND || stack.getItem() == Items.EMERALD || stack.getItem() == GlassHearts.inst.GEM) {
+			} else if (stack != null && (stack.getItem() == Items.DIAMOND || stack.getItem() == Items.EMERALD || stack.getItem() == GlassHearts.inst.GEM)) {
 				if (tegh.getGem().getState(tegh) == EnumGemState.ACTIVE_CURSED) {
 					return false;
 				}
@@ -135,11 +135,11 @@ public class BlockGlassHeart extends Block {
 						}
 						worldIn.playSound(null, pos, SoundEvents.ITEM_ARMOR_EQUIP_DIAMOND, SoundCategory.BLOCKS, 1f, 1f);
 						tegh.setGem(eg);
-						stack.shrink(1);
+						stack.stackSize--;
 					}
 					return true;
 				}
-			} else if (stack.getItem() == GlassHearts.inst.STAFF) {
+			} else if (stack != null && stack.getItem() == GlassHearts.inst.STAFF) {
 				if (worldIn.isRemote) return true;
 				if (playerIn.hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
 					IHeartHandler cap = playerIn.getCapability(CapabilityHeartHandler.CAPABILITY, null);
@@ -161,28 +161,28 @@ public class BlockGlassHeart extends Block {
 						cap.addContainer(HeartContainer.createGlass(tegh));
 						stack.damageItem(1, playerIn);
 						worldIn.playSound(null, pos, GlassHearts.inst.ATTUNE, SoundCategory.PLAYERS, 1f, 2f);
-						new ParticleEffectMessage(pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5, playerIn, ParticleEffectMessage.EFFECT_ATTUNE).sendToAllWatchingAndSelf(playerIn);
+						ParticleEffectMessage p = new ParticleEffectMessage(pos.getX()+0.5, pos.getY()+0.5, pos.getZ()+0.5, playerIn, ParticleEffectMessage.EFFECT_ATTUNE);
+						p.sendToAllWatching(playerIn);
+						p.sendTo(playerIn);
 					} else {
-						playerIn.sendStatusMessage(new TextComponentTranslation("msg.glasshearts.limitReached"), true);
+						playerIn.sendStatusMessage(new TextComponentTranslation("msg.glasshearts.limitReached"));
 					}
 					return true;
 				} else {
 					return false;
 				}
-			} else if (stack.getItem() != GlassHearts.inst.LIFEFORCE_BOTTLE && tegh.getLifeforceBuffer() < tegh.getLifeforceCapacity()) {
+			} else if (stack != null && stack.getItem() != GlassHearts.inst.LIFEFORCE_BOTTLE && tegh.getLifeforceBuffer() < tegh.getLifeforceCapacity()) {
 				try {
-					if (stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
-						IFluidHandlerItem ifhi = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
+					if (stack.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null)) {
+						IFluidHandler ifhi = stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, null);
 						FluidStack rtrn = ifhi.drain(new FluidStack(GlassHearts.inst.LIFEFORCE, (tegh.getLifeforceCapacity()-tegh.getLifeforce())-tegh.getLifeforceBuffer()), !worldIn.isRemote);
 						if (rtrn != null) {
 							if (rtrn.getFluid() == GlassHearts.inst.LIFEFORCE) {
 								if (stack.getItem() == GlassHearts.inst.LIFEFORCE_BOTTLE) {
-									stack.shrink(1);
+									stack.stackSize--;
 									if (!playerIn.inventory.addItemStackToInventory(new ItemStack(Items.GLASS_BOTTLE))) {
 										playerIn.dropItem(new ItemStack(Items.GLASS_BOTTLE), false);
 									}
-								} else {
-									playerIn.setHeldItem(hand, ifhi.getContainer());
 								}
 								tegh.setLifeforceBuffer(tegh.getLifeforceBuffer()+rtrn.amount);
 								worldIn.playSound(null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1f, 1f);
@@ -199,7 +199,7 @@ public class BlockGlassHeart extends Block {
 				}
 			}
 		}
-		return super.onBlockActivated(worldIn, pos, state, playerIn, hand, facing, hitX, hitY, hitZ);
+		return super.onBlockActivated(worldIn, pos, state, playerIn, hand, stack, facing, hitX, hitY, hitZ);
 	}
 	
 	@Override
@@ -350,7 +350,7 @@ public class BlockGlassHeart extends Block {
 	}
 	
 	@Override
-	public void getSubBlocks(Item itemIn, CreativeTabs tab, NonNullList<ItemStack> list) {
+	public void getSubBlocks(Item itemIn, CreativeTabs tab, List<ItemStack> list) {
 		for (int i = 0; i < 17; i++) {
 			list.add(new ItemStack(itemIn, 1, i));
 		}

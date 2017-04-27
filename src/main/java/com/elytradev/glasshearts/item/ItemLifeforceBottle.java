@@ -27,7 +27,6 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.FluidTankProperties;
 import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
 
 public class ItemLifeforceBottle extends Item {
@@ -39,7 +38,7 @@ public class ItemLifeforceBottle extends Item {
 			TileEntity te = source.getBlockTileEntity().getWorld().getTileEntity(source.getBlockPos().offset(facing));
 			EnumActionResult result = fill(stack, facing.getOpposite(), te);
 			if (result == EnumActionResult.SUCCESS) {
-				stack.shrink(1);
+				stack.stackSize--;
 				ItemStack bottle = new ItemStack(Items.GLASS_BOTTLE);
 				if (((TileEntityDispenser)source.getBlockTileEntity()).addItemStack(bottle) == -1) {
 					super.dispenseStack(source, bottle);
@@ -60,14 +59,14 @@ public class ItemLifeforceBottle extends Item {
 		
 		@Override
 		public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
-			return capability == CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY;
+			return capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY;
 		}
 
 		@SuppressWarnings("unchecked")
 		@Override
 		public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
-			if (capability == CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY) {
-				return (T)new IFluidHandlerItem() {
+			if (capability == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
+				return (T)new IFluidHandler() {
 					
 					@Override
 					public IFluidTankProperties[] getTankProperties() {
@@ -85,7 +84,10 @@ public class ItemLifeforceBottle extends Item {
 					public FluidStack drain(int maxDrain, boolean doDrain) {
 						if (maxDrain >= GlassHearts.inst.configLifeforceBottleSize) {
 							if (doDrain) {
-								stack.shrink(1);
+								stack.stackSize--;
+								if (stack.stackSize <= 0) {
+									stack = new ItemStack(Items.GLASS_BOTTLE);
+								}
 							}
 							return new FluidStack(GlassHearts.inst.LIFEFORCE, GlassHearts.inst.configLifeforceBottleSize);
 						}
@@ -98,11 +100,6 @@ public class ItemLifeforceBottle extends Item {
 							return drain(resource.amount, doDrain);
 						}
 						return null;
-					}
-					
-					@Override
-					public ItemStack getContainer() {
-						return stack.isEmpty() ? new ItemStack(Items.GLASS_BOTTLE) : stack;
 					}
 				};
 			}
@@ -134,19 +131,18 @@ public class ItemLifeforceBottle extends Item {
 	}
 
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand handIn) {
-		playerIn.setActiveHand(handIn);
-		return new ActionResult<>(EnumActionResult.SUCCESS, playerIn.getHeldItem(handIn));
+	public ActionResult<ItemStack> onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer playerIn, EnumHand hand) {
+		playerIn.setActiveHand(hand);
+		return new ActionResult<>(EnumActionResult.SUCCESS, itemStackIn);
 	}
 	
 	@Override
-	public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+	public EnumActionResult onItemUse(ItemStack stack, EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
 		TileEntity te = worldIn.getTileEntity(pos);
-		ItemStack stack = player.getHeldItem(hand);
 		EnumActionResult result = fill(stack, facing, te);
 		if (result == EnumActionResult.SUCCESS) {
 			if (!worldIn.isRemote && !player.isCreative()) {
-				stack.shrink(1);
+				stack.stackSize--;
 				if (!player.inventory.addItemStackToInventory(new ItemStack(Items.GLASS_BOTTLE))) {
 					player.dropItem(new ItemStack(Items.GLASS_BOTTLE), false);
 				}
@@ -176,7 +172,7 @@ public class ItemLifeforceBottle extends Item {
 	@Override
 	public ItemStack onItemUseFinish(ItemStack stack, World worldIn, EntityLivingBase entityLiving) {
 		entityLiving.heal(4f);
-		stack.shrink(1);
+		stack.stackSize--;
 		if (entityLiving instanceof EntityPlayer) {
 			if (!((EntityPlayer) entityLiving).inventory.addItemStackToInventory(new ItemStack(Items.GLASS_BOTTLE))) {
 				entityLiving.dropItem(Items.GLASS_BOTTLE, 1);

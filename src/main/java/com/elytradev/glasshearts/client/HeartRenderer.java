@@ -261,9 +261,9 @@ public class HeartRenderer extends Gui {
 		
 		if (mc.gameSettings.showDebugInfo && !mc.isReducedDebug()) {
 			String a = Float.toString(player.getHealth()/2f);
-			mc.fontRenderer.drawString(a, left-2-mc.fontRenderer.getStringWidth(a), y-9, 0xFFFF0000);
+			mc.fontRendererObj.drawString(a, left-2-mc.fontRendererObj.getStringWidth(a), y-9, 0xFFFF0000);
 			String b = Float.toString(absorb);
-			mc.fontRenderer.drawString(b, left-2-mc.fontRenderer.getStringWidth(b), top-10, 0xFFFFFF00);
+			mc.fontRendererObj.drawString(b, left-2-mc.fontRendererObj.getStringWidth(b), top-10, 0xFFFFFF00);
 			GlStateManager.color(1, 1, 1);
 		}
 		

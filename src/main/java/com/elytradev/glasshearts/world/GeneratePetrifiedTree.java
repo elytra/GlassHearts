@@ -7,7 +7,6 @@ import com.elytradev.glasshearts.block.BlockPetrifiedLog;
 
 import net.minecraft.block.BlockLog.EnumAxis;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Biomes;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -15,6 +14,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.IChunkGenerator;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraftforge.common.BiomeDictionary;
+import net.minecraftforge.common.BiomeDictionary.Type;
 import net.minecraftforge.fml.common.IWorldGenerator;
 
 public class GeneratePetrifiedTree implements IWorldGenerator {
@@ -30,7 +30,7 @@ public class GeneratePetrifiedTree implements IWorldGenerator {
 		int z = (chunkZ*16)+16;
 		int y = world.getHeight(x, z);
 		Biome b = world.getBiome(new BlockPos(x, y, z));
-		if (b != null && BiomeDictionary.areSimilar(Biomes.FOREST, b)) {
+		if (b != null && BiomeDictionary.isBiomeOfType(b, Type.FOREST)) {
 			if (random.nextInt(5) == 0) {
 				IBlockState brownMush = Blocks.BROWN_MUSHROOM.getDefaultState();
 				IBlockState redMush = Blocks.RED_MUSHROOM.getDefaultState();

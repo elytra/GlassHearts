@@ -1,10 +1,11 @@
 package com.elytradev.glasshearts.capability;
 
+import java.util.List;
+
 import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.logic.HeartContainer;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.MathHelper;
 
 public class EntityHeartHandler extends BasicHeartHandler {
@@ -33,7 +34,7 @@ public class EntityHeartHandler extends BasicHeartHandler {
 	}
 	
 	@Override
-	protected NonNullList<HeartContainer> getList() {
+	protected List<HeartContainer> getList() {
 		if (!initialized) {
 			int max = MathHelper.ceil(elb.getMaxHealth()/2);
 			float hp = elb.getHealth()/2;

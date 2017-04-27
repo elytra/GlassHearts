@@ -1,7 +1,7 @@
 package com.elytradev.glasshearts.network;
 
-import com.elytradev.concrete.network.Marshaller;
-import com.elytradev.concrete.network.exception.BadMessageException;
+import io.github.elytra.concrete.Marshaller;
+import io.github.elytra.concrete.exception.BadMessageException;
 import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.enums.EnumGlassColor;
 import com.elytradev.glasshearts.logic.HeartContainer;

@@ -2,10 +2,10 @@ package com.elytradev.glasshearts.network;
 
 import java.util.List;
 
-import com.elytradev.concrete.network.Message;
-import com.elytradev.concrete.network.NetworkContext;
-import com.elytradev.concrete.network.annotation.field.MarshalledAs;
-import com.elytradev.concrete.network.annotation.type.ReceivedOn;
+import io.github.elytra.concrete.Message;
+import io.github.elytra.concrete.NetworkContext;
+import io.github.elytra.concrete.annotation.field.MarshalledAs;
+import io.github.elytra.concrete.annotation.type.ReceivedOn;
 import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.client.ClientProxy;
 import com.elytradev.glasshearts.logic.HeartContainer;
@@ -19,7 +19,7 @@ public class UpdateHeartsMessage extends Message {
 
 	@MarshalledAs("u8")
 	private int startIndex;
-	@MarshalledAs(HeartContainerMarshaller.NAME+"-list")
+	@MarshalledAs(HeartContainerListMarshaller.NAME)
 	private List<HeartContainer> containers;
 	
 	public UpdateHeartsMessage(NetworkContext ctx) {

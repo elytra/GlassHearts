@@ -28,7 +28,7 @@ apply plugin: 'me.tatarka.retrolambda'
 
 apply from: 'project.gradle'
 
-println("Elytra Project Skeleton v1.0.1")
+println("Elytra Project Skeleton v1.0.1 (modified for 1.10.2 support)")
 println("https://github.com/elytra/skel")
 println()
 println("Project Name: "+project.ext.projectName)
@@ -36,7 +36,7 @@ println("Version: "+project.ext.version)
 println()
 println("Package: "+project.ext.package)
 println()
-if (!project.ext.concreteModules.isEmpty()) {
+if (project.ext.includeConcrete) {
 	println("Concrete Version: "+project.ext.concreteVersion)
 }
 println("Forge Version: "+project.ext.forge)
@@ -63,13 +63,17 @@ repositories {
 		name = 'elytra'
 		url = 'http://repo.elytradev.com/'
 	}
+	maven {
+		name = 'unascribed'
+		url = 'http://unascribed.com/maven/releases'
+	}
 }
 
 if (project.ext.enforceLicenseHeaders) {
 	apply plugin: 'net.minecrell.licenser'
 }
 
-if (!project.ext.concreteModules.isEmpty()) {
+if (project.ext.includeConcrete) {
 	apply plugin: 'com.github.johnrengelman.shadow'
 
 	jar {
@@ -77,7 +81,7 @@ if (!project.ext.concreteModules.isEmpty()) {
 	}
 
 	shadowJar {
-		relocate 'com.elytradev.concrete', project.ext.package+'.repackage.com.elytradev.concrete'
+		relocate 'io.github.elytra.concrete', project.ext.package+'.repackage.io.github.elytra.concrete'
 		configurations = [project.configurations.shadow]
 	}
 
@@ -96,10 +100,8 @@ if (!project.ext.concreteModules.isEmpty()) {
 	}
 
 	dependencies {
-		for (String module : project.ext.concreteModules) {
-			shadow 'com.elytradev:concrete:'+project.ext.concreteVersion+':'+module
-			compile 'com.elytradev:concrete:'+project.ext.concreteVersion+':'+module
-		}
+		shadow 'io.github.elytra:concrete:'+project.ext.concreteVersion
+		compile 'io.github.elytra:concrete:'+project.ext.concreteVersion
 	}
 }
 

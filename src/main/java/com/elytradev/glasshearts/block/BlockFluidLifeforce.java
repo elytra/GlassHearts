@@ -23,7 +23,7 @@ public class BlockFluidLifeforce extends BlockFluidClassic {
 		if (!worldIn.isRemote) {
 			if (entityIn instanceof EntityLivingBase) {
 				if (((EntityLivingBase)entityIn).getCreatureAttribute() == EnumCreatureAttribute.UNDEAD) {
-					entityIn.attackEntityFrom(DamageSource.MAGIC, 1f);
+					entityIn.attackEntityFrom(DamageSource.magic, 1f);
 				}
 			}
 		}

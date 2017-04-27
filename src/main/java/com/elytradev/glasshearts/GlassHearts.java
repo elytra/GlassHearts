@@ -13,9 +13,9 @@ import java.util.WeakHashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.elytradev.concrete.network.NetworkContext;
-import com.elytradev.concrete.reflect.invoker.Invoker;
-import com.elytradev.concrete.reflect.invoker.Invokers;
+import io.github.elytra.concrete.NetworkContext;
+import io.github.elytra.concrete.invoker.Invoker;
+import io.github.elytra.concrete.invoker.Invokers;
 import com.elytradev.glasshearts.block.BlockFluidLifeforce;
 import com.elytradev.glasshearts.block.BlockGlassHeart;
 import com.elytradev.glasshearts.block.BlockOre;
@@ -184,8 +184,8 @@ public class GlassHearts {
 	
 	public CreativeTabs CREATIVE_TAB = new CreativeTabs("glass_heart") {
 		@Override
-		public ItemStack getTabIconItem() {
-			return new ItemStack(GLASS_HEART);
+		public Item getTabIconItem() {
+			return Item.getItemFromBlock(GLASS_HEART);
 		}
 	};
 	
@@ -699,7 +699,7 @@ public class GlassHearts {
 		World world = e.getWorld();
 		EntityPlayer player = e.getEntityPlayer();
 		ItemStack stack = e.getItemStack();
-		if (stack.getItem() instanceof ItemGlassBottle) {
+		if (stack != null && stack.getItem() instanceof ItemGlassBottle) {
 			RayTraceResult rtr = (RayTraceResult)rayTrace.invoke(e.getItemStack().getItem(), world, player, true);
 	
 			if (rtr != null) {
@@ -712,7 +712,7 @@ public class GlassHearts {
 							world.setBlockToAir(pos);
 							e.setResult(Result.DENY);
 							if (!player.isCreative()) {
-								e.getItemStack().shrink(1);
+								e.getItemStack().stackSize--;
 								ItemStack res = new ItemStack(LIFEFORCE_BOTTLE);
 								if (!player.inventory.addItemStackToInventory(res)) {
 									player.dropItem(res, false);

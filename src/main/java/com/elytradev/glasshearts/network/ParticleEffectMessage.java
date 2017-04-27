@@ -1,9 +1,9 @@
 package com.elytradev.glasshearts.network;
 
-import com.elytradev.concrete.network.Message;
-import com.elytradev.concrete.network.NetworkContext;
-import com.elytradev.concrete.network.annotation.field.MarshalledAs;
-import com.elytradev.concrete.network.annotation.type.ReceivedOn;
+import io.github.elytra.concrete.Message;
+import io.github.elytra.concrete.NetworkContext;
+import io.github.elytra.concrete.annotation.field.MarshalledAs;
+import io.github.elytra.concrete.annotation.type.ReceivedOn;
 import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.client.particle.ParticleAttune;
 import com.elytradev.glasshearts.client.particle.ParticleRedstoneSeekEntity;

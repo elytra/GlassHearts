@@ -22,7 +22,7 @@ public enum EnumGem implements IStringSerializable {
 	NONE(0) {
 		@Override
 		public ItemStack toItemStack() {
-			return ItemStack.EMPTY;
+			return null;
 		}
 	},
 	
@@ -54,7 +54,9 @@ public enum EnumGem implements IStringSerializable {
 		@Override
 		public void onEmpty(IGlassHeart igh) {
 			for (EntityPlayer ep : GlassHearts.getAllOnlineAttunedPlayers(igh)) {
-				new ParticleEffectMessage(ep.posX, ep.posY+(ep.height/2), ep.posZ, ep, ParticleEffectMessage.EFFECT_AMETHYST).sendToAllWatchingAndSelf(ep);
+				ParticleEffectMessage p = new ParticleEffectMessage(ep.posX, ep.posY+(ep.height/2), ep.posZ, ep, ParticleEffectMessage.EFFECT_AMETHYST);
+				p.sendToAllWatching(ep);
+				p.sendTo(ep);
 				// 10 seconds of Regen II
 				ep.addPotionEffect(new PotionEffect(MobEffects.REGENERATION, 200, 1));
 			}
@@ -103,7 +105,9 @@ public enum EnumGem implements IStringSerializable {
 		@Override
 		public void onEmpty(IGlassHeart igh) {
 			for (EntityPlayer ep : GlassHearts.getAllOnlineAttunedPlayers(igh)) {
-				new ParticleEffectMessage(ep.posX, ep.posY+(ep.height/2), ep.posZ, ep, ParticleEffectMessage.EFFECT_TOPAZ).sendToAllWatchingAndSelf(ep);
+				ParticleEffectMessage p = new ParticleEffectMessage(ep.posX, ep.posY+(ep.height/2), ep.posZ, ep, ParticleEffectMessage.EFFECT_TOPAZ);
+				p.sendToAllWatching(ep);
+				p.sendTo(ep);
 				// 30 seconds of Absorption
 				ep.addPotionEffect(new PotionEffect(MobEffects.ABSORPTION, 600, 0));
 			}
@@ -178,7 +182,9 @@ public enum EnumGem implements IStringSerializable {
 		@Override
 		public void onEmpty(IGlassHeart igh) {
 			for (EntityPlayer ep : GlassHearts.getAllOnlineAttunedPlayers(igh)) {
-				new ParticleEffectMessage(ep.posX, ep.posY+(ep.height/2), ep.posZ, ep, ParticleEffectMessage.EFFECT_AGATE).sendToAllWatchingAndSelf(ep);
+				ParticleEffectMessage p = new ParticleEffectMessage(ep.posX, ep.posY+(ep.height/2), ep.posZ, ep, ParticleEffectMessage.EFFECT_AGATE);
+				p.sendToAllWatching(ep);
+				p.sendTo(ep);
 				// 60 seconds of Strength II
 				ep.addPotionEffect(new PotionEffect(MobEffects.STRENGTH, 1200, 1));
 			}

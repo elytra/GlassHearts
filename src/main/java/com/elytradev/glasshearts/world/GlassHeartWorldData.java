@@ -2,8 +2,8 @@ package com.elytradev.glasshearts.world;
 
 import java.util.Map;
 
-import com.elytradev.concrete.common.NBTHelper;
 import com.elytradev.glasshearts.GlassHearts;
+import com.elytradev.glasshearts.NBTHelper;
 import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.enums.EnumGlassColor;
 import com.google.common.collect.Maps;
