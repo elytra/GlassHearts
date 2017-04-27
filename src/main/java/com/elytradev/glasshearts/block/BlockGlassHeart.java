@@ -205,10 +205,20 @@ public class BlockGlassHeart extends Block {
 	@Override
 	public void onBlockExploded(World world, BlockPos pos, Explosion explosion) {
 		if (!world.isRemote) {
+			TileEntity te = world.getChunkFromBlockCoords(pos).getTileEntity(pos, EnumCreateEntityType.CHECK);
+			if (!world.isRemote && te instanceof TileEntityGlassHeart) {
+				TileEntityGlassHeart tegh = (TileEntityGlassHeart)te;
+				if (tegh.getLifeforce()+tegh.getLifeforceBuffer() > 1000) {
+					world.removeTileEntity(pos);
+					world.setBlockState(pos, GlassHearts.inst.LIFEFORCE_BLOCK.getDefaultState());
+				} else {
+					world.removeTileEntity(pos);
+					world.setBlockToAir(pos);
+				}
+			}
 			GlassHeartWorldData.getDataFor(world).remove(pos);
-			world.removeTileEntity(pos);
 		}
-		super.onBlockExploded(world, pos, explosion);
+		onBlockDestroyedByExplosion(world, pos, explosion);
 	}
 	
 	@Override
