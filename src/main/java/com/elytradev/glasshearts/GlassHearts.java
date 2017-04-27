@@ -95,6 +95,7 @@ import net.minecraftforge.event.entity.living.LivingHealEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickItem;
+import net.minecraftforge.event.terraingen.ChunkGeneratorEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.fluids.Fluid;
@@ -398,6 +399,14 @@ public class GlassHearts {
 		proxy.onPostInit();
 	}
 	
+	@SubscribeEvent
+	public void onPopulate(ChunkGeneratorEvent.ReplaceBiomeBlocks e) {
+		if (e.getWorld().provider.isSurfaceWorld() && configGeneratePetrifiedTrees) {
+			// This is DEFINITELY not a hack. Nope. Not at all.
+			GeneratePetrifiedTree.generate(e.getWorld().getSeed()+(e.getX()^e.getZ()), e.getPrimer(), e.getGen());
+		}
+	}
+	
 	@SubscribeEvent(priority=EventPriority.LOWEST)
 	public void onLogIn(PlayerLoggedInEvent e) {
 		PlayerHandler ph = new PlayerHandler(e.player);
@@ -447,13 +456,6 @@ public class GlassHearts {
 			}
 			e.getEntityLiving().setHealth((int)(cap.totalHealth()*2));
 			e.setAmount(0);
-		}
-	}
-	
-	@SubscribeEvent(priority=EventPriority.HIGHEST)
-	public void onChunkPopulate(PopulateChunkEvent.Pre e) {
-		if (configGeneratePetrifiedTrees) {
-			new GeneratePetrifiedTree().generate(e.getRand(), e.getChunkX(), e.getChunkZ(), e.getWorld(), e.getGen(), e.getWorld().getChunkProvider());
 		}
 	}
 	
