@@ -51,7 +51,7 @@ public class HeartContainerMarshaller implements Marshaller<HeartContainer> {
 		}
 		HeartContainer prototype = t.copy();
 		prototype.setFillAmount(0f);
-		prototype.setOwnerPos(null);
+		prototype.setOwner(null);
 		Integer idx = states.inverse().get(prototype);
 		if (idx == null) {
 			throw new IllegalArgumentException("Cannot find a state ID for "+prototype);

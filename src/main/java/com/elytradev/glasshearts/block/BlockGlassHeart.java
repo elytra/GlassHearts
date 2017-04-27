@@ -8,7 +8,9 @@ import com.elytradev.glasshearts.capability.IHeartHandler;
 import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.enums.EnumGemState;
 import com.elytradev.glasshearts.enums.EnumGlassColor;
+import com.elytradev.glasshearts.logic.BlockHeartContainerOwner;
 import com.elytradev.glasshearts.logic.HeartContainer;
+import com.elytradev.glasshearts.logic.HeartContainerOwner;
 import com.elytradev.glasshearts.network.ParticleEffectMessage;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
 import com.elytradev.glasshearts.world.GlassHeartWorldData;
@@ -143,12 +145,16 @@ public class BlockGlassHeart extends Block {
 					IHeartHandler cap = playerIn.getCapability(CapabilityHeartHandler.CAPABILITY, null);
 					for (int i = 0; i < cap.getContainers(); i++) {
 						HeartContainer hc = cap.getContainer(i);
-						if (Objects.equal(hc.getOwnerPos(), pos)) {
-							if (tegh.getGem().getState(tegh) == EnumGemState.ACTIVE_CURSED) {
-								return false;
+						HeartContainerOwner owner = hc.getOwner();
+						if (owner instanceof BlockHeartContainerOwner) {
+							BlockHeartContainerOwner bhco = (BlockHeartContainerOwner)owner;
+							if (Objects.equal(bhco.getPos(), pos)) {
+								if (tegh.getGem().getState(tegh) == EnumGemState.ACTIVE_CURSED) {
+									return false;
+								}
+								cap.removeContainer(i);
+								return true;
 							}
-							cap.removeContainer(i);
-							return true;
 						}
 					}
 					if (cap.getContainers() < 40) {

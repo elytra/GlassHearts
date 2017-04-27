@@ -48,17 +48,14 @@ public class PlayerHandler {
 		int destroyed = 0;
 		for (int i = 0; i < ihh.getContainers(); i++) {
 			HeartContainer hc = ihh.getContainer(i);
-			IGlassHeart igh = hc.getOwner();
-			if (igh != null) {
-				float fill = (igh.getLifeforce()/((float)igh.getLifeforceCapacity()));
-				int amt = (int)(fill*255);
-				if (hc.getFillAmountInt() != amt || hc.getGem() != igh.getGem()) {
-					hc = hc.copy();
-					hc.setFillAmountInt(amt);
-					hc.setGem(igh.getGem());
+			HeartContainerOwner owner = hc.getOwner();
+			if (owner != null) {
+				HeartContainer original = hc;
+				hc = owner.sync(hc);
+				if (original != hc) {
 					ihh.setContainer(i, hc);
 				}
-			} else if (hc.getOwnerPos() != null) {
+			} else {
 				ihh.removeContainer(i);
 				new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_HEART_SHATTER, hc.getGlassColor().ordinal(), i+destroyed).sendTo(player);
 				if (hc.getGem() != EnumGem.NONE) {
