@@ -81,6 +81,7 @@ if (project.ext.includeConcrete) {
 	}
 
 	shadowJar {
+		classifier = ''
 		relocate 'io.github.elytra.concrete', project.ext.package+'.repackage.io.github.elytra.concrete'
 		configurations = [project.configurations.shadow]
 	}
