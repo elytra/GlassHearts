@@ -32,7 +32,9 @@ import com.elytradev.glasshearts.item.ItemBlockOre;
 import com.elytradev.glasshearts.item.ItemGem;
 import com.elytradev.glasshearts.item.ItemLifeforceBottle;
 import com.elytradev.glasshearts.item.ItemStaff;
+import com.elytradev.glasshearts.logic.BlockHeartContainerOwner;
 import com.elytradev.glasshearts.logic.HeartContainer;
+import com.elytradev.glasshearts.logic.HeartContainerOwner;
 import com.elytradev.glasshearts.logic.IGlassHeart;
 import com.elytradev.glasshearts.logic.PlayerHandler;
 import com.elytradev.glasshearts.network.ParticleEffectMessage;
@@ -43,10 +45,10 @@ import com.elytradev.glasshearts.world.GenerateGems;
 import com.elytradev.glasshearts.world.GeneratePetrifiedTree;
 import com.elytradev.glasshearts.world.GlassHeartData;
 import com.elytradev.glasshearts.world.GlassHeartWorldData;
+import com.google.common.base.Objects;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -615,11 +617,15 @@ public class GlassHearts {
 					IHeartHandler ihh = ep.getCapability(CapabilityHeartHandler.CAPABILITY, null);
 					for (int i = 0; i < ihh.getContainers(); i++) {
 						HeartContainer hc = ihh.getContainer(i);
-						if (igh.getHeartPos().equals(hc.getOwnerPos())) {
-							hc = hc.copy();
-							hc.setGem(EnumGem.NONE);
-							ihh.setContainer(i, hc);
-							new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_GEM_SHATTER, originalGem.ordinal()-1, i).sendTo(ep);
+						HeartContainerOwner owner = hc.getOwner();
+						if (owner != null && owner instanceof BlockHeartContainerOwner) {
+							BlockHeartContainerOwner bhco = (BlockHeartContainerOwner)owner;
+							if (Objects.equal(bhco.getPos(), igh.getHeartPos())) {
+								hc = hc.copy();
+								hc.setGem(EnumGem.NONE);
+								ihh.setContainer(i, hc);
+								new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_GEM_SHATTER, originalGem.ordinal()-1, i).sendTo(ep);
+							}
 						}
 					}
 				}
@@ -731,9 +737,13 @@ public class GlassHearts {
 			if (ep.hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
 				IHeartHandler ihh = ep.getCapability(CapabilityHeartHandler.CAPABILITY, null);
 				for (HeartContainer hc : ihh) {
-					if (igh.getHeartPos().equals(hc.getOwnerPos())) {
-						li.add(ep);
-						break;
+					HeartContainerOwner owner = hc.getOwner();
+					if (owner instanceof BlockHeartContainerOwner) {
+						BlockHeartContainerOwner bhco = (BlockHeartContainerOwner)owner;
+						if (Objects.equal(bhco.getPos(), igh.getHeartPos())) {
+							li.add(ep);
+							break;
+						}
 					}
 				}
 			}

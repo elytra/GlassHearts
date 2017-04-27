@@ -4,54 +4,53 @@ import java.util.Locale;
 
 import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.enums.EnumGlassColor;
-import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
-import com.elytradev.glasshearts.world.GlassHeartWorldData;
 import com.google.common.base.Enums;
 import com.google.common.base.Objects;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
-import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.Constants.NBT;
 
 public class HeartContainer implements INBTSerializable<NBTTagCompound> {
+	public static final BiMap<String, Class<? extends HeartContainerOwner>> REGISTRY = HashBiMap.create();
+	
+	static {
+		REGISTRY.put("block", BlockHeartContainerOwner.class);
+	}
+	
 	private EnumGlassColor glassColor;
 	private EnumGem gem;
 	private float fillAmount;
 	private float lastFillAmount;
 	
-	private World ownerWorld;
-	private BlockPos ownerPos;
+	private HeartContainerOwner owner;
 
 	public HeartContainer() {}
 
-	public HeartContainer(EnumGlassColor glassColor, EnumGem gem, float fillAmount, World ownerWorld, BlockPos ownerPos) {
+	public HeartContainer(EnumGlassColor glassColor, EnumGem gem, float fillAmount, HeartContainerOwner owner) {
 		if (gem == null) throw new IllegalArgumentException("Null gem is invalid, use EnumGem.NONE");
 		this.glassColor = glassColor;
 		this.gem = gem;
 		this.fillAmount = fillAmount;
-		this.ownerWorld = ownerWorld;
-		this.ownerPos = ownerPos;
+		this.owner = owner;
 	}
 	
 	// factory methods
 	
 	public static HeartContainer createNatural(EnumGem gem, float fillAmount) {
-		return new HeartContainer(null, gem, fillAmount, null, null);
+		return new HeartContainer(null, gem, fillAmount, null);
 	}
 	
 	public static HeartContainer createGlass(EnumGlassColor color, EnumGem gem, float fillAmount) {
 		if (color == null) throw new IllegalArgumentException("Null color is not permitted in createGlass, use the constructor directly or createNatural");
-		return new HeartContainer(color, gem, fillAmount, null, null);
+		return new HeartContainer(color, gem, fillAmount, null);
 	}
 	
 	public static HeartContainer createGlass(IGlassHeart igh) {
-		return new HeartContainer(igh.getColor(), igh.getGem(), igh.getLifeforce()/(float)igh.getLifeforceCapacity(), igh.getHeartWorld(), igh.getHeartPos());
+		return new HeartContainer(igh.getColor(), igh.getGem(), igh.getLifeforce()/(float)igh.getLifeforceCapacity(), new BlockHeartContainerOwner(igh.getHeartWorld(), igh.getHeartPos()));
 	}
 	
 	
@@ -66,18 +65,16 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		float mult = gem.getMultiplier(src);
 		if (amount*mult > fillAmount && gem.doesBlockDamage(src, this)) {
 			fillAmount = 0;
-			IGlassHeart igh = getOwner();
-			if (igh != null) {
-				igh.setLifeforce(0);
+			if (hasOwner()) {
+				getOwner().set(0);
 			}
 			return amount;
 		}
 		amount *= mult;
 		float dmg = Math.min(amount, fillAmount);
 		fillAmount -= dmg;
-		IGlassHeart igh = getOwner();
-		if (igh != null) {
-			igh.setLifeforce(MathHelper.ceil(igh.getLifeforce()-(igh.getLifeforceCapacity()*dmg)));
+		if (hasOwner()) {
+			getOwner().modify(-dmg);
 		}
 		return dmg / mult;
 	}
@@ -86,9 +83,8 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		if (!canHeal()) return 0;
 		float heal = Math.min(amount, 1-fillAmount);
 		fillAmount += heal;
-		IGlassHeart igh = getOwner();
-		if (igh != null) {
-			igh.setLifeforce(MathHelper.ceil(igh.getLifeforce()+(igh.getLifeforceCapacity()*heal)));
+		if (hasOwner()) {
+			getOwner().modify(heal);
 		}
 		return heal;
 	}
@@ -113,12 +109,8 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		return glassColor;
 	}
 	
-	public BlockPos getOwnerPos() {
-		return ownerPos;
-	}
-	
-	public World getOwnerWorld() {
-		return ownerWorld;
+	public HeartContainerOwner getOwner() {
+		return owner;
 	}
 	
 	
@@ -140,37 +132,17 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		this.glassColor = glassColor;
 	}
 	
-	public void setOwnerPos(BlockPos ownerPos) {
-		this.ownerPos = ownerPos;
-	}
-	
-	public void setOwnerWorld(World ownerWorld) {
-		this.ownerWorld = ownerWorld;
+	public void setOwner(HeartContainerOwner owner) {
+		this.owner = owner;
 	}
 	
 	public HeartContainer copy() {
-		return new HeartContainer(glassColor, gem, fillAmount, ownerWorld, ownerPos);
+		return new HeartContainer(glassColor, gem, fillAmount, owner.copy());
 	}
 	
 	
 	
 	// convenience getters and setters
-	
-	public IGlassHeart getOwner() {
-		if (ownerPos == null) return null;
-		if (ownerWorld == null) return null;
-		if (ownerWorld.isBlockLoaded(ownerPos)) {
-			// so this can sometimes work on clients
-			TileEntity te = ownerWorld.getTileEntity(ownerPos);
-			if (te instanceof TileEntityGlassHeart) {
-				return (TileEntityGlassHeart)te;
-			} else {
-				return null;
-			}
-		}
-		GlassHeartWorldData ghwd = GlassHeartWorldData.getDataFor(ownerWorld);
-		return ghwd.get(ownerPos);
-	}
 	
 	public int getFillAmountInt() {
 		return ((int)(fillAmount*255f))&0xFF;
@@ -186,6 +158,10 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 	
 	public void setFillAmountByte(byte fillAmount) {
 		setFillAmountInt(fillAmount&0xFF);
+	}
+	
+	public boolean hasOwner() {
+		return owner != null;
 	}
 	
 	
@@ -211,7 +187,7 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		result = prime * result + getFillAmountInt();
 		result = prime * result + ((gem == null) ? 0 : gem.hashCode());
 		result = prime * result + ((glassColor == null) ? 0 : glassColor.hashCode());
-		result = prime * result + ((ownerPos == null) ? 0 : ownerPos.hashCode());
+		result = prime * result + ((owner == null) ? 0 : owner.hashCode());
 		return result;
 	}
 
@@ -236,7 +212,7 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		if (this.glassColor != that.glassColor) {
 			return false;
 		}
-		if (!Objects.equal(this.ownerPos, that.ownerPos)) {
+		if (!Objects.equal(this.owner, that.owner)) {
 			return false;
 		}
 		return true;
@@ -248,12 +224,22 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		gem = Enums.getIfPresent(EnumGem.class, nbt.getString("Gem").toUpperCase(Locale.ROOT)).or(EnumGem.NONE);
 		setFillAmountByte(nbt.getByte("Fill"));
 		lastFillAmount = fillAmount;
-		ownerPos = nbt.hasKey("OwnerPos", NBT.TAG_LONG) ? BlockPos.fromLong(nbt.getLong("OwnerPos")) : null;
-		ownerWorld = nbt.hasKey("OwnerWorld", NBT.TAG_INT) ? DimensionManager.getWorld(nbt.getInteger("OwnerWorld")) : null;
+		if (nbt.hasKey("Owner", NBT.TAG_COMPOUND)) {
+			NBTTagCompound ownerTag = nbt.getCompoundTag("Owner");
+			try {
+				HeartContainerOwner ihco = REGISTRY.get(ownerTag.getString("Kind")).newInstance();
+				ihco.deserializeNBT(ownerTag);
+			} catch (Exception e) {
+				e.printStackTrace();
+				owner = null;
+			}
+		} else {
+			owner = null;
+		}
 	}
 	
 	public static HeartContainer createFromNBT(NBTTagCompound nbt) {
-		HeartContainer hc = new HeartContainer(null, EnumGem.NONE, 0, null, null);
+		HeartContainer hc = new HeartContainer(null, EnumGem.NONE, 0, null);
 		hc.deserializeNBT(nbt);
 		return hc;
 	}
@@ -266,11 +252,10 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		}
 		tag.setString("Gem", gem.getName());
 		tag.setByte("Fill", getFillAmountByte());
-		if (ownerPos != null) {
-			tag.setLong("OwnerPos", ownerPos.toLong());
-		}
-		if (ownerWorld != null) {
-			tag.setInteger("OwnerWorld", ownerWorld.provider.getDimension());
+		if (owner != null) {
+			NBTTagCompound ownerTag = owner.serializeNBT();
+			ownerTag.setString("Kind", REGISTRY.inverse().get(owner.getClass()));
+			tag.setTag("Owner", ownerTag);
 		}
 		return tag;
 	}

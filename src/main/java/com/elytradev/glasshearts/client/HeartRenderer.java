@@ -53,7 +53,9 @@ public class HeartRenderer extends Gui {
 	
 	
 	public void tick() {
-		updateCounter++;
+		if (!Minecraft.getMinecraft().isGamePaused()) {
+			updateCounter++;
+		}
 	}
 	
 	public void renderHealth(ScaledResolution res, float partialTicks) {

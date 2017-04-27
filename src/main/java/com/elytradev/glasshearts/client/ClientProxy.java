@@ -11,6 +11,7 @@ import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.enums.EnumGemState;
 import com.elytradev.glasshearts.item.ItemGem;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 
 import net.minecraft.client.Minecraft;
@@ -18,6 +19,7 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.particle.ParticleRedstone;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.color.IItemColor;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.passive.EntitySheep;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumDyeColor;
@@ -29,6 +31,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
@@ -125,6 +128,34 @@ public class ClientProxy extends CommonProxy {
 			if (e.getLeft().get(i).startsWith("P:")) {
 				e.getLeft().set(i, e.getLeft().get(i)+", GuiP: "+guiParticles.size());
 				break;
+			}
+		}
+	}
+	
+	@SubscribeEvent
+	public void onTooltip(ItemTooltipEvent e) {
+		EnumGem gem = EnumGem.fromItemStack(e.getItemStack());
+		if (gem != null) {
+			String swp = null;
+			if (e.isShowAdvancedItemTooltips()) {
+				swp = e.getToolTip().remove(e.getToolTip().size()-1);
+			}
+			if (I18n.hasKey("tooltip.glasshearts.when_heart_adorned."+gem.getName())) {
+				e.getToolTip().add("\u00A75"+I18n.format("tooltip.glasshearts.when_heart_adorned"));
+				String s = I18n.format("tooltip.glasshearts.when_heart_adorned."+gem.getName());
+				for (String l : Splitter.on("\\n").split(s)) {
+					e.getToolTip().add("  \u00A79"+l);
+				}
+			}
+			if (I18n.hasKey("tooltip.glasshearts.when_heart_emptied."+gem.getName())) {
+				e.getToolTip().add("\u00A75"+I18n.format("tooltip.glasshearts.when_heart_emptied"));
+				String s = I18n.format("tooltip.glasshearts.when_heart_emptied."+gem.getName());
+				for (String l : Splitter.on("\\n").split(s)) {
+					e.getToolTip().add("  \u00A79"+l);
+				}
+			}
+			if (e.isShowAdvancedItemTooltips() && swp != null) {
+				e.getToolTip().add(swp);
 			}
 		}
 	}
