@@ -19,9 +19,9 @@ public class GenerateGems implements IWorldGenerator {
 	public void generate(Random random, int chunkX, int chunkZ, World world, IChunkGenerator chunkGenerator, IChunkProvider chunkProvider) {
 		if (!world.provider.isSurfaceWorld()) return;
 		for (int i = 0; i < 12; i++) {
-			int x = (chunkX*16)+random.nextInt(16);
+			int x = ((chunkX*16)+random.nextInt(16))+8;
 			int y = random.nextInt(24)+3;
-			int z = (chunkZ*16)+random.nextInt(16);
+			int z = ((chunkZ*16)+random.nextInt(16))+8;
 			BlockPos pos = new BlockPos(x, y, z);
 			if (world.getBlockState(pos).getBlock() == Blocks.STONE) {
 				EnumGem gem = BlockOre.VALID_GEMS[random.nextInt(BlockOre.VALID_GEMS.length)];
