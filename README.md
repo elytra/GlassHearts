@@ -5,6 +5,11 @@
 
 *A novel and balanced way to increase your health.*
 
+**This mod is open source and under a permissive license.** All Elytra mods are,
+and as such, can be included in any modpack on any platform without prior
+permission. We appreciate hearing about people using our mods, but you do not
+need to ask to use our mods. See the [LICENSE file](LICENSE) for more details.
+
 Glass Hearts adds five things:
 
  * An enchantment, called Sapping
@@ -37,9 +42,3 @@ mods.
 This mod idea was originally intended for a factions PvP server, but I'm
 releasing it as an open-source Forge mod because I can't just continue to not
 implement this idea. I hope you enjoy!
-
-*In accordance with the MIT License, this mod may be used in any modpacks on
-any platform for any purpose. You can even charge for it, though that's against
-Mojang's EULA.*
-
-This will probably evolve into a lifeforce alchemy mod! Stay tuned.
