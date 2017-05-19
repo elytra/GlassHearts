@@ -157,7 +157,7 @@ public class BlockGlassHeart extends Block {
 							}
 						}
 					}
-					if (cap.getContainers() < 40) {
+					if (cap.getContainers() < GlassHearts.inst.configMaxContainers) {
 						cap.addContainer(HeartContainer.createGlass(tegh));
 						stack.damageItem(1, playerIn);
 						worldIn.playSound(null, pos, GlassHearts.inst.ATTUNE, SoundCategory.PLAYERS, 1f, 2f);
