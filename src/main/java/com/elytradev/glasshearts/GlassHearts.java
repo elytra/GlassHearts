@@ -136,6 +136,7 @@ public class GlassHearts {
 	public int configGlassHeartCapacity = 1000;
 	public int configLifeforceBottleSize = 400;
 	public int configGlassHeartFillRate = 10;
+	public int configMaxContainers = 40;
 	public boolean configCreepersSeekHearts = true;
 	public boolean configCreeperFakeExplosions = false;
 	
@@ -228,14 +229,17 @@ public class GlassHearts {
 				  "The maximum amount of Lifeforce transferred from the buffer\n"
 				+ "tank to the main tank every tick. Keeping this low prevents\n"
 				+ "players from becoming invincible by refilling their glass\n"
-				+ "hearts quickly.");
+				+ "hearts quickly.\n");
+		configMaxContainers = config.getInt("maxContainers", "Balance", 40, 1, Short.MAX_VALUE,
+				  "The maximum amount of heart containers one player can have.\n"
+				+ "This includes the 10 vanilla hearts.\n");
 		configCreepersSeekHearts = config.getBoolean("creepersSeekHearts", "Balance", true,
 				  "If true, Creepers will seek out Glass Hearts and explode on\n"
 				+ "them. If mobGriefing is false, the heart will still be\n"
 				+ "destroyed, but no nearby blocks will be.\n");
 		configCreeperFakeExplosions = config.getBoolean("creeperFakeExplosions", "Balance", false,
 				  "If true, Creepers exploding on Glass Hearts will only\n"
-				+ "destroy the heart, even if mobGriefing is true.");
+				+ "destroy the heart, even if mobGriefing is true.\n");
 		
 		configGeneratePetrifiedTrees = config.getBoolean("generatePetrifiedTrees", "World", true,
 				  "If true, Petrified Trees will generate in forests, which can\n"
