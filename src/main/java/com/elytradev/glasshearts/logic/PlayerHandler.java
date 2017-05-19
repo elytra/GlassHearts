@@ -4,6 +4,8 @@ import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.List;
 
+import com.elytradev.concrete.reflect.accessor.Accessor;
+import com.elytradev.concrete.reflect.accessor.Accessors;
 import com.elytradev.glasshearts.capability.CapabilityHeartHandler;
 import com.elytradev.glasshearts.capability.IHeartHandler;
 import com.elytradev.glasshearts.enums.EnumGem;
@@ -15,11 +17,13 @@ import com.google.common.collect.Lists;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.FoodStats;
 
 public class PlayerHandler {
 
-	private final WeakReference<EntityPlayer> player;
+	private static final Accessor<Integer> foodTimer = Accessors.findField(FoodStats.class, "field_75123_d", "foodTimer", "d");
 	
+	private final WeakReference<EntityPlayer> player;
 	private final List<HeartContainer> lastContainers = Lists.newArrayList();
 	
 	public PlayerHandler(EntityPlayer player) {
@@ -67,8 +71,17 @@ public class PlayerHandler {
 				}
 			}
 		}
+		boolean anyHealableEmpty = false;
 		for (HeartContainer hc : ihh) {
 			hp += hc.getFillAmount();
+			if (hc.canHeal() && hc.getFillAmount() < 1) {
+				anyHealableEmpty = true;
+			}
+		}
+		boolean naturalRegeneration = player.world.getGameRules().getBoolean("naturalRegeneration");
+		FoodStats food = player.getFoodStats();
+		if (naturalRegeneration && !anyHealableEmpty && player.shouldHeal() && food.getFoodLevel() >= 18) {
+			foodTimer.set(food, 0);
 		}
 		player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(ihh.getContainers()*2);
 		if (player.isEntityAlive()) {
