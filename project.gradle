@@ -6,7 +6,7 @@ ext.version = '1.11.2-0.0.1'
 ext.concreteVersion = '0.2.1'
 ext.concreteModules = [ 'common', 'network', 'reflect' ]
 
-ext.forge = '1.11.2-13.20.0.2226'
+ext.forge = '1.11.2-13.20.0.2282'
 ext.mappings = 'snapshot_20170205'
 
 ext.enforceLicenseHeaders = false
@@ -16,12 +16,15 @@ ext.verbose = false
 repositories {
 	// the skeleton already defines mavenCentral, jcenter, and the Elytra repo
 	maven {
-		name = 'jei'
-		url = 'http://dvs1.progwml6.com/files/maven'
+		name 'DVS1 Maven FS'
+		url 'http://dvs1.progwml6.com/files/maven'
 	}
 }
 
 dependencies {
 	compile 'mezz.jei:jei_1.11.2:4.2.6.235:api'
 	runtime 'mezz.jei:jei_1.11.2:4.2.6.235'
+	
+	deobfCompile 'slimeknights.mantle:Mantle:1.11.2-1.2.0.27'
+	deobfCompile 'slimeknights:TConstruct:1.11.2-2.7.0.9'
 }
