@@ -67,3 +67,7 @@ tooltip.glasshearts.when_heart_emptied.amethyst=Regeneration II (0:10)
 tooltip.glasshearts.when_heart_emptied.ruby=§cGem Shatters\nHeart Refills
 tooltip.glasshearts.when_heart_emptied.topaz=Absorption I (0:30)
 tooltip.glasshearts.when_heart_emptied.agate=Strength II (1:00)
+
+modifier.glasshearts.tcon.sapping.name=Sapping
+modifier.glasshearts.tcon.sapping.desc=§oZza- err, sap!§r\nChance to fill a Glass Bottle with Lifeforce upon killing a mob
+modifier.glasshearts.tcon.sapping.extra=Sap Chance: %s
