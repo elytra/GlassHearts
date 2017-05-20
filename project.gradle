@@ -16,12 +16,15 @@ ext.verbose = false
 repositories {
 	// the skeleton already defines mavenCentral, jcenter, the Elytra repo, and unascribed's maven
 	maven {
-		name = 'jei'
-		url = 'http://dvs1.progwml6.com/files/maven'
+		name 'DVS1 Maven FS'
+		url 'http://dvs1.progwml6.com/files/maven'
 	}
 }
 
 dependencies {
 	compile 'mezz.jei:jei_1.10.2:3.9.7.260:api'
 	runtime 'mezz.jei:jei_1.10.2:3.9.7.260'
+	
+	deobfCompile 'slimeknights.mantle:Mantle:1.10.2-1.1.5.205'
+	deobfCompile 'slimeknights:TConstruct:1.10.2-2.6.3.503'
 }

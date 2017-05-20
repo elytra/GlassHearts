@@ -28,6 +28,7 @@ import com.elytradev.glasshearts.enchant.EnchantmentSapping;
 import com.elytradev.glasshearts.entity.EntityAICreeperSeekHeart;
 import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.enums.EnumGemState;
+import com.elytradev.glasshearts.integration.tcon.TConIntegration;
 import com.elytradev.glasshearts.item.ItemBlockGlassHeart;
 import com.elytradev.glasshearts.item.ItemBlockOre;
 import com.elytradev.glasshearts.item.ItemGem;
@@ -101,6 +102,7 @@ import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -392,6 +394,10 @@ public class GlassHearts {
 		
 		
 		GameRegistry.registerTileEntity(TileEntityGlassHeart.class, "glasshearts:glass_heart");
+		
+		if (Loader.isModLoaded("tconstruct")) {
+			TConIntegration.init();
+		}
 		
 		MinecraftForge.EVENT_BUS.register(this);
 		

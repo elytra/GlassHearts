@@ -4,8 +4,6 @@ import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.List;
 
-import com.elytradev.concrete.reflect.accessor.Accessor;
-import com.elytradev.concrete.reflect.accessor.Accessors;
 import com.elytradev.glasshearts.capability.CapabilityHeartHandler;
 import com.elytradev.glasshearts.capability.IHeartHandler;
 import com.elytradev.glasshearts.enums.EnumGem;
@@ -14,6 +12,8 @@ import com.elytradev.glasshearts.network.UpdateHeartsMessage;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
+import io.github.elytra.concrete.accessor.Accessor;
+import io.github.elytra.concrete.accessor.Accessors;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.player.EntityPlayer;
