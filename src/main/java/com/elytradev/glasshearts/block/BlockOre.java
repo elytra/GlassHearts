@@ -52,7 +52,7 @@ public class BlockOre extends Block {
 	
 	@Override
 	public int getMetaFromState(IBlockState state) {
-		return state.getValue(VARIANT).ordinal();
+		return ArrayUtils.indexOf(VALID_GEMS, state.getValue(VARIANT));
 	}
 	
 	@Override
@@ -69,7 +69,7 @@ public class BlockOre extends Block {
 	
 	@Override
 	protected ItemStack getSilkTouchDrop(IBlockState state) {
-		return new ItemStack(this, 1, ArrayUtils.indexOf(VALID_GEMS, state.getValue(VARIANT)));
+		return new ItemStack(this, 1, ArrayUtils.indexOf(ItemGem.VALID_GEMS, state.getValue(VARIANT)));
 	}
 	
 	@Override
