@@ -147,7 +147,6 @@ public class GlassHeartData implements INBTSerializable<NBTTagCompound>, IGlassH
 			} else {
 				gemStack = new ItemStack(GlassHearts.inst.GEM, 1, EnumGemOre.valueOf(gem.getRegistryName().getResourcePath().toUpperCase(Locale.ROOT)).ordinal());
 			}
-			System.out.println("loaded legacy gem "+gem.getRegistryName()+" ("+nbt.getString("Gem")+") as stack "+gemStack);
 		} else {
 			gemStack = new ItemStack(nbt.getCompoundTag("GemStack"));
 			gem = Gem.fromItemStack(gemStack);
