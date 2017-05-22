@@ -46,6 +46,7 @@ public class CapabilityHeartHandler {
 				NBTTagList li = tag.getTagList("Containers", NBT.TAG_COMPOUND);
 				for (int i = 0; i < li.tagCount(); i++) {
 					HeartContainer hc = HeartContainer.createFromNBT(li.getCompoundTagAt(i));
+					hc.animationTicks = 512;
 					instance.addContainer(hc);
 				}
 			}
