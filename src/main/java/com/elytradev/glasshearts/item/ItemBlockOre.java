@@ -15,7 +15,7 @@ public class ItemBlockOre extends ItemBlock {
 	
 	@Override
 	public String getUnlocalizedName(ItemStack stack) {
-		return "tile.glasshearts.ore."+EnumGemOre.VALUES[stack.getMetadata()%EnumGemOre.VALUES.length].getName();
+		return "tile.glasshearts.ore."+EnumGemOre.VALUES_WITHOUT_AMBER[stack.getMetadata()%EnumGemOre.VALUES_WITHOUT_AMBER.length].getName();
 	}
 	
 	@Override
