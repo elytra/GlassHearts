@@ -29,6 +29,7 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 	private float lastFillAmount;
 	
 	private HeartContainerOwner owner;
+	public int animationTicks;
 
 	public HeartContainer() {}
 
