@@ -8,7 +8,8 @@ import com.elytradev.concrete.reflect.accessor.Accessor;
 import com.elytradev.concrete.reflect.accessor.Accessors;
 import com.elytradev.glasshearts.capability.CapabilityHeartHandler;
 import com.elytradev.glasshearts.capability.IHeartHandler;
-import com.elytradev.glasshearts.enums.EnumGem;
+import com.elytradev.glasshearts.gem.Gem;
+import com.elytradev.glasshearts.init.Gems;
 import com.elytradev.glasshearts.network.PlayHeartEffectMessage;
 import com.elytradev.glasshearts.network.UpdateHeartsMessage;
 import com.google.common.base.Objects;
@@ -63,8 +64,8 @@ public class PlayerHandler {
 				} else {
 					ihh.removeContainer(i);
 					new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_HEART_SHATTER, hc.getGlassColor().ordinal(), i+destroyed).sendTo(player);
-					if (hc.getGem() != EnumGem.NONE) {
-						new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_GEM_SHATTER, hc.getGem().ordinal()-1, i+destroyed).sendTo(player);
+					if (hc.getGem() != Gems.NONE) {
+						new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_GEM_SHATTER, Gem.getIdForGem(hc.getGem()), i+destroyed).sendTo(player);
 					}
 					destroyed++;
 					i--;

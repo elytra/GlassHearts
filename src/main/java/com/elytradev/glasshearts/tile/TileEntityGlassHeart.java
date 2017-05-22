@@ -1,8 +1,9 @@
 package com.elytradev.glasshearts.tile;
 
 import com.elytradev.glasshearts.GlassHearts;
-import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.enums.EnumGlassColor;
+import com.elytradev.glasshearts.gem.Gem;
+import com.elytradev.glasshearts.init.Gems;
 import com.elytradev.glasshearts.logic.IGlassHeart;
 import com.elytradev.glasshearts.world.GlassHeartData;
 import com.elytradev.glasshearts.world.GlassHeartWorldData;
@@ -36,7 +37,8 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 	private int clientLifeforceCapacity = 0;
 	private int clientLifeforceBuffer = 0;
 	private EnumGlassColor clientColor = EnumGlassColor.NONE;
-	private EnumGem clientGem = EnumGem.NONE;
+	private Gem clientGem = Gems.NONE;
+	private ItemStack clientGemStack = ItemStack.EMPTY;
 	private boolean clientHasBeenFull = false;
 	
 	private String name;
@@ -59,7 +61,8 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 		tag.setShort("LifeforceCapacity", (short)getLifeforceCapacity());
 		tag.setShort("LifeforceBuffer", (short)getLifeforceBuffer());
 		tag.setByte("Color", (byte)getColor().ordinal());
-		tag.setByte("Gem", (byte)getGem().ordinal());
+		tag.setTag("GemStack", getGemStack().serializeNBT());
+		tag.setByte("Gem", (byte)Gem.getIdForGem(getGem()));
 		tag.setBoolean("HasBeenFull", hasBeenFull());
 		if (name != null) {
 			tag.setString("Name", name);
@@ -102,7 +105,8 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 		clientLifeforceBuffer = tag.getInteger("LifeforceBuffer");
 		clientLifeforceCapacity = tag.getInteger("LifeforceCapacity");
 		clientColor = EnumGlassColor.values()[tag.getByte("Color")];
-		clientGem = EnumGem.values()[tag.getByte("Gem")];
+		clientGem = Gem.getGemById(tag.getByte("Gem")&0xFF);
+		clientGemStack = new ItemStack(tag.getCompoundTag("GemStack"));
 		clientHasBeenFull = tag.getBoolean("HasBeenFull");
 		name = tag.hasKey("Name", NBT.TAG_STRING) ? tag.getString("Name") : null;
 	}
@@ -147,7 +151,7 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 			return cur.get();
 		}
 		GlassHeartWorldData ghwd = GlassHeartWorldData.getDataFor(world);
-		return ghwd.create(getHeartPos(), EnumGlassColor.NONE, EnumGem.NONE, 0, 0);
+		return ghwd.create(getHeartPos(), EnumGlassColor.NONE, ItemStack.EMPTY, 0, 0);
 	}
 	
 	public String getName() {
@@ -173,9 +177,15 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 	}
 	
 	@Override
-	public EnumGem getGem() {
+	public Gem getGem() {
 		if (client) return clientGem;
-		return getData().transform(GlassHeartData::getGem).or(EnumGem.NONE);
+		return getData().transform(GlassHeartData::getGem).or(Gems.NONE);
+	}
+	
+	@Override
+	public ItemStack getGemStack() {
+		if (client) return clientGemStack;
+		return getData().transform(GlassHeartData::getGemStack).or(ItemStack.EMPTY);
 	}
 	
 	@Override
@@ -198,7 +208,10 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 	
 	@Override
 	public void setLifeforce(int lifeforce) {
-		if (client) this.clientLifeforce = lifeforce;
+		if (client) {
+			this.clientLifeforce = lifeforce;
+			return;
+		}
 		if (!hasWorld() || getWorld().isRemote) return;
 		int oldLifeforce = getLifeforce();
 		getOrCreateData().setLifeforce(lifeforce);
@@ -210,7 +223,10 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 	
 	@Override
 	public void setColor(EnumGlassColor color) {
-		if (client) this.clientColor = color;
+		if (client) {
+			this.clientColor = color;
+			return;
+		}
 		if (!hasWorld() || getWorld().isRemote) return;
 		EnumGlassColor oldColor = getColor();
 		getOrCreateData().setColor(color);
@@ -220,12 +236,18 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 	}
 	
 	@Override
-	public void setGem(EnumGem gem) {
-		if (client) this.clientGem = gem;
+	public void setGemStack(ItemStack gemStack) {
+		if (client) {
+			this.clientGem = Gem.fromItemStack(gemStack);
+			this.clientGemStack = gemStack;
+			return;
+		}
 		if (!hasWorld() || getWorld().isRemote) return;
-		EnumGem oldGem = getGem();
-		getOrCreateData().setGem(gem);
-		if (oldGem != gem) {
+		Gem oldGem = getGem();
+		ItemStack oldGemStack = getGemStack();
+		getOrCreateData().setGemStack(gemStack);
+		Gem newGem = getGem();
+		if (oldGem != newGem || !ItemStack.areItemStacksEqual(oldGemStack, gemStack)) {
 			GlassHearts.sendUpdatePacket(this);
 		}
 	}
@@ -313,21 +335,23 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 	@Override
 	public ItemStack getStackInSlot(int slot) {
 		if (slot != 0) return ItemStack.EMPTY;
-		return getGem().toItemStack();
+		return getGemStack();
 	}
 
 	@Override
 	public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
 		if (slot != 0) return stack;
-		if (getGem() == EnumGem.NONE) {
-			EnumGem eg = EnumGem.fromItemStack(stack);
-			if (eg != null) {
-				ItemStack is = stack.copy();
-				is.shrink(1);
+		if (getGemStack().isEmpty()) {
+			Gem eg = Gem.fromItemStack(stack);
+			if (eg != Gems.NONE) {
+				ItemStack copy = stack.copy();
+				copy.shrink(1);
 				if (!simulate) {
-					setGem(eg);
+					ItemStack gemStack = stack.copy();
+					gemStack.setCount(1);
+					setGemStack(gemStack);
 				}
-				return is;
+				return copy;
 			}
 		}
 		return stack;
@@ -336,11 +360,11 @@ public class TileEntityGlassHeart extends TileEntity implements IFluidHandler, I
 	@Override
 	public ItemStack extractItem(int slot, int amount, boolean simulate) {
 		if (slot != 0) return ItemStack.EMPTY;
-		EnumGem gem = getGem();
+		ItemStack stack = getGemStack();
 		if (!simulate) {
-			setGem(EnumGem.NONE);
+			setGemStack(ItemStack.EMPTY);
 		}
-		return gem.toItemStack();
+		return stack;
 	}
 
 	@Override
