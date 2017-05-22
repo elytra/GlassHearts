@@ -55,7 +55,7 @@ public class BlockOre extends Block {
 	
 	@Override
 	protected ItemStack getSilkTouchDrop(IBlockState state) {
-		return new ItemStack(this, 1, state.getValue(VARIANT).ordinal());
+		return new ItemStack(this, 1, state.getValue(VARIANT).ordinalWithoutAmber());
 	}
 	
 	@Override

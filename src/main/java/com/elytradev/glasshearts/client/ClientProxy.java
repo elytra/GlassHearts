@@ -5,13 +5,11 @@ import java.util.List;
 
 import com.elytradev.glasshearts.CommonProxy;
 import com.elytradev.glasshearts.GlassHearts;
-import com.elytradev.glasshearts.block.BlockOre;
 import com.elytradev.glasshearts.client.guiparticle.GuiParticle;
 import com.elytradev.glasshearts.enums.EnumGemOre;
 import com.elytradev.glasshearts.enums.EnumGemState;
 import com.elytradev.glasshearts.gem.Gem;
 import com.elytradev.glasshearts.init.Gems;
-import com.elytradev.glasshearts.item.ItemGem;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -56,9 +54,11 @@ public class ClientProxy extends CommonProxy {
 			ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(GlassHearts.inst.GLASS_HEART), i, new ModelResourceLocation("glasshearts:stained_glass_heart#inventory"));
 		}
 		
-		for (int i = 0; i < EnumGemOre.VALUES.length; i++) {
-			ModelLoader.setCustomModelResourceLocation(GlassHearts.inst.GEM, i, new ModelResourceLocation("glasshearts:"+EnumGemOre.VALUES[i].getName()+"#inventory"));
-			ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(GlassHearts.inst.ORE), i, new ModelResourceLocation("glasshearts:ore#variant="+EnumGemOre.VALUES[i].getName()));
+		for (EnumGemOre gem : EnumGemOre.VALUES) {
+			ModelLoader.setCustomModelResourceLocation(GlassHearts.inst.GEM, gem.ordinal(), new ModelResourceLocation("glasshearts:"+gem.getName()+"#inventory"));
+			if (gem != EnumGemOre.AMBER) {
+				ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(GlassHearts.inst.ORE), gem.ordinalWithoutAmber(), new ModelResourceLocation("glasshearts:ore#variant="+gem.getName()));
+			}
 		}
 		ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(GlassHearts.inst.PETRIFIED_LOG), 0, new ModelResourceLocation("glasshearts:petrified_log#axis=y"));
 		
