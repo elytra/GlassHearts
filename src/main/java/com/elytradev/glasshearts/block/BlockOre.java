@@ -21,7 +21,7 @@ import net.minecraft.world.World;
 
 public class BlockOre extends Block {
 	
-	public static final PropertyEnum<EnumGemOre> VARIANT = PropertyEnum.create("variant", EnumGemOre.class);
+	public static final PropertyEnum<EnumGemOre> VARIANT = PropertyEnum.create("variant", EnumGemOre.class, EnumGemOre.VALUES_WITHOUT_AMBER);
 	
 	public BlockOre() {
 		super(Material.ROCK);
@@ -38,17 +38,17 @@ public class BlockOre extends Block {
 	
 	@Override
 	public int getMetaFromState(IBlockState state) {
-		return state.getValue(VARIANT).ordinal();
+		return state.getValue(VARIANT).ordinalWithoutAmber();
 	}
 	
 	@Override
 	public IBlockState getStateFromMeta(int meta) {
-		return getDefaultState().withProperty(VARIANT, EnumGemOre.VALUES[meta%EnumGemOre.VALUES.length]);
+		return getDefaultState().withProperty(VARIANT, EnumGemOre.VALUES_WITHOUT_AMBER[meta%EnumGemOre.VALUES_WITHOUT_AMBER.length]);
 	}
 	
 	@Override
 	public void getSubBlocks(Item itemIn, CreativeTabs tab, List<ItemStack> list) {
-		for (int i = 0; i < EnumGemOre.VALUES.length-1; i++) {
+		for (int i = 0; i < EnumGemOre.VALUES_WITHOUT_AMBER.length; i++) {
 			list.add(new ItemStack(itemIn, 1, i));
 		}
 	}
