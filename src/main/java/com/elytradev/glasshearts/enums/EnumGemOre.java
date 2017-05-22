@@ -11,11 +11,14 @@ public enum EnumGemOre implements IStringSerializable {
 	SAPPHIRE,
 	OPAL,
 	ONYX,
-	AGATE,
 	AMBER,
+	AGATE,
 	;
 	
 	public static final EnumGemOre[] VALUES = values();
+	public static final EnumGemOre[] VALUES_WITHOUT_AMBER = {
+			AMETHYST, RUBY, TOPAZ, SAPPHIRE, OPAL, ONYX, AGATE
+	};
 	
 	private final String name;
 	
@@ -26,5 +29,13 @@ public enum EnumGemOre implements IStringSerializable {
 	@Override
 	public String getName() {
 		return name;
+	}
+	
+	public int ordinalWithoutAmber() {
+		if (this == AMBER) throw new UnsupportedOperationException("Cannot get the ordinal-without-amber of amber");
+		if (ordinal() >= AMBER.ordinal()) {
+			return ordinal()-1;
+		}
+		return ordinal();
 	}
 }
