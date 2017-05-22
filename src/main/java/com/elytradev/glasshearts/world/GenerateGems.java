@@ -4,7 +4,7 @@ import java.util.Random;
 
 import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.block.BlockOre;
-import com.elytradev.glasshearts.enums.EnumGem;
+import com.elytradev.glasshearts.enums.EnumGemOre;
 
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -24,7 +24,7 @@ public class GenerateGems implements IWorldGenerator {
 			int z = ((chunkZ*16)+random.nextInt(16))+8;
 			BlockPos pos = new BlockPos(x, y, z);
 			if (world.getBlockState(pos).getBlock() == Blocks.STONE) {
-				EnumGem gem = BlockOre.VALID_GEMS[random.nextInt(BlockOre.VALID_GEMS.length)];
+				EnumGemOre gem = EnumGemOre.VALUES[random.nextInt(EnumGemOre.VALUES.length-1)];
 				if (GlassHearts.inst.configGenerateGems.contains(gem)) {
 					world.setBlockState(pos, GlassHearts.inst.ORE.getDefaultState().withProperty(BlockOre.VARIANT, gem));
 				}

@@ -7,8 +7,10 @@ import com.elytradev.glasshearts.CommonProxy;
 import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.block.BlockOre;
 import com.elytradev.glasshearts.client.guiparticle.GuiParticle;
-import com.elytradev.glasshearts.enums.EnumGem;
+import com.elytradev.glasshearts.enums.EnumGemOre;
 import com.elytradev.glasshearts.enums.EnumGemState;
+import com.elytradev.glasshearts.gem.Gem;
+import com.elytradev.glasshearts.init.Gems;
 import com.elytradev.glasshearts.item.ItemGem;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
 import com.google.common.base.Splitter;
@@ -54,12 +56,9 @@ public class ClientProxy extends CommonProxy {
 			ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(GlassHearts.inst.GLASS_HEART), i, new ModelResourceLocation("glasshearts:stained_glass_heart#inventory"));
 		}
 		
-		for (int i = 0; i < ItemGem.VALID_GEMS.length; i++) {
-			ModelLoader.setCustomModelResourceLocation(GlassHearts.inst.GEM, i, new ModelResourceLocation("glasshearts:"+ItemGem.VALID_GEMS[i].getName()+"#inventory"));
-		}
-		
-		for (int i = 0; i < BlockOre.VALID_GEMS.length; i++) {
-			ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(GlassHearts.inst.ORE), i, new ModelResourceLocation("glasshearts:ore#variant="+BlockOre.VALID_GEMS[i].getName()));
+		for (int i = 0; i < EnumGemOre.VALUES.length; i++) {
+			ModelLoader.setCustomModelResourceLocation(GlassHearts.inst.GEM, i, new ModelResourceLocation("glasshearts:"+EnumGemOre.VALUES[i].getName()+"#inventory"));
+			ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(GlassHearts.inst.ORE), i, new ModelResourceLocation("glasshearts:ore#variant="+EnumGemOre.VALUES[i].getName()));
 		}
 		ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(GlassHearts.inst.PETRIFIED_LOG), 0, new ModelResourceLocation("glasshearts:petrified_log#axis=y"));
 		
@@ -134,22 +133,22 @@ public class ClientProxy extends CommonProxy {
 	
 	@SubscribeEvent
 	public void onTooltip(ItemTooltipEvent e) {
-		EnumGem gem = EnumGem.fromItemStack(e.getItemStack());
-		if (gem != null) {
+		Gem gem = Gem.fromItemStack(e.getItemStack());
+		if (gem != Gems.NONE) {
 			String swp = null;
 			if (e.isShowAdvancedItemTooltips()) {
 				swp = e.getToolTip().remove(e.getToolTip().size()-1);
 			}
-			if (I18n.hasKey("tooltip.glasshearts.when_heart_adorned."+gem.getName())) {
+			if (I18n.hasKey("tooltip.glasshearts.when_heart_adorned."+gem.getRegistryName().getResourcePath())) {
 				e.getToolTip().add("\u00A75"+I18n.format("tooltip.glasshearts.when_heart_adorned"));
-				String s = I18n.format("tooltip.glasshearts.when_heart_adorned."+gem.getName());
+				String s = I18n.format("tooltip.glasshearts.when_heart_adorned."+gem.getRegistryName().getResourcePath());
 				for (String l : Splitter.on("\\n").split(s)) {
 					e.getToolTip().add("  \u00A79"+l);
 				}
 			}
-			if (I18n.hasKey("tooltip.glasshearts.when_heart_emptied."+gem.getName())) {
+			if (I18n.hasKey("tooltip.glasshearts.when_heart_emptied."+gem.getRegistryName().getResourcePath())) {
 				e.getToolTip().add("\u00A75"+I18n.format("tooltip.glasshearts.when_heart_emptied"));
-				String s = I18n.format("tooltip.glasshearts.when_heart_emptied."+gem.getName());
+				String s = I18n.format("tooltip.glasshearts.when_heart_emptied."+gem.getRegistryName().getResourcePath());
 				for (String l : Splitter.on("\\n").split(s)) {
 					e.getToolTip().add("  \u00A79"+l);
 				}
@@ -186,7 +185,7 @@ public class ClientProxy extends CommonProxy {
 					} else {
 						GlassHearts.inst.update(tegh, tegh.getWorld().getTotalWorldTime());
 						if (!Minecraft.getMinecraft().isGamePaused() && tegh.getDistanceSq(player.posX, player.posY, player.posZ) < 384) {
-							if (tegh.getGem() != EnumGem.NONE && tegh.getGem().getState(tegh) != EnumGemState.INACTIVE) {
+							if (tegh.getGem() != Gems.NONE && tegh.getGem().getState(tegh) != EnumGemState.INACTIVE) {
 								float yaw = (float)Math.toRadians(RenderGlassHeart.getAnimTime(tegh, 0)%360);
 								Vec3d base = new Vec3d(tegh.getHeartPos()).addVector(0.5, 0.565, 0.5);
 								float dist = 0.3f;
@@ -198,7 +197,7 @@ public class ClientProxy extends CommonProxy {
 								ParticleRedstone a = new ParticleRedstone(Minecraft.getMinecraft().world, aPos.xCoord, aPos.yCoord, aPos.zCoord, 1f, 1f, 1f, 1f) {};
 								ParticleRedstone b = new ParticleRedstone(Minecraft.getMinecraft().world, bPos.xCoord, bPos.yCoord, bPos.zCoord, 1f, 1f, 1f, 1f) {};
 								
-								int gemColor = tegh.getGem().color;
+								int gemColor = tegh.getGem().getColor();
 								
 								float c1 = (player.world.rand.nextFloat()-0.5f)/8;
 								float c2 = (player.world.rand.nextFloat()-0.5f)/8;

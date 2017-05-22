@@ -1,6 +1,6 @@
 package com.elytradev.glasshearts.item;
 
-import com.elytradev.glasshearts.block.BlockOre;
+import com.elytradev.glasshearts.enums.EnumGemOre;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemBlock;
@@ -15,7 +15,7 @@ public class ItemBlockOre extends ItemBlock {
 	
 	@Override
 	public String getUnlocalizedName(ItemStack stack) {
-		return "tile.glasshearts.ore."+BlockOre.VALID_GEMS[stack.getMetadata()%BlockOre.VALID_GEMS.length].getName();
+		return "tile.glasshearts.ore."+EnumGemOre.VALUES[stack.getMetadata()%EnumGemOre.VALUES.length].getName();
 	}
 	
 	@Override

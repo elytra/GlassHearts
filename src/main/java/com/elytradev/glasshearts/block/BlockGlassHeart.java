@@ -5,9 +5,10 @@ import org.apache.logging.log4j.LogManager;
 import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.capability.CapabilityHeartHandler;
 import com.elytradev.glasshearts.capability.IHeartHandler;
-import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.enums.EnumGemState;
 import com.elytradev.glasshearts.enums.EnumGlassColor;
+import com.elytradev.glasshearts.gem.Gem;
+import com.elytradev.glasshearts.init.Gems;
 import com.elytradev.glasshearts.logic.BlockHeartContainerOwner;
 import com.elytradev.glasshearts.logic.HeartContainer;
 import com.elytradev.glasshearts.logic.HeartContainerOwner;
@@ -113,32 +114,26 @@ public class BlockGlassHeart extends Block {
 		TileEntity te = worldIn.getTileEntity(pos);
 		if (te instanceof TileEntityGlassHeart) {
 			TileEntityGlassHeart tegh = (TileEntityGlassHeart)te;
-			if (stack.isEmpty() && tegh.getGem() != EnumGem.NONE) {
+			if (stack.isEmpty() && tegh.getGem() != Gems.NONE) {
 				if (tegh.getGem().getState(tegh) == EnumGemState.ACTIVE_CURSED) {
 					return false;
 				}
 				if (!worldIn.isRemote) {
-					spawnAsEntity(worldIn, pos, tegh.getGem().toItemStack());
-					tegh.setGem(EnumGem.NONE);
+					spawnAsEntity(worldIn, pos, tegh.getGemStack());
+					tegh.setGemStack(ItemStack.EMPTY);
 					worldIn.playSound(null, pos, SoundEvents.ITEM_ARMOR_EQUIP_DIAMOND, SoundCategory.BLOCKS, 1f, 1f);
 				}
 				return true;
-			} else if (stack.getItem() == Items.DIAMOND || stack.getItem() == Items.EMERALD || stack.getItem() == GlassHearts.inst.GEM) {
+			} else if (Gem.fromItemStack(stack) != Gems.NONE) {
 				if (tegh.getGem().getState(tegh) == EnumGemState.ACTIVE_CURSED) {
 					return false;
 				}
-				EnumGem eg = EnumGem.fromItemStack(stack);
-				if (eg != null) {
-					if (!worldIn.isRemote) {
-						if (tegh.getGem() != EnumGem.NONE) {
-							spawnAsEntity(worldIn, pos, tegh.getGem().toItemStack());
-						}
-						worldIn.playSound(null, pos, SoundEvents.ITEM_ARMOR_EQUIP_DIAMOND, SoundCategory.BLOCKS, 1f, 1f);
-						tegh.setGem(eg);
-						stack.shrink(1);
-					}
-					return true;
+				if (!worldIn.isRemote) {
+					spawnAsEntity(worldIn, pos, tegh.getGemStack());
+					worldIn.playSound(null, pos, SoundEvents.ITEM_ARMOR_EQUIP_DIAMOND, SoundCategory.BLOCKS, 1f, 1f);
+					tegh.setGemStack(stack.splitStack(1));
 				}
+				return true;
 			} else if (stack.getItem() == GlassHearts.inst.STAFF) {
 				if (worldIn.isRemote) return true;
 				if (playerIn.hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
@@ -257,9 +252,7 @@ public class BlockGlassHeart extends Block {
 		if (!worldIn.isRemote && te instanceof TileEntityGlassHeart) {
 			TileEntityGlassHeart tegh = (TileEntityGlassHeart)te;
 			spawnAsEntity(worldIn, pos, getPickBlock(worldIn.getBlockState(pos), null, worldIn, pos, null));
-			if (tegh.getGem() != EnumGem.NONE) {
-				spawnAsEntity(worldIn, pos, tegh.getGem().toItemStack());
-			}
+			spawnAsEntity(worldIn, pos, tegh.getGemStack());
 			if (tegh.getLifeforce()+tegh.getLifeforceBuffer() > 1000) {
 				placeLiquid = true;
 			}
