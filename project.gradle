@@ -1,6 +1,6 @@
 ext.package = 'com.elytradev.glasshearts'
 ext.projectName = 'GlassHearts'
-ext.version = '1.10.2-0.0.1'
+ext.version = '1.10.2-1.0.0'
 
 // 0.0.9 is the last Concrete version supported by the 1.10.2 skeleton backport.
 ext.concreteVersion = '0.0.9'
