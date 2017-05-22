@@ -522,7 +522,14 @@ public class GlassHearts {
 		if (e.getEntityPlayer().hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
 			IHeartHandler cap = e.getEntityPlayer().getCapability(CapabilityHeartHandler.CAPABILITY, null);
 			
-			File f = e.getPlayerFile("glasshearts.dat");
+			File f;
+			if (e.getEntityPlayer().getName().equals(e.getEntityPlayer().getServer().getServerOwner())) {
+				// singleplayer
+				f = new File(e.getEntityPlayer().world.getSaveHandler().getWorldDirectory(), "glasshearts_sp.dat");
+			} else {
+				// multiplayer
+				f = e.getPlayerFile("glasshearts.dat");
+			}
 			
 			NBTBase nbt = CapabilityHeartHandler.CAPABILITY.writeNBT(cap, null);
 			NBTTagCompound tag = new NBTTagCompound();
@@ -538,7 +545,19 @@ public class GlassHearts {
 	
 	@SubscribeEvent
 	public void onPlayerLoad(PlayerEvent.LoadFromFile e) {
-		File f = e.getPlayerFile("glasshearts.dat");
+		File f;
+		if (e.getEntityPlayer().getName().equals(e.getEntityPlayer().getServer().getServerOwner())) {
+			// singleplayer
+			f = new File(e.getEntityPlayer().world.getSaveHandler().getWorldDirectory(), "glasshearts_sp.dat");
+			if (!f.exists() && e.getPlayerFile("glasshearts.dat").exists()) {
+				// compatibility with old worlds
+				f = e.getPlayerFile("glasshearts.dat");
+			}
+		} else {
+			// multiplayer
+			f = e.getPlayerFile("glasshearts.dat");
+		}
+		
 		if (f.exists()) {
 			if (e.getEntityPlayer().hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
 				IHeartHandler cap = e.getEntityPlayer().getCapability(CapabilityHeartHandler.CAPABILITY, null);
