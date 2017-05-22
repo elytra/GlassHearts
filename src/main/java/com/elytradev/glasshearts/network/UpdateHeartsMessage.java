@@ -61,6 +61,9 @@ public class UpdateHeartsMessage extends Message {
 					old.setLastFillAmount(old.getLastFillAmount());
 					old.setFillAmount(nw.getFillAmount());
 				} else {
+					if (old != null) {
+						nw.animationTicks = old.animationTicks;
+					}
 					li.set(startIndex+i, nw);
 				}
 			}

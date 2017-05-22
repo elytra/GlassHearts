@@ -56,6 +56,10 @@ public class HeartRenderer extends Gui {
 	public void tick() {
 		if (!Minecraft.getMinecraft().isGamePaused()) {
 			updateCounter++;
+			for (HeartContainer hc : containers) {
+				if (hc == null) continue;
+				hc.animationTicks++;
+			}
 		}
 	}
 	
@@ -150,18 +154,41 @@ public class HeartRenderer extends Gui {
 			int uOffset;
 			float nextAlpha;
 			
+			float alpha;
+			
+			GlStateManager.pushMatrix();
 			if (hc == null) {
 				fill = (i == totalHearts-1) ? ((int)absorb == absorb) ? 1 : absorb%1 : 1;
 				uOffset = -1;
 				nextAlpha = 0;
+				alpha = 1;
 			} else {
 				fill = hc.getFillAmount();
 				if (hc.getGlassColor() == null) {
 					uOffset = (int)decay;
 					nextAlpha = decay%1;
+					alpha = 1;
 				} else {
 					uOffset = 0;
 					nextAlpha = 0;
+					
+					float anim = hc.animationTicks+partialTicks;
+					
+					if (anim < 25) {
+						fill = 0;
+						float sin = MathHelper.sin((anim/25f)*(float)(Math.PI/2));
+						alpha = sin;
+						if (anim < 15) {
+							float sin2 = MathHelper.sin((anim/15f)*(float)(Math.PI/2));
+							GlStateManager.translate(0, (1-sin2)*-9, 0);
+						}
+					} else if (anim < 30) {
+						alpha = 1;
+						float sin = MathHelper.sin(((anim-25)/5f)*(float)(Math.PI/2));
+						fill *= sin;
+					} else {
+						alpha = 1;
+					}
 				}
 			}
 			
@@ -180,6 +207,7 @@ public class HeartRenderer extends Gui {
 			}
 			
 			mc.getTextureManager().bindTexture(TEX);
+			GlStateManager.color(1, 1, 1, alpha);
 			
 			int bgFgIdx;
 			if (hc == null || hc.getGlassColor() == null) {
@@ -208,17 +236,17 @@ public class HeartRenderer extends Gui {
 				// health highlight
 				drawModalRectWithCustomSizedTexture(x, y, 36+(uOffset*9), 72+((fillIdx*18)+9), hc.getLastFillAmount()*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
 				if (nextAlpha > 0) {
-					GlStateManager.color(1, 1, 1, nextAlpha);
+					GlStateManager.color(1, 1, 1, nextAlpha*alpha);
 					drawModalRectWithCustomSizedTexture(x, y, 36+((uOffset+1)*9), 72+((fillIdx*18)+9), hc.getLastFillAmount()*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
-					GlStateManager.color(1, 1, 1, 1);
+					GlStateManager.color(1, 1, 1, alpha);
 				}
 			}
 			// health
 			drawModalRectWithCustomSizedTexture(x, y, 36+(uOffset*9), 72+((fillIdx*18)), fill*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
 			if (nextAlpha > 0) {
-				GlStateManager.color(1, 1, 1, nextAlpha);
+				GlStateManager.color(1, 1, 1, nextAlpha*alpha);
 				drawModalRectWithCustomSizedTexture(x, y, 36+((uOffset+1)*9), 72+((fillIdx*18)), fill*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
-				GlStateManager.color(1, 1, 1, 1);
+				GlStateManager.color(1, 1, 1, alpha);
 			}
 			if (hc != null && hc.getGlassColor() == null) {
 				// glint
@@ -227,7 +255,7 @@ public class HeartRenderer extends Gui {
 			
 			if (hc != null && hc.getGlassColor() != null && hc.getGlassColor().dye != null) {
 				float[] fleece = EntitySheep.getDyeRgb(hc.getGlassColor().dye);
-				GlStateManager.color(fleece[0], fleece[1], fleece[2]);
+				GlStateManager.color(fleece[0], fleece[1], fleece[2], alpha);
 			}
 			float ofsL = 0.5f;
 			float ofsR = 0.5f;
@@ -238,7 +266,7 @@ public class HeartRenderer extends Gui {
 			}
 			// foreground
 			drawModalRectWithCustomSizedTexture(x+ofsL, y, 9+ofsL+(bgFgIdx*18), 36, 9-(ofsL+ofsR), 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
-			GlStateManager.color(1, 1, 1);
+			GlStateManager.color(1, 1, 1, alpha);
 			if (highlight) {
 				drawModalRectWithCustomSizedTexture(x+ofsL, y, 18+ofsL+(bgFgIdx*18), 36, 9-(ofsL+ofsR), 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
 			}
@@ -258,6 +286,7 @@ public class HeartRenderer extends Gui {
 					mc.getTextureManager().bindTexture(TEX);
 				}
 			}
+			GlStateManager.popMatrix();
 			
 			y = oldY;
 			

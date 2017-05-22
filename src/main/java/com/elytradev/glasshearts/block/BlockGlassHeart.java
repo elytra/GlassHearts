@@ -15,6 +15,7 @@ import com.elytradev.glasshearts.logic.BlockHeartContainerOwner;
 import com.elytradev.glasshearts.logic.HeartContainer;
 import com.elytradev.glasshearts.logic.HeartContainerOwner;
 import com.elytradev.glasshearts.network.ParticleEffectMessage;
+import com.elytradev.glasshearts.network.PlayHeartEffectMessage;
 import com.elytradev.glasshearts.tile.TileEntityGlassHeart;
 import com.elytradev.glasshearts.world.GlassHeartWorldData;
 import com.google.common.base.Objects;
@@ -152,6 +153,7 @@ public class BlockGlassHeart extends Block {
 									return false;
 								}
 								cap.removeContainer(i);
+								new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_UNATTUNE, tegh.getColor().ordinal(), i).sendTo(playerIn);
 								return true;
 							}
 						}
