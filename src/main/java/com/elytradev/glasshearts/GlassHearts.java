@@ -26,8 +26,10 @@ import com.elytradev.glasshearts.capability.EntityHeartHandler;
 import com.elytradev.glasshearts.capability.IHeartHandler;
 import com.elytradev.glasshearts.enchant.EnchantmentSapping;
 import com.elytradev.glasshearts.entity.EntityAICreeperSeekHeart;
-import com.elytradev.glasshearts.enums.EnumGem;
+import com.elytradev.glasshearts.enums.EnumGemOre;
 import com.elytradev.glasshearts.enums.EnumGemState;
+import com.elytradev.glasshearts.gem.Gem;
+import com.elytradev.glasshearts.init.Gems;
 import com.elytradev.glasshearts.integration.tcon.TConIntegration;
 import com.elytradev.glasshearts.item.ItemBlockGlassHeart;
 import com.elytradev.glasshearts.item.ItemBlockOre;
@@ -91,6 +93,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHealEvent;
@@ -144,7 +147,7 @@ public class GlassHearts {
 	
 	public boolean configGeneratePetrifiedTrees = true;
 	
-	public Set<EnumGem> configGenerateGems = EnumSet.allOf(EnumGem.class);
+	public Set<EnumGemOre> configGenerateGems = EnumSet.allOf(EnumGemOre.class);
 	
 	@SidedProxy(clientSide="com.elytradev.glasshearts.client.ClientProxy", serverSide="com.elytradev.glasshearts.CommonProxy")
 	public static Proxy proxy;
@@ -205,6 +208,10 @@ public class GlassHearts {
 		FluidRegistry.enableUniversalBucket();
 	}
 	
+	public GlassHearts() {
+		MinecraftForge.EVENT_BUS.register(this);
+	}
+	
 	@EventHandler
 	public void onPreInit(FMLPreInitializationEvent e) {
 		Configuration config = new Configuration(e.getSuggestedConfigurationFile());
@@ -249,25 +256,25 @@ public class GlassHearts {
 		
 		configGenerateGems.clear();
 		if (config.getBoolean("generateAmethystOre", "World", true, "")) {
-			configGenerateGems.add(EnumGem.AMETHYST);
+			configGenerateGems.add(EnumGemOre.AMETHYST);
 		}
 		if (config.getBoolean("generateRubyOre", "World", true, "")) {
-			configGenerateGems.add(EnumGem.RUBY);
+			configGenerateGems.add(EnumGemOre.RUBY);
 		}
 		if (config.getBoolean("generateTopazOre", "World", true, "")) {
-			configGenerateGems.add(EnumGem.TOPAZ);
+			configGenerateGems.add(EnumGemOre.TOPAZ);
 		}
 		if (config.getBoolean("generateSapphireOre", "World", true, "")) {
-			configGenerateGems.add(EnumGem.SAPPHIRE);
+			configGenerateGems.add(EnumGemOre.SAPPHIRE);
 		}
 		if (config.getBoolean("generateOpalOre", "World", true, "")) {
-			configGenerateGems.add(EnumGem.OPAL);
+			configGenerateGems.add(EnumGemOre.OPAL);
 		}
 		if (config.getBoolean("generateOnyxOre", "World", true, "")) {
-			configGenerateGems.add(EnumGem.ONYX);
+			configGenerateGems.add(EnumGemOre.ONYX);
 		}
 		if (config.getBoolean("generateAgateOre", "World", true, "")) {
-			configGenerateGems.add(EnumGem.AGATE);
+			configGenerateGems.add(EnumGemOre.AGATE);
 		}
 		
 		config.save();
@@ -279,6 +286,7 @@ public class GlassHearts {
 		NETWORK.register(PlayHeartEffectMessage.class);
 		
 		CapabilityHeartHandler.register();
+		Gem.registerGems();
 		
 		LIFEFORCE = new Fluid("glasshearts.lifeforce", new ResourceLocation("glasshearts", "blocks/lifeforce_still"), new ResourceLocation("glasshearts", "blocks/lifeforce_flow"));
 		LIFEFORCE.setViscosity(750);
@@ -307,9 +315,9 @@ public class GlassHearts {
 		GEM.setCreativeTab(CREATIVE_TAB);
 		GameRegistry.register(GEM);
 		
-		for (int i = 0; i < ItemGem.VALID_GEMS.length; i++) {
-			EnumGem gem = ItemGem.VALID_GEMS[i];
-			OreDictionary.registerOre(gem.oreDictionary, new ItemStack(GEM, 1, i));
+		for (int i = 0; i < EnumGemOre.VALUES.length; i++) {
+			EnumGemOre gem = EnumGemOre.VALUES[i];
+			OreDictionary.registerOre("gem"+gem.name().charAt(0)+gem.getName().substring(1), new ItemStack(GEM, 1, i));
 		}
 		
 		STAFF = new ItemStaff();
@@ -399,14 +407,17 @@ public class GlassHearts {
 			TConIntegration.init();
 		}
 		
-		MinecraftForge.EVENT_BUS.register(this);
-		
 		proxy.onPreInit();
 	}
 	
 	@EventHandler
 	public void onPostInit(FMLPostInitializationEvent e) {
 		proxy.onPostInit();
+	}
+	
+	@SubscribeEvent
+	public void onNewRegistry(RegistryEvent.NewRegistry e) {
+		Gem.registerGemRegistry();
 	}
 	
 	@SubscribeEvent
@@ -613,18 +624,17 @@ public class GlassHearts {
 	}
 	
 	public void update(IGlassHeart igh, long ticks) {
-		if (igh.getGem() != EnumGem.NONE && igh.getGem().getState(igh) != EnumGemState.INACTIVE) {
-			EnumGem originalGem = igh.getGem();
+		if (igh.getGem() != Gems.NONE && igh.getGem().getState(igh) != EnumGemState.INACTIVE) {
+			Gem originalGem = igh.getGem();
 			igh.getGem().update(igh, ticks);
 			if (igh.getLifeforce() == 0 && igh.hasBeenFull()) {
 				igh.getGem().onEmpty(igh);
 			}
-			if (igh.getGem() == EnumGem.NONE) {
-				if (igh.getHeartWorld() instanceof WorldServer) {
-					ItemStack is = originalGem.getRenderingSingleton();
+			if (igh.getGem() == Gems.NONE) {
+				if (igh.getHeartWorld() instanceof WorldServer && igh.getGemStack() != null) {
 					((WorldServer)igh.getHeartWorld()).spawnParticle(EnumParticleTypes.ITEM_CRACK,
 							igh.getHeartPos().getX()+0.5, igh.getHeartPos().getY()+0.5, igh.getHeartPos().getZ()+0.5, 32,
-							0, 0, 0, 0.2, Item.getIdFromItem(is.getItem()), is.getMetadata());
+							0, 0, 0, 0.2, Item.getIdFromItem(igh.getGemStack().getItem()), igh.getGemStack().getMetadata());
 					igh.getHeartWorld().playSound(null, igh.getHeartPos(), SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.BLOCKS, 1f, 2f);
 				}
 				for (EntityPlayer ep : getAllOnlineAttunedPlayers(igh)) {
@@ -636,9 +646,9 @@ public class GlassHearts {
 							BlockHeartContainerOwner bhco = (BlockHeartContainerOwner)owner;
 							if (Objects.equal(bhco.getPos(), igh.getHeartPos())) {
 								hc = hc.copy();
-								hc.setGem(EnumGem.NONE);
+								hc.setGem(Gems.NONE);
 								ihh.setContainer(i, hc);
-								new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_GEM_SHATTER, originalGem.ordinal()-1, i).sendTo(ep);
+								new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_GEM_SHATTER, Gem.getIdForGem(originalGem), i).sendTo(ep);
 							}
 						}
 					}

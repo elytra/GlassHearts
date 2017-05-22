@@ -2,8 +2,9 @@ package com.elytradev.glasshearts.logic;
 
 import java.util.Locale;
 
-import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.enums.EnumGlassColor;
+import com.elytradev.glasshearts.gem.Gem;
+import com.elytradev.glasshearts.init.Gems;
 import com.google.common.base.Enums;
 import com.google.common.base.Objects;
 import com.google.common.collect.BiMap;
@@ -11,6 +12,7 @@ import com.google.common.collect.HashBiMap;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.common.util.Constants.NBT;
 
@@ -22,7 +24,7 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 	}
 	
 	private EnumGlassColor glassColor;
-	private EnumGem gem;
+	private Gem gem;
 	private float fillAmount;
 	private float lastFillAmount;
 	
@@ -30,8 +32,8 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 
 	public HeartContainer() {}
 
-	public HeartContainer(EnumGlassColor glassColor, EnumGem gem, float fillAmount, HeartContainerOwner owner) {
-		if (gem == null) throw new IllegalArgumentException("Null gem is invalid, use EnumGem.NONE");
+	public HeartContainer(EnumGlassColor glassColor, Gem gem, float fillAmount, HeartContainerOwner owner) {
+		if (gem == null) throw new IllegalArgumentException("Null gem is invalid, use Gems.NONE");
 		this.glassColor = glassColor;
 		this.gem = gem;
 		this.fillAmount = fillAmount;
@@ -40,11 +42,11 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 	
 	// factory methods
 	
-	public static HeartContainer createNatural(EnumGem gem, float fillAmount) {
+	public static HeartContainer createNatural(Gem gem, float fillAmount) {
 		return new HeartContainer(null, gem, fillAmount, null);
 	}
 	
-	public static HeartContainer createGlass(EnumGlassColor color, EnumGem gem, float fillAmount) {
+	public static HeartContainer createGlass(EnumGlassColor color, Gem gem, float fillAmount) {
 		if (color == null) throw new IllegalArgumentException("Null color is not permitted in createGlass, use the constructor directly or createNatural");
 		return new HeartContainer(color, gem, fillAmount, null);
 	}
@@ -101,7 +103,7 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		return lastFillAmount;
 	}
 	
-	public EnumGem getGem() {
+	public Gem getGem() {
 		return gem;
 	}
 	
@@ -123,8 +125,8 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		this.lastFillAmount = lastFillAmount;
 	}
 	
-	public void setGem(EnumGem gem) {
-		if (gem == null) throw new IllegalArgumentException("Null gem is invalid, use EnumGem.NONE");
+	public void setGem(Gem gem) {
+		if (gem == null) throw new IllegalArgumentException("Null gem is invalid, use Gems.NONE");
 		this.gem = gem;
 	}
 	
@@ -170,7 +172,7 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 	
 	@Override
 	public String toString() {
-		String gemStr = (gem == EnumGem.NONE) ? "" : "+"+gem.getName();
+		String gemStr = (gem == Gems.NONE) ? "" : "+"+gem.getRegistryName().getResourcePath();
 		if (glassColor == null) {
 			return "natural"+gemStr+"["+fillAmount+"]";
 		} else if (glassColor == EnumGlassColor.NONE) {
@@ -221,7 +223,11 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 	@Override
 	public void deserializeNBT(NBTTagCompound nbt) {
 		glassColor = Enums.getIfPresent(EnumGlassColor.class, nbt.getString("Color").toUpperCase(Locale.ROOT)).orNull();
-		gem = Enums.getIfPresent(EnumGem.class, nbt.getString("Gem").toUpperCase(Locale.ROOT)).or(EnumGem.NONE);
+		String gemStr = nbt.getString("Gem");
+		if (!gemStr.contains(":")) {
+			gemStr = "glasshearts:"+gemStr;
+		}
+		gem = Gem.REGISTRY.getValue(new ResourceLocation(gemStr));
 		setFillAmountByte(nbt.getByte("Fill"));
 		lastFillAmount = fillAmount;
 		if (nbt.hasKey("Owner", NBT.TAG_COMPOUND)) {
@@ -239,7 +245,7 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 	}
 	
 	public static HeartContainer createFromNBT(NBTTagCompound nbt) {
-		HeartContainer hc = new HeartContainer(null, EnumGem.NONE, 0, null);
+		HeartContainer hc = new HeartContainer(null, Gems.NONE, 0, null);
 		hc.deserializeNBT(nbt);
 		return hc;
 	}
@@ -250,7 +256,7 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		if (glassColor != null) {
 			tag.setString("Color", glassColor.getName());
 		}
-		tag.setString("Gem", gem.getName());
+		tag.setString("Gem", gem.getRegistryName().toString());
 		tag.setByte("Fill", getFillAmountByte());
 		if (owner != null) {
 			NBTTagCompound ownerTag = owner.serializeNBT();
@@ -259,7 +265,6 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		}
 		return tag;
 	}
-	
 	
 
 }

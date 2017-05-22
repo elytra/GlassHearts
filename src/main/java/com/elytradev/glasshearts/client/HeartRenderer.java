@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL11;
 
 import com.elytradev.glasshearts.client.guiparticle.PendingEffect;
 import com.elytradev.glasshearts.enums.EnumGlassColor;
+import com.elytradev.glasshearts.gem.Gem;
 import com.elytradev.glasshearts.logic.HeartContainer;
 import com.google.common.collect.Lists;
 
@@ -247,7 +248,15 @@ public class HeartRenderer extends Gui {
 			}
 			if (hc != null) {
 				// gem
-				drawModalRectWithCustomSizedTexture(x, y, 9+(hc.getGem().ordinal()*9), 54, 9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+				Gem gem = hc.getGem();
+				boolean bind = !gem.getTexture().equals(TEX);
+				if (bind) {
+					mc.getTextureManager().bindTexture(gem.getTexture());
+				}
+				drawModalRect(x, y, 9, 9, gem.getMinU(), gem.getMinV(), gem.getMaxU(), gem.getMaxV());
+				if (bind) {
+					mc.getTextureManager().bindTexture(TEX);
+				}
 			}
 			
 			y = oldY;
@@ -276,13 +285,17 @@ public class HeartRenderer extends Gui {
 	public static void drawModalRectWithCustomSizedTexture(float x, float y, float u, float v, float width, float height, float textureWidth, float textureHeight) {
 		float xScale = 1 / textureWidth;
 		float yScale = 1 / textureHeight;
+		drawModalRect(x, y, width, height, u * xScale, v * yScale, (u+width) * xScale, (v+height) * yScale);
+	}
+	
+	public static void drawModalRect(float x, float y, float width, float height, float minU, float minV, float maxU, float maxV) {
 		Tessellator tess = Tessellator.getInstance();
 		VertexBuffer vb = tess.getBuffer();
 		vb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-		vb.pos(x,         y + height, 0).tex( u          * xScale, (v + height) * yScale).endVertex();
-		vb.pos(x + width, y + height, 0).tex((u + width) * xScale, (v + height) * yScale).endVertex();
-		vb.pos(x + width, y         , 0).tex((u + width) * xScale,  v           * yScale).endVertex();
-		vb.pos( x      ,  y         , 0).tex( u          * xScale,  v           * yScale).endVertex();
+		vb.pos(x,         y + height, 0).tex(minU, maxV).endVertex();
+		vb.pos(x + width, y + height, 0).tex(maxU, maxV).endVertex();
+		vb.pos(x + width, y         , 0).tex(maxU, minV).endVertex();
+		vb.pos( x      ,  y         , 0).tex(minU, minV).endVertex();
 		tess.draw();
 	}
 

@@ -4,10 +4,10 @@ import java.util.Map;
 
 import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.NBTHelper;
-import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.enums.EnumGlassColor;
 import com.google.common.collect.Maps;
 
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -47,8 +47,8 @@ public class GlassHeartWorldData extends WorldSavedData {
 		this.world = world;
 	}
 	
-	public GlassHeartData create(BlockPos pos, EnumGlassColor color, EnumGem gem, int lifeforce, int lifeforceBuffer) {
-		GlassHeartData ghd = new GlassHeartData(this, pos, color, gem, lifeforce, lifeforceBuffer);
+	public GlassHeartData create(BlockPos pos, EnumGlassColor color, ItemStack gemStack, int lifeforce, int lifeforceBuffer) {
+		GlassHeartData ghd = new GlassHeartData(this, pos, color, gemStack, lifeforce, lifeforceBuffer);
 		hearts.put(pos, ghd);
 		markDirty();
 		return ghd;

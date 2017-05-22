@@ -6,12 +6,13 @@ import io.github.elytra.concrete.annotation.field.MarshalledAs;
 import io.github.elytra.concrete.annotation.type.ReceivedOn;
 import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.client.ClientProxy;
+import com.elytradev.glasshearts.client.HeartRenderer;
 import com.elytradev.glasshearts.client.guiparticle.GuiParticleHeartFragment;
 import com.elytradev.glasshearts.client.guiparticle.GuiParticleSmoke;
 import com.elytradev.glasshearts.client.guiparticle.PendingEffect;
 import com.elytradev.glasshearts.client.guiparticle.PendingEffect.EffectSpawner;
-import com.elytradev.glasshearts.enums.EnumGem;
 import com.elytradev.glasshearts.enums.EnumGlassColor;
+import com.elytradev.glasshearts.gem.Gem;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -59,7 +60,7 @@ public class PlayHeartEffectMessage extends Message {
 					@SideOnly(Side.CLIENT)
 					public void spawn(int x, int y) {
 						mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.BLOCK_GLASS_BREAK, 1f));
-						GuiParticleHeartFragment.spawn(cp.guiParticles, x, y, 27, 36, 9, 9, 3, 3, 1, 1, 1);
+						GuiParticleHeartFragment.spawn(cp.guiParticles, HeartRenderer.TEX, x, y, 27, 36, 9, 9, HeartRenderer.TEXTURE_WIDTH, HeartRenderer.TEXTURE_HEIGHT, 3, 3, 1, 1, 1);
 					}
 				}));
 			} else {
@@ -71,19 +72,19 @@ public class PlayHeartEffectMessage extends Message {
 					@SideOnly(Side.CLIENT)
 					public void spawn(int x, int y) {
 						mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.BLOCK_GLASS_BREAK, 1f));
-						GuiParticleHeartFragment.spawn(cp.guiParticles, x, y, 45, 36, 9, 9, 3, 3, fleece[0], fleece[1], fleece[2]);
+						GuiParticleHeartFragment.spawn(cp.guiParticles, HeartRenderer.TEX, x, y, 45, 36, 9, 9, HeartRenderer.TEXTURE_WIDTH, HeartRenderer.TEXTURE_HEIGHT, 3, 3, fleece[0], fleece[1], fleece[2]);
 					}
 				}));
 			}
 		} else if (effect == EFFECT_GEM_SHATTER) {
 			// gem shatter
-			EnumGem gem = EnumGem.values()[meta+1];
+			Gem gem = Gem.getGemById(meta);
 			cp.heartRenderer.pendingEffects.add(new PendingEffect(index, new EffectSpawner() {
 				@Override
 				@SideOnly(Side.CLIENT)
 				public void spawn(int x, int y) {
 					mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.BLOCK_GLASS_BREAK, 2f));
-					GuiParticleHeartFragment.spawn(cp.guiParticles, x, y, 27+(gem.ordinal()*9), 54, 9, 9, 1, 1, 1, 1, 1);
+					GuiParticleHeartFragment.spawn(cp.guiParticles, gem.getTexture(), x, y, gem.getU(), gem.getV(), gem.getWidth(), gem.getHeight(), gem.getTextureWidth(), gem.getTextureHeight(), 1, 1, 1, 1, 1);
 				}
 			}));
 		} else if (effect == EFFECT_WASTED_HEALING) {

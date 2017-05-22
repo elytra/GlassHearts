@@ -3,12 +3,8 @@ package com.elytradev.glasshearts.block;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.commons.lang3.ArrayUtils;
-
 import com.elytradev.glasshearts.GlassHearts;
-import com.elytradev.glasshearts.enums.EnumGem;
-import com.elytradev.glasshearts.item.ItemGem;
-
+import com.elytradev.glasshearts.enums.EnumGemOre;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -24,18 +20,8 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 
 public class BlockOre extends Block {
-
-	public static final EnumGem[] VALID_GEMS = {
-		EnumGem.AMETHYST,
-		EnumGem.RUBY,
-		EnumGem.TOPAZ,
-		EnumGem.SAPPHIRE,
-		EnumGem.OPAL,
-		EnumGem.ONYX,
-		EnumGem.AGATE,
-	};
 	
-	public static final PropertyEnum<EnumGem> VARIANT = PropertyEnum.create("variant", EnumGem.class, VALID_GEMS);
+	public static final PropertyEnum<EnumGemOre> VARIANT = PropertyEnum.create("variant", EnumGemOre.class);
 	
 	public BlockOre() {
 		super(Material.ROCK);
@@ -52,24 +38,24 @@ public class BlockOre extends Block {
 	
 	@Override
 	public int getMetaFromState(IBlockState state) {
-		return ArrayUtils.indexOf(VALID_GEMS, state.getValue(VARIANT));
+		return state.getValue(VARIANT).ordinal();
 	}
 	
 	@Override
 	public IBlockState getStateFromMeta(int meta) {
-		return getDefaultState().withProperty(VARIANT, VALID_GEMS[meta%VALID_GEMS.length]);
+		return getDefaultState().withProperty(VARIANT, EnumGemOre.VALUES[meta%EnumGemOre.VALUES.length]);
 	}
 	
 	@Override
 	public void getSubBlocks(Item itemIn, CreativeTabs tab, List<ItemStack> list) {
-		for (int i = 0; i < VALID_GEMS.length; i++) {
+		for (int i = 0; i < EnumGemOre.VALUES.length-1; i++) {
 			list.add(new ItemStack(itemIn, 1, i));
 		}
 	}
 	
 	@Override
 	protected ItemStack getSilkTouchDrop(IBlockState state) {
-		return new ItemStack(this, 1, ArrayUtils.indexOf(ItemGem.VALID_GEMS, state.getValue(VARIANT)));
+		return new ItemStack(this, 1, state.getValue(VARIANT).ordinal());
 	}
 	
 	@Override
@@ -84,7 +70,7 @@ public class BlockOre extends Block {
 	
 	@Override
 	public int damageDropped(IBlockState state) {
-		return ArrayUtils.indexOf(ItemGem.VALID_GEMS, state.getValue(VARIANT));
+		return state.getValue(VARIANT).ordinal();
 	}
 	
 	@Override
