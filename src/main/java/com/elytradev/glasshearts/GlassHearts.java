@@ -202,6 +202,8 @@ public class GlassHearts {
 	private Invoker explode = Invokers.findMethod(EntityCreeper.class, null, new String[] { "func_146077_cc", "explode", "dn" });
 	
 	private Map<EntityPlayer, PlayerHandler> playerHandlers = new WeakHashMap<>();
+
+	public static final ResourceLocation TEX = new ResourceLocation("glasshearts", "textures/gui/heart.png");
 	
 	static {
 		FluidRegistry.enableUniversalBucket();

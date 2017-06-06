@@ -6,6 +6,7 @@ import java.util.Random;
 
 import org.lwjgl.opengl.GL11;
 
+import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.client.guiparticle.PendingEffect;
 import com.elytradev.glasshearts.enums.EnumGlassColor;
 import com.elytradev.glasshearts.gem.Gem;
@@ -22,15 +23,16 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.passive.EntitySheep;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.MobEffects;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.client.GuiIngameForge;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
+@SideOnly(Side.CLIENT)
 public class HeartRenderer extends Gui {
 
 	public List<HeartContainer> containers = Lists.newArrayList();
 	
-	public static final ResourceLocation TEX = new ResourceLocation("glasshearts", "textures/gui/heart.png");
 	public static final int TEXTURE_WIDTH = 256;
 	public static final int TEXTURE_HEIGHT = 256;
 	
@@ -206,7 +208,7 @@ public class HeartRenderer extends Gui {
 				
 			}
 			
-			mc.getTextureManager().bindTexture(TEX);
+			mc.getTextureManager().bindTexture(GlassHearts.TEX);
 			GlStateManager.color(1, 1, 1, alpha);
 			
 			int bgFgIdx;
@@ -277,13 +279,13 @@ public class HeartRenderer extends Gui {
 			if (hc != null) {
 				// gem
 				Gem gem = hc.getGem();
-				boolean bind = !gem.getTexture().equals(TEX);
+				boolean bind = !gem.getTexture().equals(GlassHearts.TEX);
 				if (bind) {
 					mc.getTextureManager().bindTexture(gem.getTexture());
 				}
 				drawModalRect(x, y, 9, 9, gem.getMinU(), gem.getMinV(), gem.getMaxU(), gem.getMaxV());
 				if (bind) {
-					mc.getTextureManager().bindTexture(TEX);
+					mc.getTextureManager().bindTexture(GlassHearts.TEX);
 				}
 			}
 			GlStateManager.popMatrix();

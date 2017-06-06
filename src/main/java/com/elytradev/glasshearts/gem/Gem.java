@@ -2,6 +2,7 @@ package com.elytradev.glasshearts.gem;
 
 import org.apache.commons.lang3.ArrayUtils;
 
+import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.client.HeartRenderer;
 import com.elytradev.glasshearts.enums.EnumGemState;
 import com.elytradev.glasshearts.init.Gems;
@@ -46,7 +47,7 @@ public abstract class Gem extends IForgeRegistryEntry.Impl<Gem> {
 	}
 	
 	protected Gem setDefaultTexture(int u) {
-		return setTexture(HeartRenderer.TEX, HeartRenderer.TEXTURE_WIDTH, HeartRenderer.TEXTURE_HEIGHT, 9+(u*9), 54, 9, 9);
+		return setTexture(GlassHearts.TEX, HeartRenderer.TEXTURE_WIDTH, HeartRenderer.TEXTURE_HEIGHT, 9+(u*9), 54, 9, 9);
 	}
 	
 	protected Gem setTexture(ResourceLocation tex) {
