@@ -60,7 +60,7 @@ public class PlayHeartEffectMessage extends Message {
 					@SideOnly(Side.CLIENT)
 					public void spawn(int x, int y) {
 						mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.BLOCK_GLASS_BREAK, 1f));
-						GuiParticleHeartFragment.spawnShatter(cp.guiParticles, HeartRenderer.TEX, x, y, 27, 36, 9, 9, HeartRenderer.TEXTURE_WIDTH, HeartRenderer.TEXTURE_HEIGHT, 3, 3, 1, 1, 1);
+						GuiParticleHeartFragment.spawnShatter(cp.guiParticles, GlassHearts.TEX, x, y, 27, 36, 9, 9, HeartRenderer.TEXTURE_WIDTH, HeartRenderer.TEXTURE_HEIGHT, 3, 3, 1, 1, 1);
 					}
 				}));
 			} else {
@@ -72,7 +72,7 @@ public class PlayHeartEffectMessage extends Message {
 					@SideOnly(Side.CLIENT)
 					public void spawn(int x, int y) {
 						mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.BLOCK_GLASS_BREAK, 1f));
-						GuiParticleHeartFragment.spawnShatter(cp.guiParticles, HeartRenderer.TEX, x, y, 45, 36, 9, 9, HeartRenderer.TEXTURE_WIDTH, HeartRenderer.TEXTURE_HEIGHT, 3, 3, fleece[0], fleece[1], fleece[2]);
+						GuiParticleHeartFragment.spawnShatter(cp.guiParticles, GlassHearts.TEX, x, y, 45, 36, 9, 9, HeartRenderer.TEXTURE_WIDTH, HeartRenderer.TEXTURE_HEIGHT, 3, 3, fleece[0], fleece[1], fleece[2]);
 					}
 				}));
 			}
@@ -110,7 +110,7 @@ public class PlayHeartEffectMessage extends Message {
 					@Override
 					@SideOnly(Side.CLIENT)
 					public void spawn(int x, int y) {
-						GuiParticleHeartFragment.spawnFade(cp.guiParticles, HeartRenderer.TEX, x, y, 27, 36, 9, 9, HeartRenderer.TEXTURE_WIDTH, HeartRenderer.TEXTURE_HEIGHT, 1, 1, 1);
+						GuiParticleHeartFragment.spawnFade(cp.guiParticles, GlassHearts.TEX, x, y, 27, 36, 9, 9, HeartRenderer.TEXTURE_WIDTH, HeartRenderer.TEXTURE_HEIGHT, 1, 1, 1);
 					}
 				}));
 			} else {
@@ -121,7 +121,7 @@ public class PlayHeartEffectMessage extends Message {
 					@Override
 					@SideOnly(Side.CLIENT)
 					public void spawn(int x, int y) {
-						GuiParticleHeartFragment.spawnFade(cp.guiParticles, HeartRenderer.TEX, x, y, 45, 36, 9, 9, HeartRenderer.TEXTURE_WIDTH, HeartRenderer.TEXTURE_HEIGHT, fleece[0], fleece[1], fleece[2]);
+						GuiParticleHeartFragment.spawnFade(cp.guiParticles, GlassHearts.TEX, x, y, 45, 36, 9, 9, HeartRenderer.TEXTURE_WIDTH, HeartRenderer.TEXTURE_HEIGHT, fleece[0], fleece[1], fleece[2]);
 					}
 				}));
 			}
