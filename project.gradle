@@ -1,6 +1,6 @@
 ext.package = 'com.elytradev.glasshearts'
 ext.projectName = 'GlassHearts'
-ext.version = '1.11.2-1.0.0'
+ext.version = '1.11.2-1.0.1'
 
 // 0.2.1 is the earliest Concrete version supported by the skeleton.
 ext.concreteVersion = '0.2.1'
@@ -28,3 +28,5 @@ dependencies {
 	deobfCompile 'slimeknights.mantle:Mantle:1.11.2-1.2.0.27'
 	deobfCompile 'slimeknights:TConstruct:1.11.2-2.7.0.9'
 }
+
+tasks.runServer.outputs.upToDateWhen { false }
