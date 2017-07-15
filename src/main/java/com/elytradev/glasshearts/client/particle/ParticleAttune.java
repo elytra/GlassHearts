@@ -22,9 +22,9 @@ public class ParticleAttune extends ParticleRedstone {
 		if (particleAge > 20) {
 			Vec3d diff = seek.getPositionVector().addVector(0, seek.height/2, 0).subtract(posX, posY, posZ).normalize().scale(0.4);
 			
-			motionX = diff.xCoord;
-			motionY = diff.yCoord;
-			motionZ = diff.zCoord;
+			motionX = diff.x;
+			motionY = diff.y;
+			motionZ = diff.z;
 			
 			if (seek.getDistanceSq(posX, posY-seek.height/2, posZ) < 0.1) {
 				setExpired();

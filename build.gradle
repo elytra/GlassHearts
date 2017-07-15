@@ -1,3 +1,27 @@
+/*
+ * The MIT License (MIT)
+ * 
+ * Copyright (c) 2017 William Thompson (unascribed)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of 
+ * this software and associated documentation files (the "Software"), to deal in 
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies 
+ * of the Software, and to permit persons to whom the Software is furnished to do 
+ * so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all 
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+ * SOFTWARE.
+ */
+
 buildscript {
 	repositories {
 		mavenCentral()
@@ -15,8 +39,7 @@ buildscript {
 		}
 	}
 	dependencies {
-		classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
-		classpath 'me.tatarka:gradle-retrolambda:3.2.0'
+		classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
 		classpath 'net.sf.proguard:proguard-gradle:5.3.3'
 		classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.4'
 		classpath 'gradle.plugin.net.minecrell:licenser:0.3'
@@ -24,15 +47,33 @@ buildscript {
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
-apply plugin: 'me.tatarka.retrolambda'
 
 apply from: 'project.gradle'
 
-println("Elytra Project Skeleton v1.0.1")
+if (project.ext.useElytraVersionFormat) {
+	def branch;
+	if (System.env.BRANCH_NAME) {
+		// Jenkins support
+		branch = System.env.BRANCH_NAME;
+		branch = branch.substring(branch.lastIndexOf('/')+1);
+	} else {
+		branch = 'git rev-parse --abbrev-ref HEAD'.execute().in.text.trim();
+	}
+	if (branch == "HEAD") {
+		branch = 'git rev-parse --short HEAD'.execute().in.text.trim();
+	}
+	def commits = 'git rev-list --count HEAD'.execute().in.text.trim();
+	def dirty = !'git diff-index HEAD'.execute().in.text.trim().isEmpty();
+	version = branch+'-'+project.ext.version+'.'+commits+(dirty ? '-dirty' : '');
+} else {
+	version = project.ext.version;
+}
+
+println("Elytra Project Skeleton v1.1.0")
 println("https://github.com/elytra/skel")
 println()
 println("Project Name: "+project.ext.projectName)
-println("Version: "+project.ext.version)
+println("Version: "+version)
 println()
 println("Package: "+project.ext.package)
 println()
@@ -44,17 +85,11 @@ println("Mappings: "+project.ext.mappings)
 
 project.ext.priv = parseConfig(file('private.properties'))
 
-group = "com.elytradev"
+group = project.ext.group
 archivesBaseName = project.ext.projectName
-version = project.ext.version
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
-
-retrolambda {
-	javaVersion JavaVersion.VERSION_1_6
-	defaultMethods true
-}
 
 repositories {
 	jcenter()

@@ -12,21 +12,20 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.oredict.OreDictionary;
-import net.minecraftforge.fml.common.registry.FMLControlledNamespacedRegistry;
-import net.minecraftforge.fml.common.registry.GameRegistry;
-import net.minecraftforge.fml.common.registry.IForgeRegistryEntry;
-import net.minecraftforge.fml.common.registry.RegistryBuilder;
+import net.minecraftforge.registries.ForgeRegistry;
+import net.minecraftforge.registries.RegistryBuilder;
+import net.minecraftforge.registries.IForgeRegistryEntry;;
 
 public abstract class Gem extends IForgeRegistryEntry.Impl<Gem> {
-	public static FMLControlledNamespacedRegistry<Gem> REGISTRY;
+	public static ForgeRegistry<Gem> REGISTRY;
 	private static final ResourceLocation MISSING = new ResourceLocation("glasshearts", "this/definitely/does/not/exist.png");
 	
 	public static Gem getGemById(int id) {
-		return REGISTRY.getObjectById(id);
+		return REGISTRY.getValue(id);
 	}
 	
 	public static int getIdForGem(Gem gem) {
-		return REGISTRY.getId(gem);
+		return REGISTRY.getID(gem);
 	}
 	
 	
@@ -152,7 +151,7 @@ public abstract class Gem extends IForgeRegistryEntry.Impl<Gem> {
 
 	
 	public static void registerGemRegistry() {
-		REGISTRY = (FMLControlledNamespacedRegistry<Gem>) new RegistryBuilder<Gem>()
+		REGISTRY = (ForgeRegistry<Gem>)new RegistryBuilder<Gem>()
 				.setIDRange(0, 254)
 				.setName(new ResourceLocation("glasshearts", "gems"))
 				.setType(Gem.class)
@@ -161,17 +160,18 @@ public abstract class Gem extends IForgeRegistryEntry.Impl<Gem> {
 	}
 	
 	public static void registerGems() {
-		GameRegistry.register((Gems.NONE = new GemNone()).setRegistryName("none"));
-		
-		GameRegistry.register((Gems.AGATE = new GemAgate()).setRegistryName("agate"));
-		GameRegistry.register((Gems.AMBER = new GemAmber()).setRegistryName("amber"));
-		GameRegistry.register((Gems.AMETHYST = new GemAmethyst()).setRegistryName("amethyst"));
-		GameRegistry.register((Gems.DIAMOND = new GemDiamond()).setRegistryName("diamond"));
-		GameRegistry.register((Gems.EMERALD = new GemEmerald()).setRegistryName("emerald"));
-		GameRegistry.register((Gems.ONYX = new GemOnyx()).setRegistryName("onyx"));
-		GameRegistry.register((Gems.OPAL = new GemOpal()).setRegistryName("opal"));
-		GameRegistry.register((Gems.RUBY = new GemRuby()).setRegistryName("ruby"));
-		GameRegistry.register((Gems.SAPPHIRE = new GemSapphire()).setRegistryName("sapphire"));
-		GameRegistry.register((Gems.TOPAZ = new GemTopaz()).setRegistryName("topaz"));
+		REGISTRY.registerAll(
+			(Gems.NONE = new GemNone()).setRegistryName("none"),
+			
+			(Gems.AGATE = new GemAgate()).setRegistryName("agate"),
+			(Gems.AMBER = new GemAmber()).setRegistryName("amber"),
+			(Gems.AMETHYST = new GemAmethyst()).setRegistryName("amethyst"),
+			(Gems.DIAMOND = new GemDiamond()).setRegistryName("diamond"),
+			(Gems.EMERALD = new GemEmerald()).setRegistryName("emerald"),
+			(Gems.ONYX = new GemOnyx()).setRegistryName("onyx"),
+			(Gems.OPAL = new GemOpal()).setRegistryName("opal"),
+			(Gems.RUBY = new GemRuby()).setRegistryName("ruby"),
+			(Gems.SAPPHIRE = new GemSapphire()).setRegistryName("sapphire"),
+			(Gems.TOPAZ = new GemTopaz()).setRegistryName("topaz"));
 	}
 }

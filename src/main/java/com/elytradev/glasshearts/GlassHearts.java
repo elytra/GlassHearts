@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -29,7 +30,6 @@ import com.elytradev.glasshearts.enums.EnumGemOre;
 import com.elytradev.glasshearts.enums.EnumGemState;
 import com.elytradev.glasshearts.gem.Gem;
 import com.elytradev.glasshearts.init.Gems;
-import com.elytradev.glasshearts.integration.tcon.TConIntegration;
 import com.elytradev.glasshearts.item.ItemBlockGlassHeart;
 import com.elytradev.glasshearts.item.ItemBlockOre;
 import com.elytradev.glasshearts.item.ItemGem;
@@ -52,8 +52,11 @@ import com.google.common.base.Objects;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -67,6 +70,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemGlassBottle;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -104,7 +108,6 @@ import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -195,11 +198,11 @@ public class GlassHearts {
 		}
 	};
 	
-	private Invoker rayTrace = Invokers.findMethod(Item.class, null, new String[] {"func_77621_a", "rayTrace", "a"}, World.class, EntityPlayer.class, boolean.class);
-	private Invoker applyArmorCalculations = Invokers.findMethod(EntityLivingBase.class, null, new String[] { "func_70655_b", "applyArmorCalculations", "b" }, DamageSource.class, float.class);
-	private Invoker applyPotionDamageCalculations = Invokers.findMethod(EntityLivingBase.class, null, new String[] { "func_70672_c", "applyPotionDamageCalculations", "c" }, DamageSource.class, float.class);
+	private Invoker rayTrace = Invokers.findMethod(Item.class, "rayTrace", "func_77621_a", World.class, EntityPlayer.class, boolean.class);
+	private Invoker applyArmorCalculations = Invokers.findMethod(EntityLivingBase.class, "applyArmorCalculations", "func_70655_b", DamageSource.class, float.class);
+	private Invoker applyPotionDamageCalculations = Invokers.findMethod(EntityLivingBase.class, "applyPotionDamageCalculations", "func_70672_c", DamageSource.class, float.class);
 	
-	private Invoker explode = Invokers.findMethod(EntityCreeper.class, null, new String[] { "func_146077_cc", "explode", "dn" });
+	private Invoker explode = Invokers.findMethod(EntityCreeper.class, "explode", "func_146077_cc");
 	
 	private Map<EntityPlayer, PlayerHandler> playerHandlers = new WeakHashMap<>();
 
@@ -293,85 +296,111 @@ public class GlassHearts {
 		LIFEFORCE.setViscosity(750);
 		FluidRegistry.registerFluid(LIFEFORCE);
 		
-		LIFEFORCE_BLOCK = new BlockFluidLifeforce(LIFEFORCE, Material.WATER);
-		LIFEFORCE.setBlock(LIFEFORCE_BLOCK);
-		
 		FluidRegistry.addBucketForFluid(LIFEFORCE);
 		
-		LIFEFORCE_BLOCK.setRegistryName("lifeforce_block");
-		GameRegistry.register(LIFEFORCE_BLOCK);
 		
 		
+		GameRegistry.registerWorldGenerator(new GenerateGems(), 2);
+		
+		
+		
+		GameRegistry.registerTileEntity(TileEntityGlassHeart.class, "glasshearts:glass_heart");
+		
+		//if (Loader.isModLoaded("tconstruct")) {
+		//	TConIntegration.init();
+		//}
+		
+		proxy.onPreInit();
+	}
+	
+	@SubscribeEvent
+	public void onRegisterEnchantments(RegistryEvent.Register<Enchantment> e) {
 		SAPPING = new EnchantmentSapping();
 		SAPPING.setRegistryName("sapping");
-		GameRegistry.register(SAPPING);
-		
+		e.getRegistry().register(SAPPING);
+	}
+	
+	@SubscribeEvent
+	public void onRegisterItems(RegistryEvent.Register<Item> e) {
 		LIFEFORCE_BOTTLE = new ItemLifeforceBottle();
 		LIFEFORCE_BOTTLE.setRegistryName("lifeforce_bottle");
 		LIFEFORCE_BOTTLE.setCreativeTab(CREATIVE_TAB);
-		GameRegistry.register(LIFEFORCE_BOTTLE);
+		e.getRegistry().register(LIFEFORCE_BOTTLE);
 		
 		GEM = new ItemGem();
 		GEM.setRegistryName("gem");
 		GEM.setCreativeTab(CREATIVE_TAB);
-		GameRegistry.register(GEM);
+		e.getRegistry().register(GEM);
+		
+		STAFF = new ItemStaff();
+		STAFF.setRegistryName("staff");
+		STAFF.setCreativeTab(CREATIVE_TAB);
+		e.getRegistry().register(STAFF);
+		
+		e.getRegistry().register(new ItemBlockGlassHeart(GLASS_HEART).setRegistryName("glass_heart"));
+		e.getRegistry().register(new ItemBlockOre(ORE).setRegistryName("ore"));
+		e.getRegistry().register(new ItemBlock(PETRIFIED_LOG).setRegistryName("petrified_log"));
 		
 		for (int i = 0; i < EnumGemOre.VALUES.length; i++) {
 			EnumGemOre gem = EnumGemOre.VALUES[i];
 			OreDictionary.registerOre("gem"+gem.name().charAt(0)+gem.getName().substring(1), new ItemStack(GEM, 1, i));
 		}
-		
-		STAFF = new ItemStaff();
-		STAFF.setRegistryName("staff");
-		STAFF.setCreativeTab(CREATIVE_TAB);
-		GameRegistry.register(STAFF);
-		
+	}
+	
+	@SubscribeEvent
+	public void onRegisterBlocks(RegistryEvent.Register<Block> e) {
 		GLASS_HEART = new BlockGlassHeart();
 		GLASS_HEART.setRegistryName("glass_heart");
 		GLASS_HEART.setCreativeTab(CREATIVE_TAB);
 		GLASS_HEART.setUnlocalizedName("glasshearts.glass_heart");
-		GameRegistry.register(GLASS_HEART);
-		GameRegistry.register(new ItemBlockGlassHeart(GLASS_HEART).setRegistryName("glass_heart"));
+		e.getRegistry().register(GLASS_HEART);
 		
 		ORE = new BlockOre();
 		ORE.setRegistryName("ore");
 		ORE.setCreativeTab(CREATIVE_TAB);
 		ORE.setUnlocalizedName("glasshearts.ore");
-		GameRegistry.register(ORE);
-		GameRegistry.register(new ItemBlockOre(ORE).setRegistryName("ore"));
+		e.getRegistry().register(ORE);
 		
 		PETRIFIED_LOG = new BlockPetrifiedLog();
 		PETRIFIED_LOG.setRegistryName("petrified_log");
 		PETRIFIED_LOG.setCreativeTab(CREATIVE_TAB);
 		PETRIFIED_LOG.setUnlocalizedName("glasshearts.petrified_log");
-		GameRegistry.register(PETRIFIED_LOG);
-		GameRegistry.register(new ItemBlock(PETRIFIED_LOG).setRegistryName("petrified_log"));
+		e.getRegistry().register(PETRIFIED_LOG);
 		
+		LIFEFORCE_BLOCK = new BlockFluidLifeforce(LIFEFORCE, Material.WATER);
+		LIFEFORCE.setBlock(LIFEFORCE_BLOCK);
+		
+		LIFEFORCE_BLOCK.setRegistryName("lifeforce_block");
+		e.getRegistry().register(LIFEFORCE_BLOCK);
+	}
+	
+	@SubscribeEvent
+	public void onRegisterSounds(RegistryEvent.Register<SoundEvent> e) {
 		SAP = new SoundEvent(new ResourceLocation("glasshearts", "sap"));
 		SAP.setRegistryName("sap");
-		GameRegistry.register(SAP);
+		e.getRegistry().register(SAP);
 		
 		ATTUNE = new SoundEvent(new ResourceLocation("glasshearts", "attune"));
 		ATTUNE.setRegistryName("attune");
-		GameRegistry.register(ATTUNE);
-		
-		GameRegistry.registerWorldGenerator(new GenerateGems(), 2);
-		
-		
-		GameRegistry.addRecipe(new ShapedOreRecipe(STAFF,
+		e.getRegistry().register(ATTUNE);
+	}
+	
+	@SubscribeEvent
+	public void onRegisterRecipes(RegistryEvent.Register<IRecipe> e) {
+		e.getRegistry().register(new ShapedOreRecipe(null, STAFF,
 				"  o",
 				" //",
 				"/  ",
 				
 				'/', Items.BLAZE_ROD,
-				'o', "gemOpal"));
+				'o', "gemOpal").setRegistryName("opal_staff"));
 		
-		GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(GLASS_HEART, 1, 0),
+		e.getRegistry().register(new ShapedOreRecipe(null, new ItemStack(GLASS_HEART, 1, 0),
 				"g g",
 				"ggg",
 				" g ",
 				
-				'g', "blockGlassColorless"));
+				'g', "blockGlassColorless").setRegistryName("glass_heart"));
 		
 		String[] dyes = {
 				"Black",
@@ -393,22 +422,13 @@ public class GlassHearts {
 			};
 		
 		for (int i = 0; i < dyes.length; i++) {
-			GameRegistry.addRecipe(new ShapedOreRecipe(new ItemStack(GLASS_HEART, 1, 16-i),
+			e.getRegistry().register(new ShapedOreRecipe(null, new ItemStack(GLASS_HEART, 1, 16-i),
 					"g g",
 					"ggg",
 					" g ",
 					
-					'g', "blockGlass"+dyes[i]));
+					'g', "blockGlass"+dyes[i]).setRegistryName(dyes[i].toLowerCase(Locale.ROOT)+"_glass_heart"));
 		}
-		
-		
-		GameRegistry.registerTileEntity(TileEntityGlassHeart.class, "glasshearts:glass_heart");
-		
-		if (Loader.isModLoaded("tconstruct")) {
-			TConIntegration.init();
-		}
-		
-		proxy.onPreInit();
 	}
 	
 	@EventHandler
@@ -705,8 +725,8 @@ public class GlassHearts {
 	public void onDeath(LivingDeathEvent e) {
 		if (!e.getEntityLiving().world.isRemote) {
 			DamageSource src = e.getSource();
-			if (src.getEntity() instanceof EntityPlayer) {
-				EntityPlayer p = (EntityPlayer)src.getEntity();
+			if (src.getTrueSource() instanceof EntityPlayer) {
+				EntityPlayer p = (EntityPlayer)src.getTrueSource();
 				ItemStack held = p.getHeldItemMainhand();
 				if (configLifeforceFromPlayerKillsOnly) {
 					if (!(e.getEntityLiving() instanceof EntityPlayer)) return;
@@ -806,7 +826,7 @@ public class GlassHearts {
 		Chunk c = te.getWorld().getChunkFromBlockCoords(te.getPos());
 		SPacketUpdateTileEntity packet = new SPacketUpdateTileEntity(te.getPos(), te.getBlockMetadata(), nbt);
 		for (EntityPlayerMP player : te.getWorld().getPlayers(EntityPlayerMP.class, Predicates.alwaysTrue())) {
-			if (ws.getPlayerChunkMap().isPlayerWatchingChunk(player, c.xPosition, c.zPosition)) {
+			if (ws.getPlayerChunkMap().isPlayerWatchingChunk(player, c.x, c.z)) {
 				player.connection.sendPacket(packet);
 			}
 		}

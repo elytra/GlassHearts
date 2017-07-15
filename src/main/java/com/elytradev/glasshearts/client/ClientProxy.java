@@ -27,6 +27,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.model.ModelLoader;
@@ -46,6 +47,14 @@ public class ClientProxy extends CommonProxy {
 	@Override
 	public void onPreInit() {
 		super.onPreInit();
+		
+		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityGlassHeart.class, new RenderGlassHeart());
+		
+		MinecraftForge.EVENT_BUS.register(this);
+	}
+	
+	@SubscribeEvent
+	public void onModelRegister(ModelRegistryEvent e) {
 		ModelLoader.setCustomModelResourceLocation(GlassHearts.inst.LIFEFORCE_BOTTLE, 0, new ModelResourceLocation("glasshearts:lifeforce_bottle#inventory"));
 		ModelLoader.setCustomModelResourceLocation(GlassHearts.inst.STAFF, 0, new ModelResourceLocation("glasshearts:staff#inventory"));
 		
@@ -61,15 +70,12 @@ public class ClientProxy extends CommonProxy {
 			}
 		}
 		ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(GlassHearts.inst.PETRIFIED_LOG), 0, new ModelResourceLocation("glasshearts:petrified_log#axis=y"));
-		
-		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityGlassHeart.class, new RenderGlassHeart());
-		
-		MinecraftForge.EVENT_BUS.register(this);
 	}
 	
 	@Override
 	public void onPostInit() {
 		super.onPostInit();
+
 		Minecraft.getMinecraft().getItemColors().registerItemColorHandler(new IItemColor() {
 			
 			@Override
@@ -136,7 +142,7 @@ public class ClientProxy extends CommonProxy {
 		Gem gem = Gem.fromItemStack(e.getItemStack());
 		if (gem != Gems.NONE) {
 			String swp = null;
-			if (e.isShowAdvancedItemTooltips()) {
+			if (e.getFlags().isAdvanced()) {
 				swp = e.getToolTip().remove(e.getToolTip().size()-1);
 			}
 			if (I18n.hasKey("tooltip.glasshearts.when_heart_adorned."+gem.getRegistryName().getResourcePath())) {
@@ -153,7 +159,7 @@ public class ClientProxy extends CommonProxy {
 					e.getToolTip().add("  \u00A79"+l);
 				}
 			}
-			if (e.isShowAdvancedItemTooltips() && swp != null) {
+			if (e.getFlags().isAdvanced() && swp != null) {
 				e.getToolTip().add(swp);
 			}
 		}
@@ -194,8 +200,8 @@ public class ClientProxy extends CommonProxy {
 								Vec3d aPos = base.add(dir);
 								Vec3d bPos = base.subtract(dir);
 								
-								ParticleRedstone a = new ParticleRedstone(Minecraft.getMinecraft().world, aPos.xCoord, aPos.yCoord, aPos.zCoord, 1f, 1f, 1f, 1f) {};
-								ParticleRedstone b = new ParticleRedstone(Minecraft.getMinecraft().world, bPos.xCoord, bPos.yCoord, bPos.zCoord, 1f, 1f, 1f, 1f) {};
+								ParticleRedstone a = new ParticleRedstone(Minecraft.getMinecraft().world, aPos.x, aPos.y, aPos.z, 1f, 1f, 1f, 1f) {};
+								ParticleRedstone b = new ParticleRedstone(Minecraft.getMinecraft().world, bPos.x, bPos.y, bPos.z, 1f, 1f, 1f, 1f) {};
 								
 								int gemColor = tegh.getGem().getColor();
 								

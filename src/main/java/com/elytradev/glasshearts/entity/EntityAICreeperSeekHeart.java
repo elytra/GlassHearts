@@ -26,11 +26,6 @@ public class EntityAICreeperSeekHeart extends EntityAIMoveToBlock {
 	}
 
 	@Override
-	public boolean continueExecuting() {
-		return super.continueExecuting();
-	}
-
-	@Override
 	public void updateTask() {
 		super.updateTask();
 		creeper.getLookHelper().setLookPosition(destinationBlock.getX() + 0.5, destinationBlock.getY() + 1, destinationBlock.getZ() + 0.5, 10f, creeper.getVerticalFaceSpeed());

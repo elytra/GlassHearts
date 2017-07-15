@@ -1,13 +1,15 @@
+ext.group = 'com.elytradev'
 ext.package = 'com.elytradev.glasshearts'
 ext.projectName = 'GlassHearts'
-ext.version = '1.11.2-1.0.1'
+ext.version = '1.0'
+ext.useElytraVersionFormat = true
 
 // 0.2.1 is the earliest Concrete version supported by the skeleton.
-ext.concreteVersion = '0.2.1'
+ext.concreteVersion = '0.3.2-SNAPSHOT'
 ext.concreteModules = [ 'common', 'network', 'reflect' ]
 
-ext.forge = '1.11.2-13.20.0.2282'
-ext.mappings = 'snapshot_20170205'
+ext.forge = '1.12-14.21.1.2413'
+ext.mappings = 'snapshot_20170715'
 
 ext.enforceLicenseHeaders = false
 
@@ -22,11 +24,8 @@ repositories {
 }
 
 dependencies {
-	compile 'mezz.jei:jei_1.11.2:4.2.6.235:api'
-	runtime 'mezz.jei:jei_1.11.2:4.2.6.235'
-	
-	deobfCompile 'slimeknights.mantle:Mantle:1.11.2-1.2.0.27'
-	deobfCompile 'slimeknights:TConstruct:1.11.2-2.7.0.9'
+	compile 'mezz.jei:jei_1.12:4.7.2.76:api'
+	runtime 'mezz.jei:jei_1.12:4.7.2.76'
 }
 
 tasks.runServer.outputs.upToDateWhen { false }
