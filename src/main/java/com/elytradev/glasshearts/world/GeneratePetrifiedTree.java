@@ -12,19 +12,19 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.ChunkPrimer;
-import net.minecraft.world.chunk.IChunkGenerator;
-import net.minecraft.world.gen.ChunkProviderOverworld;
+import net.minecraft.world.gen.ChunkGeneratorOverworld;
+import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
 
 public class GeneratePetrifiedTree {
 
-	private static final Accessor<Biome[]> biomesForGeneration = Accessors.findField(ChunkProviderOverworld.class, "field_185981_C", "biomesForGeneration", "D");
+	private static final Accessor<Biome[]> biomesForGeneration = Accessors.findField(ChunkGeneratorOverworld.class, "field_185981_C", "biomesForGeneration", "D");
 	
 	private static Random random = new Random(0);
 	
 	public static void generate(long seed, ChunkPrimer primer, IChunkGenerator gen) {
-		if (!(gen instanceof ChunkProviderOverworld)) return;
+		if (!(gen instanceof ChunkGeneratorOverworld)) return;
 		
 		random.setSeed(seed);
 		

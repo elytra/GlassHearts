@@ -13,9 +13,9 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockModelRenderer;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.GlStateManager.DestFactor;
 import net.minecraft.client.renderer.GlStateManager.SourceFactor;
 import net.minecraft.client.renderer.block.model.IBakedModel;
@@ -35,8 +35,8 @@ public class RenderGlassHeart extends TileEntitySpecialRenderer<TileEntityGlassH
 	}
 	
 	@Override
-	public void renderTileEntityAt(TileEntityGlassHeart te, double x, double y, double z, float partialTicks, int destroyStage) {
-		super.renderTileEntityAt(te, x, y, z, partialTicks, destroyStage);
+	public void render(TileEntityGlassHeart te, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
+		super.render(te, x, y, z, partialTicks, destroyStage, alpha);
 		
 		BlockRendererDispatcher brd = Minecraft.getMinecraft().getBlockRendererDispatcher();
 		BlockModelRenderer bmr = brd.getBlockModelRenderer();
@@ -165,7 +165,7 @@ public class RenderGlassHeart extends TileEntitySpecialRenderer<TileEntityGlassH
 
 	private void renderCube(int x, int y, int z, float w, float h, float d, TextureAtlasSprite tas, boolean renderTop, boolean renderBottom, boolean renderSides) {
 		Tessellator tess = Tessellator.getInstance();
-		VertexBuffer vb = tess.getBuffer();
+		BufferBuilder vb = tess.getBuffer();
 		
 		float minVX = tas.getInterpolatedV(x);
 		float maxVX = tas.getInterpolatedV(x+w);

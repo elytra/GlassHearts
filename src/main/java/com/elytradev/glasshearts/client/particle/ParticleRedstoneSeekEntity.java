@@ -21,9 +21,9 @@ public class ParticleRedstoneSeekEntity extends ParticleRedstone {
 		
 		Vec3d diff = seek.getPositionVector().addVector(0, seek.height/2, 0).subtract(posX, posY, posZ);
 		
-		double targetX = diff.xCoord;
-		double targetY = diff.yCoord;
-		double targetZ = diff.zCoord;
+		double targetX = diff.x;
+		double targetY = diff.y;
+		double targetZ = diff.z;
 		double diffX = targetX-motionX;
 		double diffY = targetY-motionY;
 		double diffZ = targetZ-motionZ;

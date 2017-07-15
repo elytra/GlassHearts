@@ -16,9 +16,9 @@ import com.google.common.collect.Lists;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.passive.EntitySheep;
 import net.minecraft.entity.player.EntityPlayer;
@@ -321,7 +321,7 @@ public class HeartRenderer extends Gui {
 	
 	public static void drawModalRect(float x, float y, float width, float height, float minU, float minV, float maxU, float maxV) {
 		Tessellator tess = Tessellator.getInstance();
-		VertexBuffer vb = tess.getBuffer();
+		BufferBuilder vb = tess.getBuffer();
 		vb.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
 		vb.pos(x,         y + height, 0).tex(minU, maxV).endVertex();
 		vb.pos(x + width, y + height, 0).tex(maxU, maxV).endVertex();
