@@ -1,0 +1,73 @@
+fluid.glasshearts.lifeforce=Lebenskraft
+
+item.glasshearts.glass_heart.none.name=Glasherz
+item.glasshearts.glass_heart.white.name=Weißes Glasherz
+item.glasshearts.glass_heart.orange.name=Oranges Glasherz
+item.glasshearts.glass_heart.magenta.name=Magenta Glasherz
+item.glasshearts.glass_heart.light_blue.name=Hellblaues Glasherz
+item.glasshearts.glass_heart.yellow.name=Gelbes Glasherz
+item.glasshearts.glass_heart.lime.name=Hellgrünes Glasherz
+item.glasshearts.glass_heart.pink.name=Rosa Glasherz
+item.glasshearts.glass_heart.gray.name=Graues Glasherz
+item.glasshearts.glass_heart.silver.name=Hellgraues Glasherz
+item.glasshearts.glass_heart.cyan.name=Türkises Glasherz
+item.glasshearts.glass_heart.purple.name=Violettes Glasherz
+item.glasshearts.glass_heart.blue.name=Blaues Glasherz
+item.glasshearts.glass_heart.brown.name=Braunes Glasherz
+item.glasshearts.glass_heart.green.name=Grünes Glasherz
+item.glasshearts.glass_heart.red.name=Rotes Glasherz
+item.glasshearts.glass_heart.black.name=Schwarzes Glasherz
+
+item.glasshearts.lifeforce_bottle.name=Flasche mit Lebenskraft
+item.glasshearts.staff.name=Opalstab
+
+item.glasshearts.gem.amethyst.name=Amethyst
+item.glasshearts.gem.ruby.name=Rubin
+item.glasshearts.gem.topaz.name=Topas
+item.glasshearts.gem.sapphire.name=Saphir
+item.glasshearts.gem.opal.name=Opal
+item.glasshearts.gem.onyx.name=Onyx
+item.glasshearts.gem.amber.name=Bernstein
+item.glasshearts.gem.agate.name=Achat
+
+tile.glasshearts.glass_heart.name=Glasherz
+tile.glasshearts.ore.name=Erz
+tile.glasshearts.ore.amethyst.name=Amethysterz
+tile.glasshearts.ore.onyx.name=Onyxerz
+tile.glasshearts.ore.opal.name=Opalerz
+tile.glasshearts.ore.ruby.name=Rubinerz
+tile.glasshearts.ore.sapphire.name=Saphirerz
+tile.glasshearts.ore.topaz.name=Topaserz
+tile.glasshearts.ore.agate.name=Achaterz
+tile.glasshearts.petrified_log.name=Versteinertes Holz
+
+enchantment.glasshearts.sapping=Auslaugen
+
+death.attack.glasshearts.transfer=%1$s war zu großzügig
+
+stat.glasshearts.lifeforce_consumed=Lebenskraft konsumiert
+stat.glasshearts.lifeforce_collected=Lebenskraft gesammelt
+stat.glasshearts.health_transferred=Gesundheit übertragen
+
+msg.glasshearts.limitReached=Du kannst dich nicht mit weiteren Herzen in Verbindung setzen.
+
+itemGroup.glass_heart=Glass Hearts
+
+tooltip.glasshearts.when_heart_adorned=Wenn Herz geschmückt:
+tooltip.glasshearts.when_heart_emptied=Wenn Herz geleert:
+
+tooltip.glasshearts.when_heart_adorned.diamond=+50%% Nachfüllrate
+tooltip.glasshearts.when_heart_adorned.emerald=+80%% Magieresistenz
+tooltip.glasshearts.when_heart_adorned.sapphire=Schadensbarriere
+tooltip.glasshearts.when_heart_adorned.opal=§c-25%% Nachfüllrate\nPassive Regeneration
+tooltip.glasshearts.when_heart_adorned.onyx=+80%% Witherresistenz
+tooltip.glasshearts.when_heart_adorned.amber=+50%% Resistenz
+
+tooltip.glasshearts.when_heart_emptied.amethyst=Regeneration II (0:10)
+tooltip.glasshearts.when_heart_emptied.ruby=§cEdelstein zerbricht\nHerz füllt sich auf
+tooltip.glasshearts.when_heart_emptied.topaz=Absorption I (0:30)
+tooltip.glasshearts.when_heart_emptied.agate=Stärke II (1:00)
+
+modifier.glasshearts.tcon.sapping.name=Auslaugen
+modifier.glasshearts.tcon.sapping.desc=§oKräftezehrend!§r\nErmöglicht es, eine Glasflasche beim Töten eines Mobs mit Lebenskraft zu füllen
+modifier.glasshearts.tcon.sapping.extra=Wahrscheinlichkeit: %s
