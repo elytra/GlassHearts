@@ -10,6 +10,7 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 
@@ -30,15 +31,13 @@ public class BlockPetrifiedLog extends BlockLog {
 	}
 	
 	@Override
-	public List<ItemStack> getDrops(IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
-		List<ItemStack> li = Lists.newArrayList();
+	public void getDrops(NonNullList<ItemStack> li, IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
 		for (int i = 0; i < 4+(RANDOM.nextInt(fortune+1)); i++) {
 			li.add(new ItemStack(Items.STICK));
 		}
 		if (RANDOM.nextInt(8-fortune) == 0) {
 			li.add(new ItemStack(GlassHearts.inst.GEM, 1, 6));
 		}
-		return li;
 	}
 	
 	@Override
