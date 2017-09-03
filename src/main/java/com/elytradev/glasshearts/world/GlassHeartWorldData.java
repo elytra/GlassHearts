@@ -16,8 +16,6 @@ import net.minecraftforge.common.util.Constants.NBT;
 
 public class GlassHeartWorldData extends WorldSavedData {
 
-	private static final NBTHelper nh = new NBTHelper();
-	
 	private World world;
 	
 	private Map<BlockPos, GlassHeartData> hearts = Maps.newHashMap();
@@ -28,14 +26,14 @@ public class GlassHeartWorldData extends WorldSavedData {
 	
 	@Override
 	public void readFromNBT(NBTTagCompound nbt) {
-		for (GlassHeartData ghd : nh.deserialize(() -> new GlassHeartData(this), nbt.getTagList("Hearts", NBT.TAG_COMPOUND))) {
+		for (GlassHeartData ghd : NBTHelper.deserialize(() -> new GlassHeartData(this), nbt.getTagList("Hearts", NBT.TAG_COMPOUND))) {
 			hearts.put(ghd.getHeartPos(), ghd);
 		}
 	}
 
 	@Override
 	public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
-		nbt.setTag("Hearts", nh.serialize(hearts.values()));
+		nbt.setTag("Hearts", NBTHelper.serialize(hearts.values()));
 		return nbt;
 	}
 	
