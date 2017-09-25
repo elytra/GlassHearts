@@ -30,8 +30,11 @@ import net.minecraftforge.client.MinecraftForgeClient;
 
 public class RenderGlassHeart extends TileEntitySpecialRenderer<TileEntityGlassHeart> {
 
+	private int[] displayLists = new int[EnumGlassColor.values().length];
+	private int[] lastHash = new int[EnumGlassColor.values().length];
+	
 	public static float getAnimTime(TileEntityGlassHeart te, float partialTicks) {
-		return (((te.getWorld().getTotalWorldTime()+te.hashCode())%24000)+partialTicks);
+		return (((ClientProxy.ticks+te.hashCode())%24000)+partialTicks);
 	}
 	
 	@Override
@@ -45,6 +48,25 @@ public class RenderGlassHeart extends TileEntitySpecialRenderer<TileEntityGlassH
 		IBlockState outerState = GlassHearts.inst.GLASS_HEART.getDefaultState().withProperty(BlockGlassHeart.INNER, false).withProperty(BlockGlassHeart.STAINED, stained);
 		
 		IBakedModel outer = brd.getModelForState(outerState);
+		
+		int listIdx = te.getColor().ordinal();
+		int hash = outer.hashCode();
+		
+		if (lastHash[listIdx] != hash || displayLists[listIdx] == 0) {
+			if (displayLists[listIdx] != 0) {
+				GlStateManager.glDeleteLists(displayLists[listIdx], 1);
+			}
+			displayLists[listIdx] = GlStateManager.glGenLists(1);
+			lastHash[listIdx] = hash;
+			GlStateManager.glNewList(displayLists[listIdx], GL11.GL_COMPILE);
+			if (stained) {
+				float[] color = EntitySheep.getDyeRgb(te.getColor().dye);
+				bmr.renderModelBrightnessColor(outerState, outer, 1f, color[0], color[1], color[2]);
+			} else {
+				bmr.renderModelBrightnessColor(outerState, outer, 1f, 1f, 1f, 1f);
+			}
+			GlStateManager.glEndList();
+		}
 
 		bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
 		GlStateManager.pushMatrix();
@@ -108,7 +130,6 @@ public class RenderGlassHeart extends TileEntitySpecialRenderer<TileEntityGlassH
 			GlStateManager.popMatrix();
 		}
 		
-		
 		if (stained) {
 			GlStateManager.enableBlend();
 			GlStateManager.tryBlendFuncSeparate(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA,
@@ -118,10 +139,9 @@ public class RenderGlassHeart extends TileEntitySpecialRenderer<TileEntityGlassH
 			GlStateManager.disableBlend();
 		}
 		if (stained && MinecraftForgeClient.getRenderPass() == 1) {
-			float[] color = EntitySheep.getDyeRgb(te.getColor().dye);
-			bmr.renderModelBrightnessColor(outerState, outer, 1f, color[0], color[1], color[2]);
+			GlStateManager.callList(displayLists[listIdx]);
 		} else if (MinecraftForgeClient.getRenderPass() == 0) {
-			bmr.renderModelBrightnessColor(outerState, outer, 1f, 1f, 1f, 1f);
+			GlStateManager.callList(displayLists[listIdx]);
 		}
 		GlStateManager.disableRescaleNormal();
 		GlStateManager.disableBlend();
