@@ -114,6 +114,11 @@ public class BlockHeartContainerOwner extends HeartContainerOwner {
 		result = prime * result + ((world == null) ? 0 : world.hashCode());
 		return result;
 	}
+	
+	@Override
+	public String toString() {
+		return "block @ "+getPos().getX()+", "+getPos().getY()+", "+getPos().getZ()+" (DIM"+getWorld().provider.getDimension()+")";
+	}
 
 	@Override
 	public boolean equals(Object that) {

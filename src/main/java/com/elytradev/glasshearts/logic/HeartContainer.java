@@ -224,7 +224,7 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 	@Override
 	public void deserializeNBT(NBTTagCompound nbt) {
 		glassColor = Enums.getIfPresent(EnumGlassColor.class, nbt.getString("Color").toUpperCase(Locale.ROOT)).orNull();
-		String gemStr = nbt.getString("Gem");
+		String gemStr = nbt.hasKey("Gem", NBT.TAG_STRING) ? nbt.getString("Gem") : "glasshearts:none";
 		if (!gemStr.contains(":")) {
 			gemStr = "glasshearts:"+gemStr;
 		}
@@ -236,6 +236,7 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 			try {
 				HeartContainerOwner ihco = REGISTRY.get(ownerTag.getString("Kind")).newInstance();
 				ihco.deserializeNBT(ownerTag);
+				owner = ihco;
 			} catch (Exception e) {
 				e.printStackTrace();
 				owner = null;
@@ -257,7 +258,9 @@ public class HeartContainer implements INBTSerializable<NBTTagCompound> {
 		if (glassColor != null) {
 			tag.setString("Color", glassColor.getName());
 		}
-		tag.setString("Gem", gem.getRegistryName().toString());
+		if (gem != Gems.NONE) {
+			tag.setString("Gem", gem.getRegistryName().toString());
+		}
 		tag.setByte("Fill", getFillAmountByte());
 		if (owner != null) {
 			NBTTagCompound ownerTag = owner.serializeNBT();

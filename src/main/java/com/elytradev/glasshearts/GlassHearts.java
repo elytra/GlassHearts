@@ -114,6 +114,7 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.eventhandler.Event.Result;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -311,6 +312,11 @@ public class GlassHearts {
 		//}
 		
 		proxy.onPreInit();
+	}
+	
+	@EventHandler
+	public void onServerStarting(FMLServerStartingEvent e) {
+		e.registerServerCommand(new CommandHeartInfo());
 	}
 	
 	@SubscribeEvent
@@ -555,6 +561,7 @@ public class GlassHearts {
 			
 			NBTBase nbt = CapabilityHeartHandler.CAPABILITY.writeNBT(cap, null);
 			NBTTagCompound tag = new NBTTagCompound();
+			tag.setInteger("Version", 1);
 			tag.setTag("Hearts", nbt);
 			
 			try {
@@ -586,6 +593,11 @@ public class GlassHearts {
 				
 				try {
 					NBTTagCompound tag = CompressedStreamTools.read(f);
+					int version = tag.getInteger("Version");
+					if (version == 0) {
+						LogManager.getLogger("GlassHearts").warn("Ignoring old v0 Glass Hearts data due to the ghost hearts fix");
+						return;
+					}
 					NBTBase nbt = tag.getTag("Hearts");
 					CapabilityHeartHandler.CAPABILITY.readNBT(cap, null, nbt);
 				} catch (IOException ex) {
