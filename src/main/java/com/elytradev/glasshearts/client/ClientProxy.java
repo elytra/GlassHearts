@@ -44,6 +44,8 @@ public class ClientProxy extends CommonProxy {
 	private List<TileEntityGlassHeart> glassHearts = Lists.newArrayList();
 	public List<GuiParticle> guiParticles = Lists.newArrayList();
 	
+	public static int ticks;
+	
 	@Override
 	public void onPreInit() {
 		super.onPreInit();
@@ -169,6 +171,7 @@ public class ClientProxy extends CommonProxy {
 	public void onTick(ClientTickEvent e) {
 		if (e.phase == Phase.START) {
 			if (!Minecraft.getMinecraft().isGamePaused()) {
+				ticks++;
 				Minecraft.getMinecraft().mcProfiler.startSection("glasshearts:guiparticlesupdate"); {
 					Iterator<GuiParticle> iter = guiParticles.iterator();
 					while (iter.hasNext()) {
