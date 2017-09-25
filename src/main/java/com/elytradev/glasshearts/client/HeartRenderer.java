@@ -244,7 +244,7 @@ public class HeartRenderer extends Gui {
 				}
 			}
 			// health
-			drawModalRectWithCustomSizedTexture(x, y, 36+(uOffset*9), 72+((fillIdx*18)), fill*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+			drawModalRectWithCustomSizedTexture(x+1, y+1, 37+(uOffset*9), 73+((fillIdx*18)), fill*7, 7, TEXTURE_WIDTH, TEXTURE_HEIGHT);
 			if (nextAlpha > 0) {
 				GlStateManager.color(1, 1, 1, nextAlpha*alpha);
 				drawModalRectWithCustomSizedTexture(x, y, 36+((uOffset+1)*9), 72+((fillIdx*18)), fill*9, 9, TEXTURE_WIDTH, TEXTURE_HEIGHT);
