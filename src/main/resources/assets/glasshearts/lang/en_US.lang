@@ -71,3 +71,5 @@ tooltip.glasshearts.when_heart_emptied.agate=Strength II (1:00)
 modifier.glasshearts.tcon.sapping.name=Sapping
 modifier.glasshearts.tcon.sapping.desc=§oZza- err, sap!§r\nChance to fill a Glass Bottle with Lifeforce upon killing a mob
 modifier.glasshearts.tcon.sapping.extra=Sap Chance: %s
+
+enchantment.glasshearts.sapping.desc=Saps the lifeforce out of a target when hit
