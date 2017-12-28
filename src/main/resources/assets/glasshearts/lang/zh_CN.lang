@@ -1,0 +1,75 @@
+fluid.glasshearts.lifeforce=跃动生命
+
+item.glasshearts.glass_heart.none.name=玻璃心
+item.glasshearts.glass_heart.white.name=白色玻璃心
+item.glasshearts.glass_heart.orange.name=橙色玻璃心
+item.glasshearts.glass_heart.magenta.name=品红色玻璃心
+item.glasshearts.glass_heart.light_blue.name=淡蓝色玻璃心
+item.glasshearts.glass_heart.yellow.name=黄色玻璃心
+item.glasshearts.glass_heart.lime.name=黄绿色玻璃心
+item.glasshearts.glass_heart.pink.name=粉色玻璃心
+item.glasshearts.glass_heart.gray.name=灰色玻璃心
+item.glasshearts.glass_heart.silver.name=淡灰色玻璃心
+item.glasshearts.glass_heart.cyan.name=青色玻璃心
+item.glasshearts.glass_heart.purple.name=紫色玻璃心
+item.glasshearts.glass_heart.blue.name=蓝色玻璃心
+item.glasshearts.glass_heart.brown.name=棕色玻璃心
+item.glasshearts.glass_heart.green.name=绿色玻璃心
+item.glasshearts.glass_heart.red.name=红石玻璃心
+item.glasshearts.glass_heart.black.name=黑色玻璃心
+
+item.glasshearts.lifeforce_bottle.name=瓶装跃动生命
+item.glasshearts.staff.name=蛋白石手杖
+
+item.glasshearts.gem.amethyst.name=紫晶
+item.glasshearts.gem.ruby.name=红宝石
+item.glasshearts.gem.topaz.name=黄玉
+item.glasshearts.gem.sapphire.name=蓝宝石
+item.glasshearts.gem.opal.name=蛋白石
+item.glasshearts.gem.onyx.name=黑玛瑙
+item.glasshearts.gem.amber.name=琥珀
+item.glasshearts.gem.agate.name=红玛瑙
+
+tile.glasshearts.glass_heart.name=玻璃心
+tile.glasshearts.ore.name=矿石
+tile.glasshearts.ore.amethyst.name=紫晶矿石
+tile.glasshearts.ore.onyx.name=黑玛瑙矿石
+tile.glasshearts.ore.opal.name=蛋白石矿石
+tile.glasshearts.ore.ruby.name=红宝石矿石
+tile.glasshearts.ore.sapphire.name=蓝宝石矿石
+tile.glasshearts.ore.topaz.name=黄玉矿石
+tile.glasshearts.ore.agate.name=红玛瑙矿石
+tile.glasshearts.petrified_log.name=石化原木
+
+enchantment.glasshearts.sapping=剥削
+
+death.attack.glasshearts.transfer=%1$s 慷慨就义了
+
+stat.glasshearts.lifeforce_consumed=损耗生命
+stat.glasshearts.lifeforce_collected=汇集生命
+stat.glasshearts.health_transferred=转移生命
+
+msg.glasshearts.limitReached=你不能获得更多的生命。
+
+itemGroup.glass_heart=玻璃心
+
+tooltip.glasshearts.when_heart_adorned=当心填充时：
+tooltip.glasshearts.when_heart_emptied=当心清空时：
+
+tooltip.glasshearts.when_heart_adorned.diamond=+50%% 填充速度
+tooltip.glasshearts.when_heart_adorned.emerald=+80%% 魔法抗性
+tooltip.glasshearts.when_heart_adorned.sapphire=伤害减免
+tooltip.glasshearts.when_heart_adorned.opal=§c-25%% 填充速度\n被动效果
+tooltip.glasshearts.when_heart_adorned.onyx=+80%% 凋零抗性
+tooltip.glasshearts.when_heart_adorned.amber=+50%% 抗性提升
+
+tooltip.glasshearts.when_heart_emptied.amethyst=再生 II （0:10）
+tooltip.glasshearts.when_heart_emptied.ruby=§c粉碎宝石\n填充心
+tooltip.glasshearts.when_heart_emptied.topaz=伤害吸收 I （0:30）
+tooltip.glasshearts.when_heart_emptied.agate=力量 II （1:00）
+
+modifier.glasshearts.tcon.sapping.name=剥削
+modifier.glasshearts.tcon.sapping.desc=§oZza- err, sap!§r\n通过杀死怪物以获取跃动生命。
+modifier.glasshearts.tcon.sapping.extra=填充概率： %s
+
+enchantment.glasshearts.sapping.desc=当你物品栏中的心破裂时，会给予怪物一定的伤害。
