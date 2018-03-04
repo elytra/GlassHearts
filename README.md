@@ -3,6 +3,8 @@
 # Glass Hearts
 [>> Downloads <<](https://github.com/elytra/GlassHearts/releases)
 
+## Notice: Glass Hearts is currently unmaintained.
+
 *A novel and balanced way to increase your health.*
 
 **This mod is open source and under a permissive license.** All Elytra mods are,
