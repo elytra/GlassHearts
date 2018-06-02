@@ -498,7 +498,8 @@ public class GlassHearts {
 			if (taken < amt) {
 				float waste = (amt-taken);
 				if (waste >= 0.5f && e.getEntityLiving() instanceof EntityPlayer) {
-					new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_WASTED_HEALING, (int)(waste*2)-1, cap.getContainers()-1).sendTo((EntityPlayer)e.getEntityLiving());
+					// I like this effect, but it triggers randomly due to hunger and such
+					//new PlayHeartEffectMessage(PlayHeartEffectMessage.EFFECT_WASTED_HEALING, (int)(waste*2)-1, cap.getContainers()-1).sendTo((EntityPlayer)e.getEntityLiving());
 				}
 			}
 			e.getEntityLiving().setHealth((int)(cap.totalHealth()*2));
