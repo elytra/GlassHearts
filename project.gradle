@@ -9,7 +9,7 @@ ext.concreteVersion = '0.3.2-SNAPSHOT'
 ext.concreteModules = [ 'common', 'network', 'reflect' ]
 
 ext.forge = '1.12.1-14.22.0.2467'
-ext.mappings = 'snapshot_20170903'
+ext.mappings = 'snapshot_20180413'
 
 ext.enforceLicenseHeaders = false
 
