@@ -38,6 +38,9 @@ public class PlayerHandler {
 	
 	protected IHeartHandler getHeartHandler(Entity entity) {
 		if (entity == null) return null;
+		if (entity.getTags().contains("glasshearts:disable_heart_handler")) {
+			return null;
+		}
 		if (entity.hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
 			return entity.getCapability(CapabilityHeartHandler.CAPABILITY, null);
 		}
