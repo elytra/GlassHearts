@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.elytradev.concrete.reflect.accessor.Accessor;
 import com.elytradev.concrete.reflect.accessor.Accessors;
-import com.elytradev.glasshearts.capability.CapabilityHeartHandler;
+import com.elytradev.glasshearts.GlassHearts;
 import com.elytradev.glasshearts.capability.IHeartHandler;
 import com.elytradev.glasshearts.gem.Gem;
 import com.elytradev.glasshearts.init.Gems;
@@ -15,7 +15,6 @@ import com.elytradev.glasshearts.network.UpdateHeartsMessage;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.FoodStats;
@@ -36,21 +35,10 @@ public class PlayerHandler {
 		return ep == null || ep.isDead ? null : ep;
 	}
 	
-	protected IHeartHandler getHeartHandler(Entity entity) {
-		if (entity == null) return null;
-		if (entity.getTags().contains("glasshearts:disable_heart_handler")) {
-			return null;
-		}
-		if (entity.hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
-			return entity.getCapability(CapabilityHeartHandler.CAPABILITY, null);
-		}
-		return null;
-	}
-	
 	public void preTick() {
 		EntityPlayer player = getPlayer();
 		if (player == null) return;
-		IHeartHandler ihh = getHeartHandler(player);
+		IHeartHandler ihh = GlassHearts.getHeartHandler(player);
 		if (ihh == null) return;
 		float hp = 0;
 		int destroyed = 0;
@@ -108,7 +96,7 @@ public class PlayerHandler {
 	public void resync() {
 		EntityPlayer player = getPlayer();
 		if (player == null) return;
-		IHeartHandler ihh = getHeartHandler(player);
+		IHeartHandler ihh = GlassHearts.getHeartHandler(player);
 		if (ihh == null) return;
 		if (lastContainers.isEmpty()) {
 			for (HeartContainer hc : ihh) {

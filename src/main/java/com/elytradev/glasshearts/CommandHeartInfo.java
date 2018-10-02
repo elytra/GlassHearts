@@ -32,8 +32,8 @@ public class CommandHeartInfo extends CommandBase {
 		boolean roundtrip = args.length == 1 && args[0].equals("roundtrip");
 		if (sender instanceof Entity) {
 			Entity e = (Entity)sender;
-			if (e.hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
-				IHeartHandler ihh = e.getCapability(CapabilityHeartHandler.CAPABILITY, null);
+			IHeartHandler ihh = GlassHearts.getHeartHandler(e);
+			if (ihh != null) {
 				sender.sendMessage(new TextComponentString("IHeartHandler Present"));
 				if (roundtrip) {
 					NBTBase tag = CapabilityHeartHandler.CAPABILITY.writeNBT(ihh, null);
@@ -71,7 +71,11 @@ public class CommandHeartInfo extends CommandBase {
 				}
 			} else if (e instanceof EntityLivingBase) {
 				EntityLivingBase elb = (EntityLivingBase)e;
-				sender.sendMessage(new TextComponentString("IHeartHandler NOT Present"));
+				String suf = "";
+				if (e.getTags().contains("glasshearts:disable_heart_handler")) {
+					suf = " (another mod is suppressing it)";
+				}
+				sender.sendMessage(new TextComponentString("IHeartHandler NOT Present"+suf));
 				sender.sendMessage(new TextComponentString(elb.getHealth()+"/"+elb.getMaxHealth()+" vanilla health"));
 				sender.sendMessage(new TextComponentString(elb.getAbsorptionAmount()+" absorption hearts"));
 			} else {

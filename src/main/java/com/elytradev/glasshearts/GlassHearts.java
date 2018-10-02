@@ -472,8 +472,8 @@ public class GlassHearts {
 	@SubscribeEvent(priority=EventPriority.LOWEST)
 	public void onHurt(LivingHurtEvent e) {
 		float amt = e.getAmount();
-		if (e.getEntityLiving().hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
-			IHeartHandler cap = e.getEntityLiving().getCapability(CapabilityHeartHandler.CAPABILITY, null);
+		IHeartHandler cap = getHeartHandler(e.getEntityLiving());
+		if (cap != null) {
 			amt = (Float)applyArmorCalculations.invoke(e.getEntityLiving(), e.getSource(), amt);
 			amt = (Float)applyPotionDamageCalculations.invoke(e.getEntityLiving(), e.getSource(), amt);
 
@@ -491,8 +491,8 @@ public class GlassHearts {
 	
 	@SubscribeEvent(priority=EventPriority.LOWEST)
 	public void onHeal(LivingHealEvent e) {
-		if (e.getEntityLiving().hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
-			IHeartHandler cap = e.getEntityLiving().getCapability(CapabilityHeartHandler.CAPABILITY, null);
+		IHeartHandler cap = getHeartHandler(e.getEntityLiving());
+		if (cap != null) {
 			float amt = e.getAmount()/2f;
 			float taken = cap.heal(amt);
 			if (taken < amt) {
@@ -548,9 +548,8 @@ public class GlassHearts {
 	
 	@SubscribeEvent
 	public void onPlayerSave(PlayerEvent.SaveToFile e) {
-		if (e.getEntityPlayer().hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
-			IHeartHandler cap = e.getEntityPlayer().getCapability(CapabilityHeartHandler.CAPABILITY, null);
-			
+		IHeartHandler cap = getHeartHandler(e.getEntityLiving());
+		if (cap != null) {
 			File f;
 			if (e.getEntityPlayer().getName().equals(e.getEntityPlayer().getServer().getServerOwner())) {
 				// singleplayer
@@ -589,9 +588,8 @@ public class GlassHearts {
 		}
 		
 		if (f.exists()) {
-			if (e.getEntityPlayer().hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
-				IHeartHandler cap = e.getEntityPlayer().getCapability(CapabilityHeartHandler.CAPABILITY, null);
-				
+			IHeartHandler cap = getHeartHandler(e.getEntityLiving());
+			if (cap != null) {
 				try {
 					NBTTagCompound tag = CompressedStreamTools.read(f);
 					int version = tag.getInteger("Version");
@@ -673,6 +671,17 @@ public class GlassHearts {
 				data.remove(pos);
 			}
 		}
+	}
+	
+	public static IHeartHandler getHeartHandler(Entity entity) {
+		if (entity == null) return null;
+		if (entity.getTags().contains("glasshearts:disable_heart_handler")) {
+			return null;
+		}
+		if (entity.hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
+			return entity.getCapability(CapabilityHeartHandler.CAPABILITY, null);
+		}
+		return null;
 	}
 	
 	public void update(IGlassHeart igh, long ticks) {
@@ -812,8 +821,8 @@ public class GlassHearts {
 		}
 		List<EntityPlayer> li = Lists.newArrayList();
 		for (EntityPlayer ep : players) {
-			if (ep.hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
-				IHeartHandler ihh = ep.getCapability(CapabilityHeartHandler.CAPABILITY, null);
+			IHeartHandler ihh = getHeartHandler(ep);
+			if (ihh != null) {
 				for (HeartContainer hc : ihh) {
 					HeartContainerOwner owner = hc.getOwner();
 					if (owner instanceof BlockHeartContainerOwner) {

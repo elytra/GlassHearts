@@ -3,7 +3,6 @@ package com.elytradev.glasshearts.block;
 import org.apache.logging.log4j.LogManager;
 
 import com.elytradev.glasshearts.GlassHearts;
-import com.elytradev.glasshearts.capability.CapabilityHeartHandler;
 import com.elytradev.glasshearts.capability.IHeartHandler;
 import com.elytradev.glasshearts.enums.EnumGemState;
 import com.elytradev.glasshearts.enums.EnumGlassColor;
@@ -137,8 +136,8 @@ public class BlockGlassHeart extends Block {
 				return true;
 			} else if (stack.getItem() == GlassHearts.inst.STAFF) {
 				if (worldIn.isRemote) return true;
-				if (playerIn.hasCapability(CapabilityHeartHandler.CAPABILITY, null)) {
-					IHeartHandler cap = playerIn.getCapability(CapabilityHeartHandler.CAPABILITY, null);
+				IHeartHandler cap = GlassHearts.getHeartHandler(playerIn);
+				if (cap != null) {
 					for (int i = 0; i < cap.getContainers(); i++) {
 						HeartContainer hc = cap.getContainer(i);
 						HeartContainerOwner owner = hc.getOwner();
